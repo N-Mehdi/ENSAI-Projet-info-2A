@@ -6,7 +6,7 @@ import yaml
 
 
 def initialiser_logs(nom):
-    """Initialiser les logs à partir du fichier de config"""
+    """Initialise les logs à partir du fichier de config."""
     # print current working directory
     # print(os.getcwd())
     # os.chdir('ENSAI-2A-projet-info-template')

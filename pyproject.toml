@@ -25,7 +25,7 @@ dependencies = [
 
 
 [tool.ruff]
-line-length = 79
+line-length = 82
 namespace-packages = ["src"]
 
 [tool.ruff.lint]
@@ -38,7 +38,10 @@ ignore=[
     "CPY",
     "DOC201",
     "DOC501",
-    "DOC402"
+    "DOC402",
+    "D205",
+    "N807",
+    "ANN001"
 ]
 
 exclude = [
