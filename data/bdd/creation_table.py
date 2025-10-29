@@ -22,7 +22,7 @@ conn = psycopg2.connect(
 cur = conn.cursor()
 
 with pathlib.Path(
-    "/home/onyxia/work/ENSAI-Projet-info-2A/data/bdd/table.sql"
+    "/home/onyxia/work/ENSAI-Projet-info-2A/data/bdd/table.sql",
 ).open() as f:
     sql = f.read()
 

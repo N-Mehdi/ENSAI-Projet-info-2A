@@ -1,4 +1,3 @@
-/*
 CREATE TABLE IF NOT EXISTS cocktail (
     id_cocktail SERIAL PRIMARY KEY,
     nom VARCHAR(100),
@@ -7,9 +6,6 @@ CREATE TABLE IF NOT EXISTS cocktail (
     alcool BOOLEAN,
     image TEXT
     );
-*/
-
--- DELETE FROM cocktail;
 
 CREATE TABLE IF NOT EXISTS ingredient (
     id_ingredient SERIAL PRIMARY KEY, 
@@ -48,3 +44,109 @@ CREATE TABLE IF NOT EXISTS unite (
     abbreviation VARCHAR(20),
     type_unite VARCHAR(20)   -- 'liquide', 'solide', 'autre'
 );
+
+CREATE TABLE IF NOT EXISTS utilisateur (
+    id_utilisateur INTEGER PRIMARY KEY,
+    mail VARCHAR(255),
+    mot_de_passe VARCHAR(255),
+    pseudo VARCHAR(50),
+    date_naissance DATE,
+    date_inscription DATE
+);
+
+CREATE TABLE IF NOT EXISTS avis (
+    id_utilisateur INTEGER,
+    id_cocktail INTEGER,
+    note NUMERIC,
+    commentaire TEXT,
+    favoris BOOLEAN,
+    PRIMARY KEY (id_utilisateur, id_cocktail)
+);
+
+CREATE TABLE IF NOT EXISTS acces (
+    id_utilisateur INTEGER,
+    id_cocktail INTEGER,
+    is_owner BOOLEAN,
+    can_access BOOLEAN,
+    PRIMARY KEY (id_utilisateur, id_cocktail)
+);
+
+CREATE TABLE IF NOT EXISTS stock (
+    id_utilisateur INTEGER,
+    id_ingredient INTEGER,
+    quantite NUMERIC(10,3),
+    id_unite INTEGER,
+    PRIMARY KEY (id_utilisateur, id_ingredient)
+);
+
+CREATE TABLE IF NOT EXISTS liste_course (
+    id_utilisateur INTEGER,
+    id_ingredient INTEGER,
+    effectue BOOLEAN,
+    quantite NUMERIC(10,3),
+    id_unite INTEGER,
+    PRIMARY KEY (id_utilisateur, id_ingredient)
+);
+
+/* 
+
+ALTER TABLE acces
+ADD CONSTRAINT fk_utilisateur_acces
+FOREIGN KEY (id_utilisateur) REFERENCES utilisateur(id_utilisateur);
+ 
+ALTER TABLE acces
+ADD CONSTRAINT fk_cocktail_acces
+FOREIGN KEY (id_cocktail) REFERENCES cocktail(id_cocktail);
+
+
+ALTER TABLE avis
+ADD CONSTRAINT fk_utilisateur_avis
+FOREIGN KEY (id_utilisateur) REFERENCES utilisateur(id_utilisateur);
+
+ALTER TABLE avis
+ADD CONSTRAINT fk_cocktail_avis
+FOREIGN KEY (id_cocktail) REFERENCES cocktail(id_cocktail);
+
+
+ALTER TABLE liste_course
+ADD CONSTRAINT fk_utilisateur_course
+FOREIGN KEY (id_utilisateur) REFERENCES utilisateur(id_utilisateur);
+
+ALTER TABLE liste_course
+ADD CONSTRAINT fk_ingredient_course
+FOREIGN KEY (id_ingredient) REFERENCES ingredient(id_ingredient);
+
+ALTER TABLE liste_course
+ADD CONSTRAINT fk_unite_course
+FOREIGN KEY (id_unite) REFERENCES unite(id_unite);
+
+
+ALTER TABLE instruction
+ADD CONSTRAINT fk_cocktail_instruction
+FOREIGN KEY (id_cocktail) REFERENCES cocktail(id_cocktail);
+
+
+ALTER TABLE stock
+ADD CONSTRAINT fk_unite_stock
+FOREIGN KEY (id_unite) REFERENCES unite(id_unite);
+
+ALTER TABLE stock
+ADD CONSTRAINT fk_utilisateur_stock
+FOREIGN KEY (id_utilisateur) REFERENCES utilisateur(id_utilisateur);
+
+ALTER TABLE stock
+ADD CONSTRAINT fk_ingredient_stock
+FOREIGN KEY (id_ingredient) REFERENCES ingredient(id_ingredient);
+
+*/
+
+ALTER TABLE cocktail_ingredient
+ALTER COLUMN id_unite TYPE INTEGER USING id_unite::INTEGER;
+
+ALTER TABLE cocktail_ingredient
+ADD CONSTRAINT fk_unite_cocktail_ingredient
+FOREIGN KEY (id_unite) REFERENCES unite(id_unite);
+
+
+
+

@@ -2,8 +2,8 @@
 Classe DAO du business object Cocktail.
 """
 
-from business_object.cocktail import Cocktail
-from dao.db_connection import DBConnection
+from src.business_object.cocktail import Cocktail
+from src.dao.db_connection import DBConnection
 from utils.log_decorator import log
 from utils.singleton import Singleton
 
@@ -64,3 +64,8 @@ class CocktailDao(metaclass=Singleton):
 
     def rechercher_cocktail_aleatoire():
         pass
+
+
+y = CocktailDao()
+x = y.rechercher_cocktail_par_premiere_lettre("a")
+print(x)
