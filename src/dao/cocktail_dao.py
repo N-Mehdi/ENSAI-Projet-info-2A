@@ -4,8 +4,8 @@ Classe DAO du business object Cocktail.
 
 from src.business_object.cocktail import Cocktail
 from src.dao.db_connection import DBConnection
-from utils.log_decorator import log
-from utils.singleton import Singleton
+from src.utils.log_decorator import log
+from src.utils.singleton import Singleton
 
 
 class CocktailDao(metaclass=Singleton):
@@ -14,7 +14,7 @@ class CocktailDao(metaclass=Singleton):
     """
 
     @log
-    def rechercher_cocktail_par_nom(nom) -> Cocktail:
+    def rechercher_cocktail_par_nom(self, nom) -> Cocktail:
         with DBConnection().connection as connection:
             with connection.cursor() as cursor:
                 cursor.execute(
@@ -37,14 +37,14 @@ class CocktailDao(metaclass=Singleton):
         return cocktail
 
     @log
-    def rechercher_cocktail_par_premiere_lettre(lettre) -> list[Cocktail]:
+    def rechercher_cocktail_par_premiere_lettre(self, lettre) -> list[Cocktail]:
         with DBConnection().connection as connection:
             with connection.cursor() as cursor:
                 cursor.execute(
                     "SELECT *                       "
                     "FROM cocktail                  "
                     "WHERE nom LIKE %(lettre)s      ",
-                    {"lettre": lettre},
+                    {"lettre": lettre.upper() + "%"},
                 )
                 res = cursor.fetchall()
 
@@ -67,5 +67,7 @@ class CocktailDao(metaclass=Singleton):
 
 
 y = CocktailDao()
-x = y.rechercher_cocktail_par_premiere_lettre("a")
-print(x)
+x = y.rechercher_cocktail_par_nom("Margarita")
+z = y.rechercher_cocktail_par_premiere_lettre("M")
+print(x, z)
+# il faut ajouter la méthode __repr__() dans la BO cocktail pour que le print(z) n'affiche plus des noms de cocktails codés

@@ -3,7 +3,7 @@ import dotenv
 import psycopg2
 
 from psycopg2.extras import RealDictCursor
-from utils.singleton import Singleton
+from src.utils.singleton import Singleton
 
 
 class DBConnection(metaclass=Singleton):
@@ -22,7 +22,6 @@ class DBConnection(metaclass=Singleton):
             database=os.environ["POSTGRES_DATABASE"],
             user=os.environ["POSTGRES_USER"],
             password=os.environ["POSTGRES_PASSWORD"],
-            options=f"-c search_path={os.environ['POSTGRES_SCHEMA']}",
             cursor_factory=RealDictCursor,
         )
 

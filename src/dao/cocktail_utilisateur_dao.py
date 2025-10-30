@@ -32,7 +32,7 @@ class CocktailUtilisateurDao(metaclass=Singleton):
                 res = cursor.fetchall()
 
         liste_cocktails_prives = []
-        
+
         if res:
             for cocktail in res:
                 liste_cocktails_prives.append(
@@ -42,10 +42,10 @@ class CocktailUtilisateurDao(metaclass=Singleton):
                         categorie=cocktail["categorie"],
                         verre=cocktail["verre"],
                         alcool=cocktail["alcool"],
-                        image=cocktail["image"]
-                    )
+                        image=cocktail["image"],
+                    ),
                 )
-    
+
         return liste_cocktails_prives
 
     def update_cocktail_prive(self, id_utilisateur, id_cocktail) -> Cocktail:
@@ -54,7 +54,6 @@ class CocktailUtilisateurDao(metaclass=Singleton):
     @log
     def delete_cocktail_prive(id_utilisateur, id_cocktail) -> None:
         """Supprime le cocktail privé d'un utilisateur"""
-
         sql_delete_acces = """
         DELETE FROM acces
         WHERE id_cocktail = %(id_cocktail)s
@@ -76,12 +75,13 @@ class CocktailUtilisateurDao(metaclass=Singleton):
             with connection.cursor() as cursor:
                 cursor.execute(
                     cursor.execute(sql_delete_acces, params),
-                    cursor.execute(sql_delete_cocktail, params)
+                    cursor.execute(sql_delete_cocktail, params),
                 )
 
         @log
         def get_favoris(self, id_utilisateur) -> list[Cocktail]:
             """Obtenir tous les cocktails favoris d'un utilisateur."""
+
         with DBConnection().connection as connection:
             with connection.cursor() as cursor:
                 cursor.execute(
@@ -100,7 +100,7 @@ class CocktailUtilisateurDao(metaclass=Singleton):
                 res = cursor.fetchall()
 
         liste_cocktails_favoris = []
-        
+
         if res:
             for cocktail in res:
                 liste_cocktails_favoris.append(
@@ -110,16 +110,15 @@ class CocktailUtilisateurDao(metaclass=Singleton):
                         categorie=cocktail["categorie"],
                         verre=cocktail["verre"],
                         alcool=cocktail["alcool"],
-                        image=cocktail["image"]
-                    )
+                        image=cocktail["image"],
+                    ),
                 )
-    
+
         return liste_cocktails_favoris
 
     @log
     def update_cocktail_favoris(self, id_utilisateur, id_cocktail) -> None:
         """Ajoute un cocktail dans les favoris d'un utilisateur"""
-
         with DBConnection().connection as connection:
             with connection.cursor() as cursor:
                 cursor.execute(
@@ -136,7 +135,6 @@ class CocktailUtilisateurDao(metaclass=Singleton):
     @log
     def delete_cocktail_favoris(self, id_utilisateur, id_cocktail) -> None:
         """Supprime un cocktail des favoris d'un utilisateur"""
-
         with DBConnection().connection as connection:
             with connection.cursor() as cursor:
                 cursor.execute(
@@ -149,8 +147,3 @@ class CocktailUtilisateurDao(metaclass=Singleton):
                         "id_utilisateur": id_utilisateur,
                     },
                 )
-
-
-        
-
-
