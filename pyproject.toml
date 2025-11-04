@@ -33,6 +33,7 @@ preview=true
 select=[
     "ALL"
 ]
+
 ignore=[
     "INP001",
     "CPY",

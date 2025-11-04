@@ -2,6 +2,8 @@
 Class dao du business object Stock.
 """
 
+import logging
+
 from dao.db_connection import DBConnection
 from utils.log_decorator import log
 
@@ -65,20 +67,68 @@ def update_ingredient_stock(id_ingredient, quantite, id_unite):
             with connection.cursor() as cursor:
                 cursor.execute(
                     """
-                INSERT INTO utilisateur(quantite)
-                VALUES (%(pseudo)s, %(mail)s, %(mdp)s, %(date_naissance)s)
-                RETURNING ;
-                """,
+                    UPDATE stock
+                    SET quantite = %(quantite)s, id_unite = %(id_unite)s
+                    WHERE id_ingredient = %(id_ingredient)s
+                    RETURNING id_ingredient;
+                    """,
                     {
                         "quantite": quantite,
+                        "id_unite": id_unite,
+                        "id_ingredient": id_ingredient,
                     },
                 )
-            res = cursor.fetchone()
+                res = cursor.fetchone()
+                if res:
+                    updated = True
     except Exception as e:
         logging.info(e)
-    created = False
-    if res:
-        utilisateur.id_utilisateur = res["id_utilisateur"]
-        created = True
 
-    return created
+    return updated
+
+
+@log
+def delete_ingredient_stock(id_ingredient, qte, id_unite):
+    """Méthode qui permet de modifier la quantité d'un ingredient dans le stock.
+
+    Parameters
+    ----------
+    id_ingredient : int
+        Identifiant unique de l'ingrédient
+    quantite : float
+        Nouvelle quantité de l'ingrédient
+    id_unité : int
+        Identifiant unique de l'unité de mesure
+
+    Returns
+    -------
+    created : bool
+        renvoie si la quantité a bien était modifiée et vaut la grandeur souhaitée
+
+    """
+    try:
+        with DBConnection().connection as connection:
+            with connection.cursor() as cursor:
+                cursor.execute(
+                    """
+                    UPDATE stock
+                    SET quantite = quantite - %(quantite)s, id_unite = %(id_unite)s
+                    WHERE id_ingredient = %(id_ingredient)s
+                    RETURNING id_ingredient;
+                    """,
+                    {
+                        "quantite": quantite,
+                        "id_unite": id_unite,
+                        "id_ingredient": id_ingredient,
+                    },
+                )
+                res = cursor.fetchone()
+                if res:
+                    updated = True
+    except Exception as e:
+        logging.info(e)
+
+    return updated
+
+@log
+def 
