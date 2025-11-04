@@ -7,9 +7,9 @@ app = FastAPI(
     description="API REST pour gérer les cocktails TheCocktailDB",
     version="1.0.0",
     root_path="/proxy/8000",
+    docs_url="/",  # Swagger UI accessible directement à la racine
+    redoc_url=None,  # Désactive ReDoc
 )
-
-app.include_router(api_router)
 
 
 @app.get("/")
@@ -24,5 +24,10 @@ def root():
     }
 
 
-# ouvrir la APIREST : python -m uvicorn src.main:app --reload --host 0.0.0.0 --port 8000
-# la fermer : soit avec le raccourci "ctrl + c" soit "kill %1" dans le terminal
+app.include_router(api_router)
+
+# ouvrir la APIREST :
+# python -m uvicorn src.main:app --reload --host 0.0.0.0 --port 8000
+
+# pour la fermer :
+# soit avec le raccourci "ctrl + c" soit "kill %1" dans le terminal

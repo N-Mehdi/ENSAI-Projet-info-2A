@@ -21,7 +21,7 @@ class CocktailDao(metaclass=Singleton):
                     "SELECT *                       "
                     "FROM cocktail                  "
                     "WHERE nom = %(nom)s            ",
-                    {"nom": nom},
+                    {"nom": nom.title()},
                 )
                 res = cursor.fetchone()
         cocktail = None
