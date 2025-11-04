@@ -3,8 +3,6 @@ from dao.db_connection import DBConnection
 from utils.log_decorator import log
 from utils.singleton import Singleton
 
-# rien n'est testé et pas fini
-
 
 class CocktailUtilisateurDao(metaclass=Singleton):
     """Classe contenant les méthodes agissant sur les cocktails et utilisateurs de la base
@@ -89,7 +87,147 @@ class CocktailUtilisateurDao(metaclass=Singleton):
         return new_cocktail_id
 
     @log
-    def delete_cocktail_prive(id_utilisateur, id_cocktail) -> None:
+    def get_cocktail_ingredient(self, id_cocktail):
+        """Récupère tous les ingrédients d'un cocktail donné"""
+        with DBConnection().connection as connection:
+            with connection.cursor() as cursor:
+                cursor.execute(
+                    "SELECT id_ingredient, quantite FROM cocktail_ingredient "
+                    "WHERE id_cocktail = %(id_cocktail)s",
+                    {"id_cocktail": id_cocktail},
+                )
+                # Retourne un dictionnaire {id_ingredient: quantite}
+                return {row[0]: row[1] for row in cursor.fetchall()}
+
+    @log
+    def update_cocktail_prive_modif_ingredient(
+        self,
+        id_utilisateur,
+        id_cocktail,
+        id_ingredient,
+        quantite,
+    ) -> None:
+        """Modifie la quantité d'un ingrédient
+        dans la recette privée d'un utilisateur
+        """
+        with DBConnection().connection as connection:
+            with connection.cursor() as cursor:
+                # Vérifier si l'utilisateur est bien le propriétaire du cocktail
+                cursor.execute(
+                    "SELECT 1 FROM acces "
+                    "WHERE id_utilisateur = %(id_utilisateur)s "
+                    "AND id_cocktail = %(id_cocktail)s "
+                    "AND is_owner = TRUE",
+                    {
+                        "id_utilisateur": id_utilisateur,
+                        "id_cocktail": id_cocktail,
+                    },
+                )
+
+                # Si l'utilisateur est le propriétaire :
+                if cursor.fetchone():
+                    cursor.execute(
+                        "UPDATE cocktail_ingredient "
+                        "SET quantite = %(quantite)s "
+                        "WHERE id_ingredient = %(id_ingredient)s "
+                        "AND id_cocktail = %(id_cocktail)s",
+                        {
+                            "quantite": quantite,
+                            "id_ingredient": id_ingredient,
+                            "id_cocktail": id_cocktail,
+                        },
+                    )
+                else:
+                    # Si l'utilisateur n'est pas le propriétaire
+                    raise PermissionError(
+                        "L'utilisateur n'est pas le propriétaire du cocktail.",
+                    )
+
+    @log
+    def update_cocktail_prive_ajout_ingredient(
+        self,
+        id_utilisateur,
+        id_cocktail,
+        id_ingredient,
+        quantite,
+    ) -> None:
+        """Ajouter un ingrédient à la recette privée d'un utilisateur"""
+        with DBConnection().connection as connection:
+            with connection.cursor() as cursor:
+                # Vérifier si l'utilisateur est bien le propriétaire du cocktail
+                cursor.execute(
+                    "SELECT 1 FROM acces "
+                    "WHERE id_utilisateur = %(id_utilisateur)s "
+                    "AND id_cocktail = %(id_cocktail)s "
+                    "AND is_owner = TRUE",
+                    {
+                        "id_utilisateur": id_utilisateur,
+                        "id_cocktail": id_cocktail,
+                    },
+                )
+
+                # Si l'utilisateur est le propriétaire :
+                if cursor.fetchone():
+                    cursor.execute(
+                        "INSERT INTO cocktail_ingredient (id_cocktail,  "
+                        "                                 id_ingredient,"
+                        "                                  quantite)    "
+                        "VALUES (%(id_cocktail)s, %(id_ingredient)s,    "
+                        "                                %(quantite)s)  ",
+                        {
+                            "id_cocktail": id_cocktail,
+                            "id_ingredient": id_ingredient,
+                            "quantite": quantite,
+                        },
+                    )
+                else:
+                    # Si l'utilisateur n'est pas le propriétaire
+                    raise PermissionError(
+                        "L'utilisateur n'est pas le propriétaire du cocktail.",
+                    )
+
+    @log
+    def update_cocktail_prive_supprimer_ingredient(
+        self,
+        id_utilisateur,
+        id_cocktail,
+        id_ingredient,
+        quantite,
+    ) -> None:
+        """Supprimer un ingrédient de la recette privée d'un utilisateur"""
+        with DBConnection().connection as connection:
+            with connection.cursor() as cursor:
+                # Vérifier si l'utilisateur est bien le propriétaire du cocktail
+                cursor.execute(
+                    "SELECT 1 FROM acces "
+                    "WHERE id_utilisateur = %(id_utilisateur)s "
+                    "AND id_cocktail = %(id_cocktail)s "
+                    "AND is_owner = TRUE",
+                    {
+                        "id_utilisateur": id_utilisateur,
+                        "id_cocktail": id_cocktail,
+                    },
+                )
+
+                # Si l'utilisateur est le propriétaire :
+                if cursor.fetchone():
+                    cursor.execute(
+                        "DELETE FROM cocktail_ingredient "
+                        "WHERE id_ingredient = %(id_ingredient)s "
+                        "AND id_cocktail = %(id_cocktail)s",
+                        {
+                            "id_ingredient": id_ingredient,
+                            "id_cocktail": id_cocktail,
+                        },
+                    )
+                else:
+                    # Si l'utilisateur n'est pas le propriétaire
+                    raise PermissionError(
+                        "L'utilisateur n'est pas le propriétaire du cocktail.",
+                    )
+
+    @log
+    def delete_cocktail_prive(self, id_utilisateur, id_cocktail) -> None:
         """Supprime le cocktail privé d'un utilisateur"""
         sql_delete_acces = """
         DELETE FROM acces
@@ -115,10 +253,9 @@ class CocktailUtilisateurDao(metaclass=Singleton):
                     cursor.execute(sql_delete_cocktail, params),
                 )
 
-        @log
-        def get_favoris(self, id_utilisateur) -> list[Cocktail]:
-            """Obtenir tous les cocktails favoris d'un utilisateur."""
-
+    @log
+    def get_favoris(self, id_utilisateur) -> list[Cocktail]:
+        """Obtenir tous les cocktails favoris d'un utilisateur."""
         with DBConnection().connection as connection:
             with connection.cursor() as cursor:
                 cursor.execute(
@@ -231,7 +368,7 @@ class CocktailUtilisateurDao(metaclass=Singleton):
                     "UPDATE avis                                "
                     "SET teste = TRUE                         "
                     "WHERE id_utilisateur = %(id_utilisateur)s  "
-                    "AND id_coktail = %(id_cocktail)s           ",
+                    "AND id_cocktail = %(id_cocktail)s           ",
                     {
                         "id_cocktail": id_cocktail,
                         "id_utilisateur": id_utilisateur,
