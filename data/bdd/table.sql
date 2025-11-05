@@ -1,3 +1,5 @@
+/*
+
 CREATE TABLE IF NOT EXISTS cocktail (
     id_cocktail SERIAL PRIMARY KEY,
     nom VARCHAR(100),
@@ -54,6 +56,7 @@ CREATE TABLE IF NOT EXISTS utilisateur (
     date_inscription DATE
 );
 
+
 CREATE TABLE IF NOT EXISTS avis (
     id_utilisateur INTEGER,
     id_cocktail INTEGER,
@@ -87,6 +90,11 @@ CREATE TABLE IF NOT EXISTS liste_course (
     id_unite INTEGER,
     PRIMARY KEY (id_utilisateur, id_ingredient)
 );
+
+*/
+
+-- INSERT INTO utilisateur (mail, mot_de_passe, pseudo, date_naissance)
+-- VALUES ('monmail@example.com', 'monMotDePasse', 'monPseudo', '1990-01-01');
 
 /* 
 
@@ -138,7 +146,6 @@ ALTER TABLE stock
 ADD CONSTRAINT fk_ingredient_stock
 FOREIGN KEY (id_ingredient) REFERENCES ingredient(id_ingredient);
 
-*/
 
 ALTER TABLE cocktail_ingredient
 ALTER COLUMN id_unite TYPE INTEGER USING id_unite::INTEGER;
@@ -147,6 +154,17 @@ ALTER TABLE cocktail_ingredient
 ADD CONSTRAINT fk_unite_cocktail_ingredient
 FOREIGN KEY (id_unite) REFERENCES unite(id_unite);
 
+*/
 
+/*
 
+ALTER TABLE utilisateur
+DROP COLUMN date_inscription;
 
+ALTER TABLE utilisateur
+ADD COLUMN date_inscription timestamptz NOT NULL DEFAULT now();
+
+*/
+
+-- Vider en cascade (vide aussi les tables dépendantes)
+TRUNCATE TABLE utilisateur RESTART IDENTITY CASCADE;

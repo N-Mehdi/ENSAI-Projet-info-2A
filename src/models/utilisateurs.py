@@ -3,19 +3,19 @@ Définit des schémas pour la création d’utilisateur, l’inscription, la mis
 le changement de mot de passe, et la représentation en base de données.
 """
 
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel
 
 
 class UserBase(BaseModel):
     """Schéma de base pour les attributs de Utilisateur."""
 
     pseudo: str
-    mail: EmailStr
+    mail: str
     date_naissance: str
 
 
 class UserRegister(UserBase):
-    """Schema pour crer un nouveau compte."""
+    """Schema pour créer un nouveau compte."""
 
     mot_de_passe: str
 
@@ -36,7 +36,7 @@ class UserUpdate(BaseModel):
     """Schema pour modifier les attributs d'un utilisateur."""
 
     pseudo: str | None = None
-    mail: EmailStr | None = None
+    mail: str | None = None
     date_naissance: str | None = None
 
 

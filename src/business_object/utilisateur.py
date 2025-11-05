@@ -25,15 +25,15 @@ class Utilisateur:
         pseudo: str,
         mail: str,
         date_naissance: str,
-        mdp: str | None = None,
-        id_joueur: id | None = None,
+        mot_de_passe: str | None = None,
+        id_utilisateur: int | None = None,
     ):
         """Constructeur."""
-        self.id_joueur = id_joueur
+        self.id_utilisateur = id_utilisateur
         self.pseudo = pseudo
         self.mail = mail
         self.date_naissance = date_naissance
-        self.mdp = mdp
+        self.mot_de_passe = mot_de_passe
 
     def __str__(self) -> str:
         """Afficher les informations de l'utilisateur."""

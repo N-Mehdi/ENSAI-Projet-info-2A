@@ -1,13 +1,14 @@
+import hashlib
+
 from passlib.context import CryptContext
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
-ALGORITHM = "HS256"
-
 
 def hacher_mot_de_passe(mot_de_passe: str) -> str:
-    """Hache un du mot de passe."""
-    return pwd_context.hash(mot_de_passe)
+    """Hache un mot de passe avec bcrypt."""
+    mot_de_passe_sha256 = hashlib.sha256(mot_de_passe.encode("utf-8")).hexdigest()
+    return pwd_context.hash(mot_de_passe_sha256)
 
 
 def verifier_mot_de_passe(mot_de_passe: str, hashed_mot_de_passe: str) -> bool:

@@ -6,6 +6,8 @@ import logging
 
 from business_object.utilisateur import Utilisateur
 from dao.db_connection import DBConnection
+from src.models.utilisateurs import UserCreate
+from src.utils.exceptions import DAOError
 from utils.log_decorator import log
 from utils.singleton import Singleton
 
@@ -16,12 +18,12 @@ class UtilisateurDao(metaclass=Singleton):
     """
 
     @log
-    def create_compte(self, utilisateur) -> bool:
+    def create_compte(self, utilisateur: UserCreate) -> bool:
         """Création d'un compte utilisateur.
 
         Parameters
         ----------
-        utilisateur : Utilisateur
+        utilisateur : UserCreate
 
         Returns
         -------
@@ -36,36 +38,37 @@ class UtilisateurDao(metaclass=Singleton):
                 with connection.cursor() as cursor:
                     cursor.execute(
                         """
-                    INSERT INTO utilisateur(pseudo, mail, mdp, date_naissance)
-                    VALUES (%(pseudo)s, %(mail)s, %(mdp)s, %(date_naissance)s)
-                    RETURNING id_utilisateur;
+                    INSERT INTO utilisateur(pseudo, mail, date_naissance, mot_de_passe)
+                    VALUES (%(pseudo)s, %(mail)s, %(date_naissance)s, %(mot_de_passe_hashed)s)
+                    RETURNING *
                     """,
                         {
                             "pseudo": utilisateur.pseudo,
                             "mail": utilisateur.mail,
-                            "mdp": utilisateur.mdp,
                             "date_naissance": utilisateur.date_naissance,
+                            "mot_de_passe_hashed": utilisateur.mot_de_passe_hashed,
                         },
                     )
-                res = cursor.fetchone()
+                    res = cursor.fetchone()
+                connection.commit()
         except Exception as e:
             logging.info(e)
+            raise DAOError("Impossible de créer le compte") from e
         created = False
         if res:
-            utilisateur.id_utilisateur = res["id_utilisateur"]
             created = True
 
         return created
 
     @log
-    def se_connecter(self, pseudo, mdp) -> Utilisateur:
+    def se_connecter(self, pseudo, mot_de_passe) -> Utilisateur:
         """Se connecter grâce à son pseudo et son mot de passe.
 
         Parameters
         ----------
         pseudo : str
             pseudo de l'utilisateur
-        mdp : str
+        mot_de_passe : str
             mot de passe de l'utilisateur
 
         Returns
@@ -83,9 +86,9 @@ class UtilisateurDao(metaclass=Singleton):
                         SELECT *
                         FROM utilisateur
                         WHERE pseudo = %(pseudo)s
-                        AND mdp = %(mdp)s;
+                        AND mot_de_passe = %(mot_de_passe)s;
                         """,
-                        {"pseudo": pseudo, "mdp": mdp},
+                        {"pseudo": pseudo, "mot_de_passe": mot_de_passe},
                     )
                     res = cursor.fetchone()
         except Exception as e:
@@ -98,7 +101,7 @@ class UtilisateurDao(metaclass=Singleton):
                 pseudo=res["pseudo"],
                 mail=res["mail"],
                 date_naissance=res["date_naissance"],
-                mdp=res["mdp"],
+                mot_de_passe=res["mot_de_passe"],
                 id_utilisateur=res["id_utilisateur"],
             )
         return utilisateur
@@ -171,7 +174,7 @@ class UtilisateurDao(metaclass=Singleton):
                 pseudo=res["pseudo"],
                 mail=res["mail"],
                 date_naissace=res["date_naissance"],
-                mdp=res["mdp"],
+                mot_de_passe=res["mot_de_passe"],
                 id_utilisateur=res["id_utilisateur"],
             )
         return utilisateur
