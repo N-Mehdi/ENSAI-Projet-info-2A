@@ -178,3 +178,28 @@ class UtilisateurDao(metaclass=Singleton):
                 id_utilisateur=res["id_utilisateur"],
             )
         return utilisateur
+
+    def recuperer_mot_de_passe_hashe_par_mail(self, mail: str) -> dict | None:
+        """Récupérer le mot de passe hashé et le pseudo d'un utilisateur par son email.
+
+        Parameters
+        ----------
+            mail: L'email de l'utilisateur.
+
+        Returns
+        -------
+            dict avec {mail : mot_de_passe} si trouvé, None sinon.
+
+        """
+        try:
+            with DBConnection().connection as connection:
+                with connection.cursor() as cursor:
+                    cursor.execute(
+                        "SELECT mot_de_passe FROM utilisateur WHERE mail = %(mail)s",
+                        {"mail": mail},
+                    )
+                    res = cursor.fetchone()
+        except Exception as e:
+            logging.info(e)
+            raise
+        return res

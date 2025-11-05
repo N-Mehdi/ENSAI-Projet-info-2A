@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException, status
 
 from src.dao.utilisateur_dao import UtilisateurDao
-from src.models.utilisateurs import UserRegister
+from src.models.utilisateurs import UserLogin, UserRegister
 from src.service.utilisateur_service import UtilisateurService
 from src.utils.exceptions import DAOError, UserAlreadyExistsError
 
@@ -25,3 +25,13 @@ def creer_compte(donnees: UserRegister) -> str:
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Could not register user.",
         ) from None
+
+
+@router.post("/connexion", status_code=200)
+def connexion(donnees: UserLogin):
+    """Endpoint pour se connecter à un compte existant."""
+    try:
+        message = service.se_connecter(donnees)
+        return {"message": message}
+    except ValueError as e:
+        raise HTTPException(status_code=401, detail=str(e))

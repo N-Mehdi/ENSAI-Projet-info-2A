@@ -15,25 +15,32 @@ class UserBase(BaseModel):
 
 
 class UserRegister(UserBase):
-    """Schema pour créer un nouveau compte."""
+    """Schéma pour créer un nouveau compte."""
 
     mot_de_passe: str
 
 
+class UserLogin(BaseModel):
+    """Schéma pour se connecter à son compte."""
+
+    mail: str
+    mot_de_passe: str
+
+
 class UserRead(UserBase):
-    """Schema pour lire des données sur l'utilisateur."""
+    """Schéma pour lire des données sur l'utilisateur."""
 
     id_utilisateur: int
 
 
 class UserCreate(UserBase):
-    """Schema pour créer un utilisateur dans la base de données."""
+    """Schéma pour créer un utilisateur dans la base de données."""
 
     mot_de_passe_hashed: str
 
 
 class UserUpdate(BaseModel):
-    """Schema pour modifier les attributs d'un utilisateur."""
+    """Schéma pour modifier les attributs d'un utilisateur."""
 
     pseudo: str | None = None
     mail: str | None = None
@@ -41,17 +48,17 @@ class UserUpdate(BaseModel):
 
 
 class UserUpdateFull(UserUpdate):
-    """Schema pour modifier tous les attributs d'un utilisateur."""
+    """Schéma pour modifier tous les attributs d'un utilisateur."""
 
     mot_de_passe_hashed: str | None = None
 
 
 class UserUpdatePassword(BaseModel):
-    """Schema pour changer le mot de passe d'un utilisateur."""
+    """Schéma pour changer le mot de passe d'un utilisateur."""
 
     mot_de_passe_actuel: str
     mot_de_passe_nouveau: str
 
 
 class User(UserRead, UserCreate):
-    """Schema pour un utilisateur dans la base de données."""
+    """Schéma pour un utilisateur dans la base de données."""

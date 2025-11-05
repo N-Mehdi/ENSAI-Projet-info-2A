@@ -1,6 +1,6 @@
 from src.dao.utilisateur_dao import UtilisateurDao
-from src.models.utilisateurs import UserCreate, UserRegister
-from src.utils.securite import hacher_mot_de_passe
+from src.models.utilisateurs import UserCreate, UserLogin, UserRegister
+from src.utils.securite import hacher_mot_de_passe, verifier_mot_de_passe
 
 
 class UtilisateurService:
@@ -36,3 +36,35 @@ class UtilisateurService:
         self.utilisateur_dao.create_compte(user_create)
 
         return "compte crée avec succès."
+
+    def se_connecter(self, donnees: UserLogin) -> str:
+        """Se connecter à un compte existant.
+
+        Parameters
+        ----------
+            donnees: UserLogin contenant mail et mot_de_passe.
+
+        Returns
+        -------
+            str: Message de confirmation avec le pseudo de l'utilisateur.
+
+        Raises
+        ------
+            ValueError: Si l'email n'existe pas ou si le mot de passe est incorrect.
+
+        """
+        donnees_bdd = self.utilisateur_dao.recuperer_mot_de_passe_hashe_par_mail(
+            donnees.mail,
+        )
+
+        if not donnees_bdd:
+            raise ValueError("Email ou mot de passe incorrect")
+
+        # Hacher le mot de passe fourni et le comparer avec celui en base
+        mot_de_passe = donnees.mot_de_passe
+        mot_de_passe_hache = donnees_bdd["mot_de_passe"]
+
+        if not verifier_mot_de_passe(mot_de_passe, mot_de_passe_hache):
+            raise ValueError("Email ou mot de passe incorrect")
+
+        return "Connexion réussie ! Bienvenue"

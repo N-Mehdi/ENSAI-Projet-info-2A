@@ -13,7 +13,8 @@ def hacher_mot_de_passe(mot_de_passe: str) -> str:
 
 def verifier_mot_de_passe(mot_de_passe: str, hashed_mot_de_passe: str) -> bool:
     """Vérifie un mot de passe avec son hachage."""
-    return pwd_context.verify(mot_de_passe, hashed_mot_de_passe)
+    mot_de_passe_sha256 = hashlib.sha256(mot_de_passe.encode("utf-8")).hexdigest()
+    return pwd_context.verify(mot_de_passe_sha256, hashed_mot_de_passe)
 
 
 '''def create_access_token(subject: int, expires_delta: timedelta) -> str:
