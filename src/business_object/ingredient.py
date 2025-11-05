@@ -1,42 +1,29 @@
-class Ingredient:
-    """Classe représentant un Ingredient.
+       """return [self.pseudo, self.mail, self.date_naissance]"""
+
+    class Ingredient:
+    """Classe représentant un ingrédient.
 
     Attributs
-    ---------
-    id_ingredient ; int
-   
-        id de l'ingrédient
-    Note : num
-        Note laissée par l'utilisateur qui a posté l'Ingredient
-    nom_ingredient : chr
-        nom de l'ingrédient
-    alcool_ingredient : bool
-        Booléen vérifiant si l'ingrédient est alcoolisé
+    ----------
+    id_ingredient : int
+        Identifiant unique de l'ingrédient.
+    nom : str | None
+        Nom de l'ingrédient.
+    ingredient_alcool : bool
+        True si l'ingrédient est alcoolisé, False sinon.
     """
 
+    def __init__(self, id_ingredient: int, nom: str | None = None, ingredient_alcool: bool = False):
+        """Constructeur de la classe Ingredient."""
+        self.id_ingredient = id_ingredient
+        self.nom = nom
+        self.ingredient_alcool = ingredient_alcool
 
-def __init__(
-    self,
-    id_ingredient: str,
-    nom_ingredient: chr | None = None,
-    alcool_ingredient: bool
-) -> Utilisateur:
+    def __str__(self) -> str:
+        """Retourne une représentation lisible de l'ingrédient."""
+        alcool_status = "alcoolisé" if self.ingredient_alcool else "non alcoolisé"
+        return f"Ingredient({self.nom}, {alcool_status})"
 
-"""Constructeur."""
-
-self.id_ingredient = id_ingredient
-self.nom_ingredient = nom_ingredient
-self.alcool_ingredient = alcool_ingredient
-
-
-def __str__(self) -> str:
-    """Afficher les informations de l'ingrédient."""
-    return f"Ingredient({self.nom_ingredient}, {self.})"
-
-
-def as_list(self) -> list[str]:
-    """Retourne les pseudo, note et nom_ingredient dans une Matrice."""
-
-
-   
-    """return [self.pseudo, self.mail, self.date_naissance]"""
+    def as_list(self) -> list[str]:
+        """Retourne les attributs principaux sous forme de liste de chaînes."""
+        return [str(self.id_ingredient), self.nom or "", str(self.ingredient_alcool)]
