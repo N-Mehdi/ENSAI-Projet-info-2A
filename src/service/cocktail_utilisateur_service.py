@@ -4,15 +4,8 @@ from src.business_object.cocktail import cocktail
 from src.business_object.utilisateur import utilisateur
 
 
-class cocktail_utilisateur_service:
-   """Service gérant les cocktails favoris, privés et testés des utilisateurs."""
-
-    def __init__(self):
-        # Dictionnaires de stockage temporaire :
-        # chaque utilisateur a une liste d'IDs de cocktails.
-        self._cocktails_favoris = {}  # {id_utilisateur: [id_cocktail]}
-        self._cocktails_prives = {}   # {id_utilisateur: [id_cocktail]}
-        self._cocktails_testes = {}   # {id_utilisateur: [id_cocktail]}
+class Cocktail_utilisateur_service:
+    """Service gérant les cocktails favoris, privés et testés des utilisateurs."""
 
     # -------------------- FAVORIS --------------------
 
@@ -36,7 +29,7 @@ class cocktail_utilisateur_service:
         """Retourne la liste des IDs de cocktails favoris de l'utilisateur."""
         return self._cocktails_favoris.get(id_utilisateur, [])
 
-    # -------------------- PRIVÉS --------------------
+        # -------------------- PRIVÉS --------------------
 
     def ajouter_cocktail_prive(self, id_utilisateur: int, id_cocktail: int) -> bool:
         """Ajoute un cocktail privé à un utilisateur."""
@@ -58,7 +51,7 @@ class cocktail_utilisateur_service:
         """Retourne la liste des IDs de cocktails privés d’un utilisateur."""
         return self._cocktails_prives.get(id_utilisateur, [])
 
-    # -------------------- TESTÉS --------------------
+        # -------------------- TESTÉS --------------------
 
     def ajouter_cocktail_teste(self, id_utilisateur: int, id_cocktail: int) -> bool:
         """Ajoute un cocktail testé à un utilisateur."""

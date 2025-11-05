@@ -1,6 +1,7 @@
 import unittest
 from src.business_object.Ingredient import Ingredient
 
+
 class TestIngredient(unittest.TestCase):
 
     def test_creation_ingredient(self):
@@ -19,6 +20,3 @@ class TestIngredient(unittest.TestCase):
         ingredient = Ingredient(3, "Tequila", True)
         result = ingredient.as_list()
         self.assertEqual(result, ["3", "Tequila", "True"])
-
-if __name__ == "__main__":
-    unittest.main()
