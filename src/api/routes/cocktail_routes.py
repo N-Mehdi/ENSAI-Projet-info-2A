@@ -1,5 +1,6 @@
 from fastapi import APIRouter, HTTPException, status
 
+from src.api.deps import CurrentUser
 from src.dao.cocktail_dao import CocktailDao
 from src.service.cocktail_service import CocktailService
 
@@ -9,7 +10,11 @@ cocktail_service = CocktailService(cocktail_dao=CocktailDao())
 
 
 @router.get("/sequence/{sequence}")
-def rechercher_cocktail_par_sequence_debut(sequence: str, max_resultats: int):
+def rechercher_cocktail_par_sequence_debut(
+    sequence: str,
+    max_resultats: int,
+    utilisateur: CurrentUser,
+):
     """Récupère les cocktails qui commencent par une séquence donnée
        (dans la limite de max_resultats).
 

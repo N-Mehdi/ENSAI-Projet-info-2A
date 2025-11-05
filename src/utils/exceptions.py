@@ -29,3 +29,37 @@ class UserAlreadyExistsError(Exception):
         :return: None
         """
         super().__init__(f"Username {pseudo} already exists")
+
+
+class UserNotFoundError(Exception):
+    """Raised when a user is not found.
+
+    :param user_id: ID of the user (optional)
+    :param username: Username of the user (optional)
+    """
+
+    def __init__(self, user_id: int | None = None, username: str | None = None) -> None:
+        """Initialize UserNotFoundError.
+
+        :param user_id: ID of the user (optional)
+        :param username: Username of the user (optional)
+        :return: None
+        """
+        if user_id:
+            msg = f"No user found for id={user_id}"
+        elif username:
+            msg = f"No user found for username='{username}'"
+        else:
+            msg = "No user found"
+        super().__init__(msg)
+
+
+class AuthError(Exception):
+    """Raised for authentication errors."""
+
+    def __init__(self) -> None:
+        """Initialize AuthError.
+
+        :return: None
+        """
+        super().__init__("Could not validate credentials")

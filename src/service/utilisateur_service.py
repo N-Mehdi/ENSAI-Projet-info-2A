@@ -53,18 +53,16 @@ class UtilisateurService:
             ValueError: Si l'email n'existe pas ou si le mot de passe est incorrect.
 
         """
-        donnees_bdd = self.utilisateur_dao.recuperer_mot_de_passe_hashe_par_mail(
+        utilisateur = self.utilisateur_dao.recuperer_par_mail(
             donnees.mail,
         )
 
-        if not donnees_bdd:
+        if not utilisateur:
             raise ValueError("Email ou mot de passe incorrect")
 
         # Hacher le mot de passe fourni et le comparer avec celui en base
-        mot_de_passe = donnees.mot_de_passe
-        mot_de_passe_hache = donnees_bdd["mot_de_passe"]
 
-        if not verifier_mot_de_passe(mot_de_passe, mot_de_passe_hache):
+        if not verifier_mot_de_passe(donnees.mot_de_passe, utilisateur.mot_de_passe):
             raise ValueError("Email ou mot de passe incorrect")
 
-        return "Connexion réussie ! Bienvenue"
+        return
