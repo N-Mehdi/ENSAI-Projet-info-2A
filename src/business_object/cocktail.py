@@ -42,3 +42,29 @@ class Cocktail:
     def __str__(self) -> str:
         """Afficher les informations du cocktail."""
         return f"Cocktail({self.nom}, {self.categorie})"
+
+    def __repr__(self) -> str:
+        """Représentation du cocktail."""
+        return (
+            f"Cocktail("
+            f"id_cocktail={self.id_cocktail!r}, "
+            f"nom={self.nom!r}, "
+            f"categorie={self.categorie!r}, "
+            f"verre={self.verre!r}, "
+            f"alcool={self.alcool!r}, "
+            f"image={self.image!r})"
+        )
+
+    def __eq__(self, other) -> bool:
+        """Vérifie l'égalité entre deux objets Cocktail."""
+        if not isinstance(other, Cocktail):
+            return NotImplemented
+
+        return (
+            self.id_cocktail == other.id_cocktail
+            and self.nom == other.nom
+            and self.categorie == other.categorie
+            and self.verre == other.verre
+            and self.alcool == other.alcool
+            and self.image == other.image
+        )
