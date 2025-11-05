@@ -18,6 +18,8 @@ class CocktailService:
 
         Raises
         ------
+        TypeError
+            Si le nom n'est pas une chaîne de caractères.
         ValueError
             Si le nom est vide ou None.
         LookupError
@@ -29,6 +31,9 @@ class CocktailService:
             L'objet Cocktail correspondant au nom fourni.
 
         """
+        if not isinstance(nom, str):
+            raise TypeError("Le nom du cocktail doit être une chaîne de caractères.")
+
         if not nom:
             raise ValueError("Le nom du cocktail doit être fourni.")
 
@@ -39,16 +44,57 @@ class CocktailService:
 
         return cocktail
 
-    def rechercher_cocktail_par_premiere_lettre(self, lettre: str) -> list:
-        """Doc"""
-        if not lettre or len(lettre) != 1:
-            raise ValueError("Une seule lettre doit être fournie pour la recherche.")
+    def rechercher_cocktail_par_sequence_debut(
+        self,
+        sequence: str,
+        max_resultats: int,
+    ) -> list:
+        """Recherche les cocktails dont le nom commence par une séquence donnée.
 
-        cocktails = self.cocktail_dao.rechercher_cocktail_par_premiere_lettre(lettre)
+        Parameters
+        ----------
+        sequence : str
+            Sequence par laquelle commence le nom du cocktail.
+        max_resultats : int
+            Le nombre maximal de cocktails à retourner (triés par ordre alaphabétique)
+
+        Raises
+        ------
+        TypeError
+            Si séquence n'est pas une chaîne de caractères.
+            Si max_resultats n'est pas un entier.
+        ValueError
+            Si la séquence est vide ou None.
+            Si le nombre max_resultats n'est pas supérieur ou égal à 1.
+        LookupError
+            Si aucun cocktail n'est trouvé pour le nom donné.
+
+        Returns
+        -------
+        cocktails : list[Cocktail]
+            Liste de cocktails commençant par la séquence fournie.
+
+        """
+        if not isinstance(sequence, str):
+            raise TypeError("L'argument 'sequence' doit être une chaîne de caractères.")
+
+        if not sequence:
+            raise ValueError("La séquence ne doit pas être de longueur nulle.")
+
+        if not isinstance(max_resultats, int):
+            raise TypeError("L'argument 'max_resultats' doit être un entier.")
+
+        if max_resultats < 1:
+            raise ValueError("L'argument 'max_resultats' doit être supérieur ou égal à 1.")
+
+        cocktails = self.cocktail_dao.rechercher_cocktail_par_sequence_debut(
+            sequence,
+            max_resultats,
+        )
 
         if not cocktails:
             raise LookupError(
-                f"Aucun cocktail trouvé pour la lettre '{lettre.upper()}'",
+                f"Aucun cocktail trouvé pour la séquence '{sequence}'",
             )
 
         return cocktails

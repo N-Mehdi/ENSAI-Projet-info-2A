@@ -15,15 +15,14 @@ class CocktailDao(metaclass=Singleton):
 
     @log
     def rechercher_cocktail_par_nom(self, nom) -> Cocktail:
-        with DBConnection().connection as connection:
-            with connection.cursor() as cursor:
-                cursor.execute(
-                    "SELECT *                       "
-                    "FROM cocktail                  "
-                    "WHERE nom = %(nom)s            ",
-                    {"nom": nom.title()},
-                )
-                res = cursor.fetchone()
+        with DBConnection().connection as connection, connection.cursor() as cursor:
+            cursor.execute(
+                "SELECT *                       "
+                "FROM cocktail                  "
+                "WHERE nom = %(nom)s            ",
+                {"nom": nom.title()},
+            )
+            res = cursor.fetchone()
         cocktail = None
         if res:
             cocktail = Cocktail(
@@ -37,16 +36,21 @@ class CocktailDao(metaclass=Singleton):
         return cocktail
 
     @log
-    def rechercher_cocktail_par_premiere_lettre(self, lettre) -> list[Cocktail]:
-        with DBConnection().connection as connection:
-            with connection.cursor() as cursor:
-                cursor.execute(
-                    "SELECT *                       "
-                    "FROM cocktail                  "
-                    "WHERE nom LIKE %(lettre)s      ",
-                    {"lettre": lettre.upper() + "%"},
-                )
-                res = cursor.fetchall()
+    def rechercher_cocktail_par_sequence_debut(
+        self,
+        sequence,
+        max_resultats,
+    ) -> list[Cocktail]:
+        with DBConnection().connection as connection, connection.cursor() as cursor:
+            cursor.execute(
+                "SELECT *                       "
+                "FROM cocktail                  "
+                "WHERE nom ILIKE %(sequence)s   "
+                "ORDER BY nom ASC               "
+                "LIMIT %(max_resultats)s        ",
+                {"sequence": sequence + "%", "max_resultats": max_resultats},
+            )
+            res = cursor.fetchall()
 
         liste_cocktails = []
         if res:
@@ -64,10 +68,3 @@ class CocktailDao(metaclass=Singleton):
 
     def rechercher_cocktail_aleatoire():
         pass
-
-
-y = CocktailDao()
-x = y.rechercher_cocktail_par_nom("Margarita")
-z = y.rechercher_cocktail_par_premiere_lettre("M")
-print(x, z)
-# il faut ajouter la méthode __repr__() dans la BO cocktail pour que le print(z) n'affiche plus des noms de cocktails codés

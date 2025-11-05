@@ -4,12 +4,12 @@ Classe DAO du business object Utilistauer.
 
 import logging
 
-from business_object.utilisateur import Utilisateur
-from dao.db_connection import DBConnection
+from src.business_object.utilisateur import Utilisateur
+from src.dao.db_connection import DBConnection
 from src.models.utilisateurs import UserCreate
 from src.utils.exceptions import DAOError
-from utils.log_decorator import log
-from utils.singleton import Singleton
+from src.utils.log_decorator import log
+from src.utils.singleton import Singleton
 
 
 class UtilisateurDao(metaclass=Singleton):

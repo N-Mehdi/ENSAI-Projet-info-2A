@@ -1,23 +1,10 @@
-from src.dao.utilisateur_dao import UtilisateurDao
+from src.dao.cocktail_dao import CocktailDao
 from src.models.utilisateurs import UserLogin
 from src.utils.securite import hacher_mot_de_passe, verifier_mot_de_passe
 
-utilisateur_dao = UtilisateurDao()
 
+dao = CocktailDao()
 
-donnees = UserLogin(mail="Y", mot_de_passe="azerty")
-user_mail = donnees.mail
+x = dao.rechercher_cocktail_par_sequence_debut("M", 3)
 
-mail = "Y"
-
-
-donnees_bdd = utilisateur_dao.recuperer_mot_de_passe_hashe_par_mail(
-    donnees.mail,
-)
-
-
-print(donnees)
-print(donnees_bdd)
-print(donnees_bdd["mot_de_passe"])
-
-print(verifier_mot_de_passe("azerty", hacher_mot_de_passe("azerty")))
+print(x, len(x))
