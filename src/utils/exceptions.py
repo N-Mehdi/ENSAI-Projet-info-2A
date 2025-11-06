@@ -31,15 +31,49 @@ class ServiceError(Exception):
 
 
 class UserAlreadyExistsError(Exception):
-    """Raised when attempting to create a user with an existing username.
+    """Raised when attempting to create a user with an existing pseudo.
 
-    :param username: Username that already exists
+    :param pseudo: pseudo that already exists
     """
 
     def __init__(self, pseudo: str) -> None:
         """Initialize UserAlreadyExistsError.
 
-        :param username: Username that already exists
+        :param pseudo: pseudo that already exists
         :return: None
         """
-        super().__init__(f"Username {pseudo} already exists")
+        super().__init__(f"pseudo {pseudo} already exists")
+
+
+class UserNotFoundError(Exception):
+    """Raised when a user is not found.
+
+    :param id_utilisateur: ID of the user (optional)
+    :param pseudo: pseudo of the user (optional)
+    """
+
+    def __init__(self, id_utilisateur: int | None = None, pseudo: str | None = None) -> None:
+        """Initialize UserNotFoundError.
+
+        :param id_utilisateur: ID of the user (optional)
+        :param pseudo: pseudo of the user (optional)
+        :return: None
+        """
+        if id_utilisateur:
+            msg = f"No user found for id={id_utilisateur}"
+        elif pseudo:
+            msg = f"No user found for pseudo='{pseudo}'"
+        else:
+            msg = "No user found"
+        super().__init__(msg)
+
+
+class AuthError(Exception):
+    """Raised for authentication errors."""
+
+    def __init__(self) -> None:
+        """Initialize AuthError.
+
+        :return: None
+        """
+        super().__init__("Could not validate credentials")

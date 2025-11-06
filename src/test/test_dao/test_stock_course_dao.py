@@ -1,90 +1,143 @@
 import unittest
-from unittest.mock import MagicMock
+from datetime import date
+from unittest.mock import MagicMock, patch
 
 from src.business_object.stock import Stock
+from src.business_object.utilisateur import Utilisateur
 from src.dao.stock_course_dao import Stock_course_dao
 
 
 class TestStockCourseDao(unittest.TestCase):
     """Tests unitaires de la classe Stock_course_dao."""
 
-    def setUp(self):
-        """Initialisation d'un DAO simulé avant chaque test."""
-        self.dao = Stock_course_dao()
-        self.dao.get_stock = MagicMock()
-        self.dao.update_ingredient_stock = MagicMock()
-        self.dao.delete_ingredient_stock = MagicMock()
-        self.dao.get_liste_course = MagicMock()
-        self.dao.updtate_liste_course = MagicMock()
-        self.dao.delete_ingredient_liste_course = MagicMock()
+    def _setup_mock_db(self, mock_db, fetchone_return=None):
+        """Helper pour configurer le mock de la base de données."""
+        mock_connection = MagicMock()
+        mock_cursor = MagicMock()
+        mock_cursor.fetchone.return_value = fetchone_return
 
-        # Stock d'exemple pour le test
-        self.stock = Stock(1, "Stock_Mehdi")
+        # Configure les context managers
+        mock_connection.cursor.return_value.__enter__.return_value = mock_cursor
+        mock_connection.cursor.return_value.__exit__.return_value = None
+        mock_db.return_value.connection.__enter__.return_value = mock_connection
+        mock_db.return_value.connection.__exit__.return_value = None
 
-    def test_get_stock_succes(self):
+        return mock_cursor
+
+    @patch("src.dao.stock_course_dao.DBConnection")
+    def test_get_stock_succes(self, mock_db):
         """Teste que get_stock renvoie bien le stock attendu."""
-        resultat_attendu = [(1, 2.5, 3)]
-        self.dao.get_stock.return_value = resultat_attendu
+        mock_cursor = self._setup_mock_db(mock_db, fetchone_return=(1, 2.5, 3))
 
-        res = self.dao.get_stock(self.stock)
+        stock = Stock(1, "Stock_Mehdi")
+        res = Stock_course_dao.get_stock(stock)
 
-        self.assertEqual(res, resultat_attendu)
-        self.dao.get_stock.assert_called_once_with(self.stock)
+        self.assertEqual(res, (1, 2.5, 3))
+        mock_cursor.execute.assert_called_once()
 
-    def test_get_stock_aucun_resultat(self):
+    @patch("src.dao.stock_course_dao.DBConnection")
+    def test_get_stock_aucun_resultat(self, mock_db):
         """Teste que get_stock renvoie None si aucun stock trouvé."""
-        self.dao.get_stock.return_value = None
+        mock_cursor = self._setup_mock_db(mock_db, fetchone_return=None)
 
-        res = self.dao.get_stock(self.stock)
+        stock = Stock(1, "Stock_Mehdi")
+        res = Stock_course_dao.get_stock(stock)
+
         self.assertIsNone(res)
 
-    def test_update_ingredient_stock_succes(self):
-        """Teste la mise à jour réussie d’un ingrédient dans le stock."""
-        self.dao.update_ingredient_stock.return_value = True
+    @patch("src.dao.stock_course_dao.DBConnection")
+    def test_update_ingredient_stock_succes(self, mock_db):
+        """Teste la mise à jour réussie d'un ingrédient dans le stock."""
+        mock_cursor = self._setup_mock_db(mock_db, fetchone_return=(1,))
 
-        res = self.dao.update_ingredient_stock(1, 100.0, 2)
+        res = Stock_course_dao.update_ingredient_stock(1, 100.0, 2)
+
         self.assertTrue(res)
+        mock_cursor.execute.assert_called_once()
 
-    def test_update_ingredient_stock_echec(self):
-        """Teste la mise à jour échouée d’un ingrédient."""
-        self.dao.update_ingredient_stock.return_value = False
+    @patch("src.dao.stock_course_dao.DBConnection")
+    def test_update_ingredient_stock_echec(self, mock_db):
+        """Teste la mise à jour échouée d'un ingrédient (fetchone retourne None)."""
+        mock_cursor = self._setup_mock_db(mock_db, fetchone_return=None)
 
-        res = self.dao.update_ingredient_stock(1, 50.0, 2)
+        # Avec le bug corrigé (updated = False au début), ça devrait retourner False
+        res = Stock_course_dao.update_ingredient_stock(1, 50.0, 2)
         self.assertFalse(res)
 
-    def test_delete_ingredient_stock(self):
-        """Teste la suppression d’un ingrédient du stock."""
-        self.dao.delete_ingredient_stock.return_value = True
+    @patch("src.dao.stock_course_dao.DBConnection")
+    def test_delete_ingredient_stock_succes(self, mock_db):
+        """Teste la suppression réussie d'un ingrédient du stock."""
+        mock_cursor = self._setup_mock_db(mock_db, fetchone_return=(1,))
 
-        res = self.dao.delete_ingredient_stock(1, 20.0, 2)
+        res = Stock_course_dao.delete_ingredient_stock(1, 20.0, 2)
+
         self.assertTrue(res)
+        mock_cursor.execute.assert_called_once()
 
-    def test_get_liste_course(self):
-        """Teste la récupération de la liste de course d’un utilisateur."""
-        resultat_attendu = [(1, 2.0, 3)]
-        self.dao.get_liste_course.return_value = resultat_attendu
+    @patch("src.dao.stock_course_dao.DBConnection")
+    def test_delete_ingredient_stock_echec(self, mock_db):
+        """Teste l'échec de suppression d'un ingrédient."""
+        mock_cursor = self._setup_mock_db(mock_db, fetchone_return=None)
 
-        utilisateur = MagicMock()
-        utilisateur.id_utilisateur = 5
+        res = Stock_course_dao.delete_ingredient_stock(1, 20.0, 2)
+        self.assertFalse(res)
 
-        res = self.dao.get_liste_course(utilisateur)
+    @patch("src.dao.stock_course_dao.DBConnection")
+    def test_get_liste_course_succes(self, mock_db):
+        """Teste la récupération de la liste de course d'un utilisateur."""
+        mock_cursor = self._setup_mock_db(mock_db, fetchone_return=(1, 2.0, 3))
 
-        self.assertEqual(res, resultat_attendu)
-        self.dao.get_liste_course.assert_called_once_with(utilisateur)
+        utilisateur = Utilisateur(5, "Mehdi", date(2000, 1, 1))
+        res = Stock_course_dao.get_liste_course(utilisateur)
 
-    def test_updtate_liste_course_succes(self):
-        """Teste la mise à jour réussie d’un ingrédient dans la liste de course."""
-        self.dao.updtate_liste_course.return_value = True
+        self.assertEqual(res, (1, 2.0, 3))
+        mock_cursor.execute.assert_called_once()
 
-        res = self.dao.updtate_liste_course(1, 50.0, 3)
+    @patch("src.dao.stock_course_dao.DBConnection")
+    def test_get_liste_course_aucun_resultat(self, mock_db):
+        """Teste la récupération d'une liste de course vide."""
+        mock_cursor = self._setup_mock_db(mock_db, fetchone_return=None)
+
+        utilisateur = Utilisateur(5, "Mehdi", date(2000, 1, 1))
+        res = Stock_course_dao.get_liste_course(utilisateur)
+
+        self.assertIsNone(res)
+
+    @patch("src.dao.stock_course_dao.DBConnection")
+    def test_updtate_liste_course_succes(self, mock_db):
+        """Teste la mise à jour réussie d'un ingrédient dans la liste de course."""
+        mock_cursor = self._setup_mock_db(mock_db, fetchone_return=(1,))
+
+        res = Stock_course_dao.updtate_liste_course(1, 50.0, 3)
+
         self.assertTrue(res)
+        mock_cursor.execute.assert_called_once()
 
-    def test_delete_ingredient_liste_course(self):
-        """Teste la suppression d’un ingrédient dans la liste de course."""
-        self.dao.delete_ingredient_liste_course.return_value = True
+    @patch("src.dao.stock_course_dao.DBConnection")
+    def test_updtate_liste_course_echec(self, mock_db):
+        """Teste l'échec de mise à jour dans la liste de course."""
+        mock_cursor = self._setup_mock_db(mock_db, fetchone_return=None)
 
-        res = self.dao.delete_ingredient_liste_course(1, 20.0, 3)
+        res = Stock_course_dao.updtate_liste_course(1, 50.0, 3)
+        self.assertFalse(res)
+
+    @patch("src.dao.stock_course_dao.DBConnection")
+    def test_delete_ingredient_liste_course_succes(self, mock_db):
+        """Teste la suppression réussie d'un ingrédient dans la liste de course."""
+        mock_cursor = self._setup_mock_db(mock_db, fetchone_return=(1,))
+
+        res = Stock_course_dao.delete_ingredient_liste_course(1, 20.0, 3)
+
         self.assertTrue(res)
+        mock_cursor.execute.assert_called_once()
+
+    @patch("src.dao.stock_course_dao.DBConnection")
+    def test_delete_ingredient_liste_course_echec(self, mock_db):
+        """Teste l'échec de suppression dans la liste de course."""
+        mock_cursor = self._setup_mock_db(mock_db, fetchone_return=None)
+
+        res = Stock_course_dao.delete_ingredient_liste_course(1, 20.0, 3)
+        self.assertFalse(res)
 
 
 if __name__ == "__main__":

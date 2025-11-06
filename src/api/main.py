@@ -11,3 +11,4 @@ api_router = APIRouter(prefix="/api")
 
 api_router.include_router(cocktail_router)
 api_router.include_router(utilisateur_router)
+# api_router.include_router(stock_course_router)
