@@ -59,6 +59,7 @@ class Stock_course_dao:
             renvoie si la quantité a bien était modifiée et vaut la grandeur souhaitée
 
         """
+        updated = False
         try:
             with DBConnection().connection as connection, connection.cursor() as cursor:
                 cursor.execute(
@@ -102,6 +103,7 @@ class Stock_course_dao:
             renvoie si la quantité a bien était modifiée et vaut la grandeur souhaitée
 
         """
+        updated = False
         try:
             with DBConnection().connection as connection, connection.cursor() as cursor:
                 cursor.execute(
@@ -173,6 +175,7 @@ class Stock_course_dao:
             renvoie si la quantité a bien était modifiée et vaut la grandeur souhaitée
 
         """
+        updated = False
         try:
             with DBConnection().connection as connection, connection.cursor() as cursor:
                 cursor.execute(
@@ -216,6 +219,7 @@ class Stock_course_dao:
             renvoie si la quantité a bien était modifiée et vaut la grandeur souhaitée
 
         """
+        updated = False
         try:
             with DBConnection().connection as connection, connection.cursor() as cursor:
                 cursor.execute(

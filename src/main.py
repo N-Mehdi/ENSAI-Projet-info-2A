@@ -1,12 +1,13 @@
 from fastapi import FastAPI
 
 from src.api.main import api_router
+from src.utils.settings import settings
 
 app = FastAPI(
     title="API Cocktails",
     description="API REST pour gérer les cocktails TheCocktailDB",
     version="1.0.0",
-    root_path="/proxy/8000",
+    root_path=settings.ROOT_PATH,
     docs_url="/",  # Swagger UI accessible directement à la racine
     redoc_url=None,  # Désactive ReDoc
 )
