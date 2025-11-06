@@ -14,7 +14,7 @@ from src.dao.utilisateur_dao import UtilisateurDao
 from src.models import TokenPayload, User
 from src.service.utilisateur_service import UtilisateurService
 from src.utils import securite
-from src.utils.exceptions import UserNotFoundError
+from src.utils.exceptions import DAOError, UserNotFoundError
 from src.utils.settings import settings
 
 reusable_oauth2 = OAuth2PasswordBearer(
@@ -59,6 +59,11 @@ def get_user(token: TokenDep) -> User:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="No such user in database",
+        ) from None
+    except DAOError as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Database error: {e!s}",
         ) from None
 
 

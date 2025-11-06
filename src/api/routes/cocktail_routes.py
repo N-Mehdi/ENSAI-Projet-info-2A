@@ -2,6 +2,7 @@ from fastapi import APIRouter, HTTPException, status
 
 from src.dao.cocktail_dao import CocktailDao
 from src.service.cocktail_service import CocktailService
+from src.api.deps import CurrentUser
 
 router = APIRouter(prefix="/cocktails", tags=["Cocktails"])
 
@@ -103,7 +104,7 @@ def rechercher_cocktail_par_sequence_debut(sequence: str, max_resultats: int):
 
 
 @router.get("/nom/{nom}")
-def rechercher_cocktail_par_nom(nom: str):
+def rechercher_cocktail_par_nom(nom: str, current_user: CurrentUser ):
     """Récupère tous le cocktail via son nom.
 
     Parameters

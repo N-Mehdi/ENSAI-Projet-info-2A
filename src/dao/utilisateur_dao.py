@@ -148,10 +148,10 @@ class UtilisateurDao(metaclass=Singleton):
             with DBConnection().connection as connection, connection.cursor() as cursor:
                 cursor.execute(
                     """
-                    SELECT id_utilisateur, pseudo, mail, mot_de_passe, date_naissance
-                    FROM utilisateur
-                    WHERE id_utilisateur = %(id_utilisateur)s
-                    """,
+                        SELECT id_utilisateur, pseudo, mail, mot_de_passe, date_naissance
+                        FROM utilisateur
+                        WHERE id_utilisateur = %(id_utilisateur)s
+                        """,
                     {"id_utilisateur": id_utilisateur},
                 )
                 row = cursor.fetchone()
@@ -160,53 +160,12 @@ class UtilisateurDao(metaclass=Singleton):
                     id_utilisateur=row["id_utilisateur"],
                     pseudo=row["pseudo"],
                     mail=row["mail"],
-                    date_naissance=row["date_naissance"],
+                    date_naissance=row["date_naissance"].isoformat(),
                     mot_de_passe_hashed=row["mot_de_passe"],
                 )
             return None
         except DBError as exc:
             raise DAOError from exc
-
-    @log
-    def trouver_par_id(self, id_utilisateur) -> Utilisateur:
-        """Trouver un utilisateur grâce à son identifiant.
-
-        Parameters
-        ----------
-        id_utilisateur : int
-            identifiant de l'utilisateur à trouver
-
-        Returns
-        -------
-        utilisateur : Utilisateur
-            renvoie l'utilisateur cherché par id
-
-        """
-        try:
-            with DBConnection().connection as connection, connection.cursor() as cursor:
-                cursor.execute(
-                    """
-                    "SELECT *
-                    FROM utilisateur
-                    WHERE id_utilisateur = %(id_utilisateur)s;
-                    """,
-                    {"id_utilisateur": id_utilisateur},
-                )
-                res = cursor.fetchone()
-        except Exception as e:
-            logging.info(e)
-            raise
-
-        utilisateur = None
-        if res:
-            utilisateur = Utilisateur(
-                pseudo=res["pseudo"],
-                mail=res["mail"],
-                date_naissace=res["date_naissance"],
-                mot_de_passe=res["mot_de_passe"],
-                id_utilisateur=res["id_utilisateur"],
-            )
-        return utilisateur
 
     def recuperer_mot_de_passe_hashe_par_mail(self, mail: str) -> dict | None:
         """Récupérer le mot de passe hashé et le pseudo d'un utilisateur par son email.
@@ -266,119 +225,115 @@ class UtilisateurDao(metaclass=Singleton):
             )
         return utilisateur
 
+    def pseudo_existe(self, pseudo: str) -> bool:
+        """Vérifie si un pseudo existe déjà en base de données.
 
-def pseudo_existe(self, pseudo: str) -> bool:
-    """Vérifie si un pseudo existe déjà en base de données.
+        Args:
+            pseudo: Le pseudo à vérifier
 
-    Args:
-        pseudo: Le pseudo à vérifier
+        Returns:
+            bool: True si le pseudo existe, False sinon
 
-    Returns:
-        bool: True si le pseudo existe, False sinon
+        """
+        try:
+            with DBConnection().connection as connection:
+                with connection.cursor() as cursor:
+                    cursor.execute(
+                        "SELECT EXISTS(SELECT 1 FROM utilisateur WHERE pseudo = %(pseudo)s)",
+                        {"pseudo": pseudo},
+                    )
+                    result = cursor.fetchone()
+                if result:
+                    return result["exists"]
+                return False
+        except Exception as e:
+            raise DAOError from e
 
-    """
-    try:
-        with DBConnection().connection as connection:
-            with connection.cursor() as cursor:
+    def mail_existe(self, mail: str) -> bool:
+        """Vérifie si un email existe déjà en base de données.
+
+        Args:
+            mail: L'email à vérifier
+
+        Returns:
+            bool: True si l'email existe, False sinon
+
+        """
+        try:
+            with DBConnection().connection as connection:
+                with connection.cursor() as cursor:
+                    cursor.execute(
+                        "SELECT EXISTS(SELECT 1 FROM utilisateur WHERE mail = %(mail)s)",
+                        {"mail": mail},
+                    )
+                    result = cursor.fetchone()
+                if result:
+                    return result["exists"]
+                return False
+        except Exception as e:
+            logging.exception("Erreur lors de la vérification de l'email")
+            raise DAOError("Erreur lors de la vérification de l'email") from e
+
+    @log
+    def update_mot_de_passe(self, id_utilisateur: int, nouveau_mot_de_passe_hashed: str) -> bool:
+        """Met à jour le mot de passe d'un utilisateur.
+
+        Parameters
+        ----------
+        id_utilisateur : int
+            L'identifiant de l'utilisateur
+        nouveau_mot_de_passe_hashed : str
+            Le nouveau mot de passe déjà hashé
+
+        Returns
+        -------
+        bool
+            True si le mot de passe a été mis à jour, False sinon.
+
+        """
+        try:
+            with DBConnection().connection as connection, connection.cursor() as cursor:
                 cursor.execute(
-                    "SELECT EXISTS(SELECT 1 FROM utilisateur WHERE pseudo = %(pseudo)s)",
-                    {"pseudo": pseudo},
+                    """
+                    UPDATE utilisateur
+                    SET mot_de_passe = %(mot_de_passe)s
+                    WHERE id_utilisateur = %(id_utilisateur)s
+                    """,
+                    {"mot_de_passe": nouveau_mot_de_passe_hashed, "id_utilisateur": id_utilisateur},
                 )
-                result = cursor.fetchone()
-            if result:
-                return result["exists"]
-            return False
-    except Exception as e:
-        raise DAOError from e
+                connection.commit()
+                return cursor.rowcount > 0
+        except Exception as e:
+            raise DAOError("Impossible de mettre à jour le mot de passe") from e
 
+    @log
+    def update_pseudo(self, id_utilisateur: int, nouveau_pseudo: str) -> bool:
+        """Met à jour le pseudo d'un utilisateur.
 
-def mail_existe(self, mail: str) -> bool:
-    """Vérifie si un email existe déjà en base de données.
+        Parameters
+        ----------
+        id_utilisateur : int
+            L'identifiant de l'utilisateur
+        nouveau_pseudo : str
+            Le nouveau pseudo
 
-    Args:
-        mail: L'email à vérifier
+        Returns
+        -------
+        bool
+            True si le pseudo a été mis à jour, False sinon.
 
-    Returns:
-        bool: True si l'email existe, False sinon
-
-    """
-    try:
-        with DBConnection().connection as connection:
-            with connection.cursor() as cursor:
+        """
+        try:
+            with DBConnection().connection as connection, connection.cursor() as cursor:
                 cursor.execute(
-                    "SELECT EXISTS(SELECT 1 FROM utilisateur WHERE mail = %(mail)s)",
-                    {"mail": mail},
+                    """
+                    UPDATE utilisateur
+                    SET pseudo = %(pseudo)s
+                    WHERE id_utilisateur = %(id_utilisateur)s
+                    """,
+                    {"pseudo": nouveau_pseudo, "id_utilisateur": id_utilisateur},
                 )
-                result = cursor.fetchone()
-            if result:
-                return result["exists"]
-            return False
-    except Exception as e:
-        logging.exception("Erreur lors de la vérification de l'email")
-        raise DAOError("Erreur lors de la vérification de l'email") from e
-
-
-@log
-def update_mot_de_passe(self, id_utilisateur: int, nouveau_mot_de_passe_hashed: str) -> bool:
-    """Met à jour le mot de passe d'un utilisateur.
-
-    Parameters
-    ----------
-    id_utilisateur : int
-        L'identifiant de l'utilisateur
-    nouveau_mot_de_passe_hashed : str
-        Le nouveau mot de passe déjà hashé
-
-    Returns
-    -------
-    bool
-        True si le mot de passe a été mis à jour, False sinon.
-
-    """
-    try:
-        with DBConnection().connection as connection, connection.cursor() as cursor:
-            cursor.execute(
-                """
-                UPDATE utilisateur
-                SET mot_de_passe = %(mot_de_passe)s
-                WHERE id_utilisateur = %(id_utilisateur)s
-                """,
-                {"mot_de_passe": nouveau_mot_de_passe_hashed, "id_utilisateur": id_utilisateur},
-            )
-            connection.commit()
-            return cursor.rowcount > 0
-    except Exception as e:
-        raise DAOError("Impossible de mettre à jour le mot de passe") from e
-
-
-@log
-def update_pseudo(self, id_utilisateur: int, nouveau_pseudo: str) -> bool:
-    """Met à jour le pseudo d'un utilisateur.
-
-    Parameters
-    ----------
-    id_utilisateur : int
-        L'identifiant de l'utilisateur
-    nouveau_pseudo : str
-        Le nouveau pseudo
-
-    Returns
-    -------
-    bool
-        True si le pseudo a été mis à jour, False sinon.
-
-    """
-    try:
-        with DBConnection().connection as connection, connection.cursor() as cursor:
-            cursor.execute(
-                """
-                UPDATE utilisateur
-                SET pseudo = %(pseudo)s
-                WHERE id_utilisateur = %(id_utilisateur)s
-                """,
-                {"pseudo": nouveau_pseudo, "id_utilisateur": id_utilisateur},
-            )
-            connection.commit()
-            return cursor.rowcount > 0
-    except Exception as e:
-        raise DAOError("Impossible de mettre à jour le pseudo") from e
+                connection.commit()
+                return cursor.rowcount > 0
+        except Exception as e:
+            raise DAOError("Impossible de mettre à jour le pseudo") from e
