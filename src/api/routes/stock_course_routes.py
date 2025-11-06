@@ -222,3 +222,218 @@ def retirer_ingredient_stock(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Erreur serveur: {e!s}",
         )
+
+
+@router.get("/liste-course/{id_utilisateur}")
+def get_liste_course(id_utilisateur: int, nom: str = "Utilisateur"):
+    """Récupère la liste de courses d'un utilisateur.
+
+    Parameters
+    ----------
+    id_utilisateur : int
+        Identifiant unique de l'utilisateur
+    nom : str, optional
+        Nom de l'utilisateur (par défaut "Utilisateur")
+
+    Returns
+    -------
+    dict
+        Dictionnaire contenant la liste de courses
+
+    Raises
+    ------
+    HTTPException
+        - 400 si id_utilisateur n'est pas valide
+        - 404 si aucune liste de courses n'est trouvée
+        - 500 en cas d'erreur serveur
+
+    """
+    if not isinstance(id_utilisateur, int) or id_utilisateur < 1:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Le paramètre 'id_utilisateur' doit être un entier supérieur à 0.",
+        )
+
+    try:
+        # Créer l'objet Utilisateur (adapter selon ton constructeur)
+        utilisateur = Utilisateur(id_utilisateur=id_utilisateur, nom=nom, date_naissance=None)
+
+        # Récupérer la liste de courses
+        liste_course = Stock_course_service.get_liste_course_utilisateur(utilisateur)
+
+        if not liste_course:
+            raise LookupError(
+                f"Aucune liste de courses trouvée pour l'utilisateur {id_utilisateur}",
+            )
+
+        # Formater la réponse
+        return {
+            "id_utilisateur": id_utilisateur,
+            "liste_course": [
+                {
+                    "id_ingredient": item[0],
+                    "quantite": item[1],
+                    "id_unite": item[2],
+                }
+                for item in liste_course
+            ],
+            "count": len(liste_course),
+        }
+
+    except LookupError as e:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=str(e),
+        )
+
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Erreur serveur: {e!s}",
+        )
+
+
+@router.put("/liste-course/ingredient")
+def modifier_ingredient_liste_course(
+    id_ingredient: int,
+    quantite: float,
+    id_unite: int,
+):
+    """Modifie la quantité d'un ingrédient dans la liste de courses.
+
+    Parameters
+    ----------
+    id_ingredient : int
+        Identifiant unique de l'ingrédient
+    quantite : float
+        Nouvelle quantité
+    id_unite : int
+        Identifiant de l'unité de mesure
+
+    Returns
+    -------
+    dict
+        Message de confirmation
+
+    Raises
+    ------
+    HTTPException
+        - 400 si les paramètres ne sont pas valides
+        - 500 en cas d'erreur serveur
+
+    """
+    if not isinstance(id_ingredient, int) or id_ingredient < 1:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Le paramètre 'id_ingredient' doit être un entier supérieur à 0.",
+        )
+
+    if not isinstance(quantite, (int, float)) or quantite < 0:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Le paramètre 'quantite' doit être un nombre positif.",
+        )
+
+    if not isinstance(id_unite, int) or id_unite < 1:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Le paramètre 'id_unite' doit être un entier supérieur à 0.",
+        )
+
+    try:
+        updated = Stock_course_service.modifier_liste_course(
+            id_ingredient,
+            quantite,
+            id_unite,
+        )
+
+        if not updated:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="La modification n'a pas pu être effectuée.",
+            )
+
+        return {
+            "message": "Ingrédient modifié dans la liste de courses",
+            "id_ingredient": id_ingredient,
+            "nouvelle_quantite": quantite,
+        }
+
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Erreur serveur: {e!s}",
+        )
+
+
+@router.delete("/liste-course/ingredient")
+def retirer_ingredient_liste_course(
+    id_ingredient: int,
+    quantite: float,
+    id_unite: int,
+):
+    """Retire une certaine quantité d'un ingrédient de la liste de courses.
+
+    Parameters
+    ----------
+    id_ingredient : int
+        Identifiant unique de l'ingrédient
+    quantite : float
+        Quantité à retirer
+    id_unite : int
+        Identifiant de l'unité de mesure
+
+    Returns
+    -------
+    dict
+        Message de confirmation
+
+    Raises
+    ------
+    HTTPException
+        - 400 si les paramètres ne sont pas valides
+        - 500 en cas d'erreur serveur
+
+    """
+    if not isinstance(id_ingredient, int) or id_ingredient < 1:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Le paramètre 'id_ingredient' doit être un entier supérieur à 0.",
+        )
+
+    if not isinstance(quantite, (int, float)) or quantite <= 0:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Le paramètre 'quantite' doit être un nombre strictement positif.",
+        )
+
+    if not isinstance(id_unite, int) or id_unite < 1:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Le paramètre 'id_unite' doit être un entier supérieur à 0.",
+        )
+
+    try:
+        updated = Stock_course_service.retirer_de_liste_course(
+            id_ingredient,
+            quantite,
+            id_unite,
+        )
+
+        if not updated:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="La suppression n'a pas pu être effectuée.",
+            )
+
+        return {
+            "message": "Quantité retirée de la liste de courses",
+            "id_ingredient": id_ingredient,
+            "quantite_retiree": quantite,
+        }
+
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Erreur serveur: {e!s}",
+        )
