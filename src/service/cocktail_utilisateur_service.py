@@ -4,7 +4,7 @@ from src.business_object.cocktail import cocktail
 from src.business_object.utilisateur import utilisateur
 
 
-class Cocktail_utilisateur_service:
+class Cocktailutilisateurservice:
     """Service gérant les cocktails favoris, privés et testés des utilisateurs."""
 
     # -------------------- FAVORIS --------------------
@@ -41,8 +41,8 @@ class Cocktail_utilisateur_service:
 
     def retirer_cocktail_prive(self, id_utilisateur: int, id_cocktail: int) -> bool:
         """Retire un cocktail privé d’un utilisateur."""
-        if id_utilisateur in self._cocktails_prives:
-            if id_cocktail in self._cocktails_prives[id_utilisateur]:
+        if id_utilisateur in self.cocktails_prives:
+            if id_cocktail in self.cocktails_prives[id_utilisateur]:
                 self._cocktails_prives[id_utilisateur].remove(id_cocktail)
                 return True
         return False

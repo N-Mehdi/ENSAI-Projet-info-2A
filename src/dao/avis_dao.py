@@ -1,26 +1,47 @@
-import logging
+"""Data Access Object pour les avis."""
+from typing import Any
 
-from business_object.utilisateur import Utilisateur
+from business_object.utilisateur import Utilisateur  # noqa: F401  # utilisé si extension plus tard
 from dao.db_connection import DBConnection
 from utils.log_decorator import log
 from utils.singleton import Singleton
 
-class AvisDAO(metaclass = Singleton):
-    """classe contenant les méthodes d'appel à la BDD pour les avis"""
+
+class AvisDAO(metaclass=Singleton):
+    """Classe contenant les méthodes d'appel à la base de données pour les avis."""
+
     @log
-    def listage(nom_cocktail):
-        "faire jointure avis cocktail et "
+    def rechercher_avis(self, nom_cocktail: str) -> list[list[Any]]:
+        """
+        Retourne la liste des avis liés à un cocktail.
 
+        Fait la jointure entre Avis, Cocktail et Utilisateur
+        pour récupérer les informations des avis associés
+        à un cocktail donné par son nom.
 
-def rechercher_avis(cocktail):
-    """fait la jointure entre AVIS et Cocktail pour récupérer le nom, puis renvoie une liste des avis des cocktailsavec ce nom
-    donc renvoie une liste de liste [note,commentaire]"""
-    with DBconnection().connection as connection :
-        with connection.cursor() as cursor:
-            cursor.execute:
-            "SELECT avis.note,"           
-            "avis.commentaire,"
-            "avis.nom_users"
-            "FROM  Avis avis"
-            "LEFT JOIN cocktail"
-            "using(id_cocktail)"
+        Args:
+            nom_cocktail (str): le nom du cocktail à rechercher
+
+        Returns:
+            list[list[Any]]: liste de listes contenant [note, commentaire, pseudo]
+        """
+        query = """
+            SELECT
+                avis.note,
+                avis.commentaire,
+                utilisateur.pseudo
+            FROM avis
+            LEFT JOIN cocktail USING (id_cocktail)
+            LEFT JOIN utilisateur USING (id_utilisateur)
+            WHERE cocktail.nom = %(nom)s
+        """
+
+        with DBConnection().connection as connection:
+            with connection.cursor() as cursor:
+                cursor.execute(query, {"nom": nom_cocktail})
+                results = cursor.fetchall()
+
+        liste_avis = [
+            [row["note"], row["commentaire"], row["pseudo"]] for row in results or []
+        ]
+        return liste_avis
