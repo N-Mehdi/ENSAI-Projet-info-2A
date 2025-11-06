@@ -16,6 +16,20 @@ class DAOError(Exception):
         # pour avoir une vrai Exception python avec le message personnalisé
 
 
+class ServiceError(Exception):
+    """doc."""
+
+    def __init__(self, message: str | None = None) -> None:
+        """Initialize ServiceError.
+
+        :param message: Error message (optional)
+        :return: None
+        """
+        if message is None:
+            message = "Something went wrong in the Service."
+        super().__init__(message)
+
+
 class UserAlreadyExistsError(Exception):
     """Raised when attempting to create a user with an existing username.
 

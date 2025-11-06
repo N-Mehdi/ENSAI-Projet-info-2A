@@ -60,5 +60,9 @@ class UserUpdatePassword(BaseModel):
     mot_de_passe_nouveau: str
 
 
+class UserUpdatePseudo(BaseModel):
+    nouveau_pseudo: str
+
+
 class User(UserRead, UserCreate):
     """Schéma pour un utilisateur dans la base de données."""
