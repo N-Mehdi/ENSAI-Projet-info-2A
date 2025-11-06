@@ -1,7 +1,8 @@
 from fastapi import APIRouter, HTTPException, status
 
+from src.api.deps import CurrentUser
 from src.dao.utilisateur_dao import UtilisateurDao
-from src.models.utilisateurs import UserLogin, UserRegister
+from src.models.utilisateurs import UserRegister
 from src.service.utilisateur_service import UtilisateurService
 from src.utils.exceptions import DAOError, UserAlreadyExistsError
 
@@ -27,11 +28,16 @@ def creer_compte(donnees: UserRegister) -> str:
         ) from None
 
 
-@router.post("/connexion", status_code=200)
-def connexion(donnees: UserLogin):
-    """Endpoint pour se connecter à un compte existant."""
-    try:
-        message = service.se_connecter(donnees)
-        return {"message": message}
-    except ValueError as e:
-        raise HTTPException(status_code=401, detail=str(e))
+@router.post("/logout")
+def logout(utilisateur: CurrentUser) -> dict:
+    """Déconnecter l'utilisateur.
+
+    Le vrai logout se fait côté client en supprimant le token.
+
+    :param utilisateur: Utilisateur actuellement connecté
+    :return: Message de confirmation
+    """
+    return {
+        "message": f"Utilisateur {utilisateur.pseudo} déconnecté avec succès",
+        "detail": "Supprimez le token de votre stockage local",
+    }

@@ -15,10 +15,10 @@ from src.utils import securite
 from src.utils.config import settings
 from src.utils.exceptions import AuthError
 
-router = APIRouter(tags=["connexion"])
+router = APIRouter(prefix="/connexion", tags=["connexion"])
 
 
-@router.post("/connexion/access-token")
+@router.post("/access-token", include_in_schema=False)
 def login_access_token(
     cur: CursorDep,
     form_data: Annotated[OAuth2PasswordRequestForm, Depends()],
@@ -30,14 +30,20 @@ def login_access_token(
     :raises HTTPException: Raised if authentication fails
     :return: Token object with access token and type
     """
+    if not form_data.username or not form_data.password:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Le nom d'utilisateur et le mot de passe sont requis",
+        )
+
     try:
         service = UtilisateurService(UtilisateurDao(cur))
         user = service.se_connecter(
-            UserLogin(mail=form_data.username, mot_de_passe=form_data.password),
+            UserLogin(pseudo=form_data.username, mot_de_passe=form_data.password),
         )
         access_token_expires = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
         access_token = securite.create_access_token(
-            user.id,
+            user.id_utilisateur,
             expires_delta=access_token_expires,
         )
         return Token(access_token=access_token, token_type=settings.TOKEN_TYPE)

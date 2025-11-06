@@ -17,18 +17,22 @@ class DAOError(Exception):
 
 
 class UserAlreadyExistsError(Exception):
-    """Raised when attempting to create a user with an existing username.
+    """Raised when attempting to create a user with an existing username or email."""
 
-    :param username: Username that already exists
-    """
-
-    def __init__(self, pseudo: str) -> None:
+    def __init__(self, field: str, value: str) -> None:
         """Initialize UserAlreadyExistsError.
 
-        :param username: Username that already exists
-        :return: None
+        Args:
+            field: Le champ qui existe déjà ('pseudo' ou 'mail')
+            value: La valeur qui existe déjà
+
         """
-        super().__init__(f"Username {pseudo} already exists")
+        if field == "pseudo":
+            super().__init__(f"Le pseudo '{value}' est déjà utilisé")
+        elif field == "mail":
+            super().__init__(f"L'email '{value}' est déjà utilisé")
+        else:
+            super().__init__(f"Le champ {field} avec la valeur '{value}' existe déjà")
 
 
 class UserNotFoundError(Exception):
@@ -63,3 +67,6 @@ class AuthError(Exception):
         :return: None
         """
         super().__init__("Could not validate credentials")
+
+
+
