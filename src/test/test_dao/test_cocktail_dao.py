@@ -39,7 +39,9 @@ class TestCocktailDao:
         # THEN
         assert resultat is None
 
-    def test_rechercher_cocktail_sequence_debut_succes(self):
+    # Tests pour rechercher_cocktail_sequence_debut
+
+    def test_rechercher_cocktail_par_sequence_debut_succes(self):
         # GIVEN
         sequence = "ma"
         max_resultats = 3
@@ -77,7 +79,7 @@ class TestCocktailDao:
         ]
         assert resultat == cocktails_attendus
 
-    def test_rechercher_cocktail_sequence_debut_non_trouve(self):
+    def test_rechercher_cocktail_par_sequence_debut_non_trouve(self):
         # GIVEN
         sequence = "Maaa"
         max_resultats = 1

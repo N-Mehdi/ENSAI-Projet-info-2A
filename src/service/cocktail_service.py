@@ -31,11 +31,11 @@ class CocktailService:
             L'objet Cocktail correspondant au nom fourni.
 
         """
-        if not isinstance(nom, str):
-            raise TypeError("Le nom du cocktail doit être une chaîne de caractères.")
-
         if not nom:
             raise ValueError("Le nom du cocktail doit être fourni.")
+
+        if not isinstance(nom, str):
+            raise TypeError("Le nom du cocktail doit être une chaîne de caractères.")
 
         cocktail = self.cocktail_dao.rechercher_cocktail_par_nom(nom)
 
@@ -47,7 +47,7 @@ class CocktailService:
     def rechercher_cocktail_par_sequence_debut(
         self,
         sequence: str,
-        max_resultats: int,
+        max_resultats: int = 10,
     ) -> list:
         """Recherche les cocktails dont le nom commence par une séquence donnée.
 
@@ -75,11 +75,11 @@ class CocktailService:
             Liste de cocktails commençant par la séquence fournie.
 
         """
+        if not sequence:
+            raise ValueError("La séquence doit être fournie.")
+
         if not isinstance(sequence, str):
             raise TypeError("L'argument 'sequence' doit être une chaîne de caractères.")
-
-        if not sequence:
-            raise ValueError("La séquence ne doit pas être de longueur nulle.")
 
         if not isinstance(max_resultats, int):
             raise TypeError("L'argument 'max_resultats' doit être un entier.")
