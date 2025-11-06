@@ -28,17 +28,16 @@ class Stock_course_dao:
 
         """
         res = None
-        with DBConnection().connection as connection:
-            with connection.cursor() as cursor:
-                cursor.execute(
-                    """
+        with DBConnection().connection as connection, connection.cursor() as cursor:
+            cursor.execute(
+                """
                     SELECT id_ingredient, quantite, id_unite
                     FROM stock
                     WHERE id_stock = %(id_stock)s;
                     """,
-                    {"id_stock": stock.id_stock},
-                )
-                res = cursor.fetchone()
+                {"id_stock": stock.id_stock},
+            )
+            res = cursor.fetchone()
         return res
 
     @log
@@ -61,24 +60,23 @@ class Stock_course_dao:
 
         """
         try:
-            with DBConnection().connection as connection:
-                with connection.cursor() as cursor:
-                    cursor.execute(
-                        """
+            with DBConnection().connection as connection, connection.cursor() as cursor:
+                cursor.execute(
+                    """
                         UPDATE stock
                         SET quantite = %(quantite)s, id_unite = %(id_unite)s
                         WHERE id_ingredient = %(id_ingredient)s
                         RETURNING id_ingredient;
                         """,
-                        {
-                            "quantite": quantite,
-                            "id_unite": id_unite,
-                            "id_ingredient": id_ingredient,
-                        },
-                    )
-                    res = cursor.fetchone()
-                    if res:
-                        updated = True
+                    {
+                        "quantite": quantite,
+                        "id_unite": id_unite,
+                        "id_ingredient": id_ingredient,
+                    },
+                )
+                res = cursor.fetchone()
+                if res:
+                    updated = True
         except Exception as e:
             logging.info(e)
 
@@ -105,24 +103,23 @@ class Stock_course_dao:
 
         """
         try:
-            with DBConnection().connection as connection:
-                with connection.cursor() as cursor:
-                    cursor.execute(
-                        """
+            with DBConnection().connection as connection, connection.cursor() as cursor:
+                cursor.execute(
+                    """
                         UPDATE stock
                         SET quantite = quantite - %(quantite)s, id_unite = %(id_unite)s
                         WHERE id_ingredient = %(id_ingredient)s
                         RETURNING id_ingredient;
                         """,
-                        {
-                            "quantite": quantite,
-                            "id_unite": id_unite,
-                            "id_ingredient": id_ingredient,
-                        },
-                    )
-                    res = cursor.fetchone()
-                    if res:
-                        updated = True
+                    {
+                        "quantite": quantite,
+                        "id_unite": id_unite,
+                        "id_ingredient": id_ingredient,
+                    },
+                )
+                res = cursor.fetchone()
+                if res:
+                    updated = True
         except Exception as e:
             logging.info(e)
 
@@ -144,17 +141,16 @@ class Stock_course_dao:
 
         """
         res = None
-        with DBConnection().connection as connection:
-            with connection.cursor() as cursor:
-                cursor.execute(
-                    """
+        with DBConnection().connection as connection, connection.cursor() as cursor:
+            cursor.execute(
+                """
                     SELECT id_ingredient, quantite, id_unite
                     FROM liste_course
                     WHERE id_utilisateur = %(id_utilisateur)s;
                     """,
-                    {"id_utilisateur": utilisateur.id_utilisateur},
-                )
-                res = cursor.fetchone()
+                {"id_utilisateur": utilisateur.id_utilisateur},
+            )
+            res = cursor.fetchone()
         return res
 
     @log
@@ -178,24 +174,23 @@ class Stock_course_dao:
 
         """
         try:
-            with DBConnection().connection as connection:
-                with connection.cursor() as cursor:
-                    cursor.execute(
-                        """
+            with DBConnection().connection as connection, connection.cursor() as cursor:
+                cursor.execute(
+                    """
                         UPDATE liste_course
                         SET quantite = %(quantite)s, id_unite = %(id_unite)s
                         WHERE id_ingredient = %(id_ingredient)s
                         RETURNING id_ingredient;
                         """,
-                        {
-                            "quantite": quantite,
-                            "id_unite": id_unite,
-                            "id_ingredient": id_ingredient,
-                        },
-                    )
-                    res = cursor.fetchone()
-                    if res:
-                        updated = True
+                    {
+                        "quantite": quantite,
+                        "id_unite": id_unite,
+                        "id_ingredient": id_ingredient,
+                    },
+                )
+                res = cursor.fetchone()
+                if res:
+                    updated = True
         except Exception as e:
             logging.info(e)
 
@@ -222,24 +217,23 @@ class Stock_course_dao:
 
         """
         try:
-            with DBConnection().connection as connection:
-                with connection.cursor() as cursor:
-                    cursor.execute(
-                        """
+            with DBConnection().connection as connection, connection.cursor() as cursor:
+                cursor.execute(
+                    """
                         UPDATE stock
                         SET quantite = quantite - %(quantite)s, id_unite = %(id_unite)s
                         WHERE id_ingredient = %(id_ingredient)s
                         RETURNING id_ingredient;
                         """,
-                        {
-                            "quantite": quantite,
-                            "id_unite": id_unite,
-                            "id_ingredient": id_ingredient,
-                        },
-                    )
-                    res = cursor.fetchone()
-                    if res:
-                        updated = True
+                    {
+                        "quantite": quantite,
+                        "id_unite": id_unite,
+                        "id_ingredient": id_ingredient,
+                    },
+                )
+                res = cursor.fetchone()
+                if res:
+                    updated = True
         except Exception as e:
             logging.info(e)
 

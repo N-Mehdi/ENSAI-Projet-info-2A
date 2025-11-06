@@ -1,11 +1,11 @@
 import unittest
 from unittest.mock import MagicMock
+
 from src.business_object.Ingredient import Ingredient
 from src.service.ingredient_dao import IngredientDao
-from src.service.verification_service import est_alcoolise_par_nom  # si tu as mis la fonction dans un autre module
+
 
 class TestIngredientDao(unittest.TestCase):
-
     def setUp(self):
         # Crée un DAO simulé
         self.dao = IngredientDao()
@@ -32,6 +32,7 @@ class TestIngredientDao(unittest.TestCase):
         self.dao.rechercher_ingredient_par_nom.return_value = None
         result = self.dao.rechercher_ingredient_par_nom("Inconnu")
         self.assertIsNone(result)
+
 
 if __name__ == "__main__":
     unittest.main()
