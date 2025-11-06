@@ -16,19 +16,19 @@ def get_stock(id_stock: int, nom_stock: str = "Stock"):
 
     Parameters
     ----------
-    id_stock : int
+    id_stock : int\n
         Identifiant unique du stock
-    nom_stock : str, optional
+    nom_stock : str, optional\n
         Nom du stock (par défaut "Stock")
 
     Returns
     -------
-    dict
+    dict\n
         Dictionnaire contenant les informations du stock et ses ingrédients
 
     Raises
     ------
-    HTTPException
+    HTTPException\n
         - 400 si id_stock n'est pas valide
         - 404 si le stock n'est pas trouvé
         - 500 en cas d'erreur serveur
@@ -88,21 +88,21 @@ def modifier_ingredient_stock(
 
     Parameters
     ----------
-    id_ingredient : int
+    id_ingredient : int\n
         Identifiant unique de l'ingrédient
-    quantite : float
+    quantite : float\n
         Nouvelle quantité
-    id_unite : int
+    id_unite : int\n
         Identifiant de l'unité de mesure
 
     Returns
     -------
-    dict
+    dict\n
         Message de confirmation
 
     Raises
     ------
-    HTTPException
+    HTTPException\n
         - 400 si les paramètres ne sont pas valides
         - 500 en cas d'erreur serveur
 
@@ -161,21 +161,21 @@ def retirer_ingredient_stock(
 
     Parameters
     ----------
-    id_ingredient : int
+    id_ingredient : int\n
         Identifiant unique de l'ingrédient
-    quantite : float
+    quantite : float\n
         Quantité à retirer
-    id_unite : int
+    id_unite : int\n
         Identifiant de l'unité de mesure
 
     Returns
     -------
-    dict
+    dict\n
         Message de confirmation
 
     Raises
     ------
-    HTTPException
+    HTTPException\n
         - 400 si les paramètres ne sont pas valides
         - 500 en cas d'erreur serveur
 
