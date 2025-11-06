@@ -1,6 +1,6 @@
 from src.dao.utilisateur_dao import UtilisateurDao
-from src.models.utilisateurs import User, UserCreate, UserLogin, UserRegister
-from src.utils.exceptions import ServiceError
+from src.models.utilisateurs import User, UserCreate, UserRegister
+from src.utils.exceptions import AuthError, ServiceError, UserNotFoundError
 from src.utils.securite import hacher_mot_de_passe, verifier_mot_de_passe
 
 
@@ -44,37 +44,14 @@ class UtilisateurService:
             raise ServiceError(f"Erreur DAO lors de la création du compte : {e}") from e
         return "compte crée avec succès."
 
-    def se_connecter(self, donnees: UserLogin) -> str:
-        """Se connecter à un compte existant.
-
-        Parameters
-        ----------
-            donnees: UserLogin contenant mail et mot_de_passe.
-
-        Returns
-        -------
-            str: Message de confirmation avec le pseudo de l'utilisateur.
-
-        Raises
-        ------
-            ValueError: Si l'email n'existe pas ou si le mot de passe est incorrect.
-
-        """
-        donnees_bdd = self.utilisateur_dao.recuperer_mot_de_passe_hashe_par_mail(
-            donnees.mail,
-        )
-
-        if not donnees_bdd:
-            raise ValueError("Email ou mot de passe incorrect")
-
-        # Hacher le mot de passe fourni et le comparer avec celui en base
-        mot_de_passe = donnees.mot_de_passe
-        mot_de_passe_hache = donnees_bdd["mot_de_passe"]
-
-        if not verifier_mot_de_passe(mot_de_passe, mot_de_passe_hache):
-            raise ValueError("Email ou mot de passe incorrect")
-
-        return "Connexion réussie ! Bienvenue"
+    def authenticate(self, pseudo: str, mot_de_passe: str) -> User:
+        """Authenticate a user by pseudo and mot_de_passe."""
+        db_utilisateur = self.utilisateur_dao.recuperer_par_pseudo(pseudo)
+        if db_utilisateur is None:
+            raise UserNotFoundError(pseudo=pseudo)
+        if not verifier_mot_de_passe(mot_de_passe, db_utilisateur.mot_de_passe):
+            raise AuthError
+        return db_utilisateur
 
     def changer_mot_de_passe(self, utilisateur: User, ancien_mot_de_passe: str, nouveau_mot_de_passe: str) -> bool:
         """Change le mot de passe d'un utilisateur après vérification de l'ancien mot de passe.
@@ -148,3 +125,10 @@ class UtilisateurService:
             return True
         except Exception as e:
             raise ServiceError("Impossible de changer le pseudo") from e
+
+    def read(self, id_utilisateur: int) -> User:
+        """Read a user by their ID."""
+        utilisateur = self.utilisateur_dao.read(id_utilisateur)
+        if utilisateur is None:
+            raise UserNotFoundError(id_utilisateur=id_utilisateur)
+        return utilisateur

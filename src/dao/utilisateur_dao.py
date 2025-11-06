@@ -4,6 +4,8 @@ Classe DAO du business object Utilistauer.
 
 import logging
 
+from psycopg2 import Error as DBError
+
 from src.business_object.utilisateur import Utilisateur
 from src.dao.db_connection import DBConnection
 from src.models.utilisateurs import User, UserCreate
@@ -135,6 +137,35 @@ class UtilisateurDao(metaclass=Singleton):
             raise
         return res > 0
 
+    def read(self, id_utilisateur: int) -> User | None:
+        """Read a user by their ID.
+
+        :param user_id: ID of the user to read
+        :raises DAOError: Raised if DB error occurs
+        :return: The User object or None if not found
+        """
+        try:
+            with DBConnection().connection as connection, connection.cursor as cursor:
+                cursor.execute(
+                    """
+                    SELECT pseudo, mail, mot_de_passe, date_naissance
+                    FROM users
+                    WHERE id = %(id_utilisateur)s
+                    """,
+                    {"id_utilisateur": id_utilisateur},
+                )
+            row = self.cur.fetchone()
+            if row:
+                return User(
+                    pseudo=row["pseudo"],
+                    mail=row["mail"],
+                    date_naissance=row["date_naissance"],
+                    mot_de_passe_hashed=row["mot_de_passe"],
+                )
+            return None
+        except DBError as exc:
+            raise DAOError from exc
+
     @log
     def trouver_par_id(self, id_utilisateur) -> Utilisateur:
         """Trouver un utilisateur grâce à son identifiant.
@@ -200,40 +231,39 @@ class UtilisateurDao(metaclass=Singleton):
             raise
         return res
 
+    def recuperer_par_pseudo(self, pseudo: str) -> User | None:
+        """Récupérer le mot de passe hashé et le pseudo d'un utilisateur par son email.
 
-def recuperer_par_pseudo(self, pseudo: str) -> User | None:
-    """Récupérer le mot de passe hashé et le pseudo d'un utilisateur par son email.
+        Parameters
+        ----------
+            mail: L'email de l'utilisateur.
 
-    Parameters
-    ----------
-        mail: L'email de l'utilisateur.
+        Returns
+        -------
+            dict avec {mail : mot_de_passe} si trouvé, None sinon.
 
-    Returns
-    -------
-        dict avec {mail : mot_de_passe} si trouvé, None sinon.
+        """
+        try:
+            with DBConnection().connection as connection, connection.cursor() as cursor:
+                cursor.execute(
+                    "SELECT * FROM utilisateur WHERE pseudo = %(pseudo)s",
+                    {"pseudo": pseudo},
+                )
+                res = cursor.fetchone()
+        except Exception as e:
+            logging.info(e)
+            raise
 
-    """
-    try:
-        with DBConnection().connection as connection, connection.cursor() as cursor:
-            cursor.execute(
-                "SELECT * FROM utilisateur WHERE pseudo = %(pseudo)s",
-                {"pseudo": pseudo},
+        utilisateur = None
+        if res:
+            utilisateur = User(
+                id_utilisateur=res["id_utilisateur"],
+                pseudo=res["pseudo"],
+                mail=res["mail"],
+                date_naissance=res["date_naissance"],
+                mot_de_passe_hashed=res["mot_de_passe"],
             )
-            res = cursor.fetchone()
-    except Exception as e:
-        logging.info(e)
-        raise
-
-    utilisateur = None
-    if res:
-        utilisateur = User(
-            id_utilisateur=res["id_utilisateur"],
-            pseudo=res["pseudo"],
-            mail=res["mail"],
-            date_naissance=res["date_naissance"],
-            mot_de_passe_hashed=res["mot_de_passe"],
-        )
-    return utilisateur
+        return utilisateur
 
 
 def pseudo_existe(self, pseudo: str) -> bool:
@@ -288,12 +318,12 @@ def mail_existe(self, mail: str) -> bool:
 
 
 @log
-def update_mot_de_passe(self, utilisateur_id: int, nouveau_mot_de_passe_hashed: str) -> bool:
+def update_mot_de_passe(self, id_utilisateur: int, nouveau_mot_de_passe_hashed: str) -> bool:
     """Met à jour le mot de passe d'un utilisateur.
 
     Parameters
     ----------
-    utilisateur_id : int
+    id_utilisateur : int
         L'identifiant de l'utilisateur
     nouveau_mot_de_passe_hashed : str
         Le nouveau mot de passe déjà hashé
@@ -312,7 +342,7 @@ def update_mot_de_passe(self, utilisateur_id: int, nouveau_mot_de_passe_hashed: 
                 SET mot_de_passe = %(mot_de_passe)s
                 WHERE id_utilisateur = %(id_utilisateur)s
                 """,
-                {"mot_de_passe": nouveau_mot_de_passe_hashed, "id_utilisateur": utilisateur_id},
+                {"mot_de_passe": nouveau_mot_de_passe_hashed, "id_utilisateur": id_utilisateur},
             )
             connection.commit()
             return cursor.rowcount > 0
@@ -321,12 +351,12 @@ def update_mot_de_passe(self, utilisateur_id: int, nouveau_mot_de_passe_hashed: 
 
 
 @log
-def update_pseudo(self, utilisateur_id: int, nouveau_pseudo: str) -> bool:
+def update_pseudo(self, id_utilisateur: int, nouveau_pseudo: str) -> bool:
     """Met à jour le pseudo d'un utilisateur.
 
     Parameters
     ----------
-    utilisateur_id : int
+    id_utilisateur : int
         L'identifiant de l'utilisateur
     nouveau_pseudo : str
         Le nouveau pseudo
@@ -345,7 +375,7 @@ def update_pseudo(self, utilisateur_id: int, nouveau_pseudo: str) -> bool:
                 SET pseudo = %(pseudo)s
                 WHERE id_utilisateur = %(id_utilisateur)s
                 """,
-                {"pseudo": nouveau_pseudo, "id_utilisateur": utilisateur_id},
+                {"pseudo": nouveau_pseudo, "id_utilisateur": id_utilisateur},
             )
             connection.commit()
             return cursor.rowcount > 0
