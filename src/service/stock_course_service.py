@@ -6,14 +6,7 @@ import logging
 
 from business_object.stock import Stock
 from business_object.utilisateur import Utilisateur
-from dao.stock_course_dao import (
-    delete_ingredient_liste_course,
-    delete_ingredient_stock,
-    get_liste_course,
-    get_stock,
-    update_ingredient_stock,
-    updtate_liste_course,
-)
+from dao.stock_course_dao import Stock_course_dao
 from utils.log_decorator import log
 
 
@@ -42,7 +35,7 @@ class Stock_course_service:
 
         """
         try:
-            res = get_stock(stock)
+            res = Stock_course_dao.get_stock(stock)
             if not res:
                 logging.info("Aucun stock trouvé pour cet id_stock.")
                 return None
@@ -79,7 +72,9 @@ class Stock_course_service:
 
         """
         try:
-            return update_ingredient_stock(id_ingredient, quantite, id_unite)
+            return Stock_course_dao.update_ingredient_stock(
+                id_ingredient, quantite, id_unite
+            )
         except Exception as e:
             logging.exception("Erreur dans modifier_stock : %s", e)
             return False
@@ -110,7 +105,9 @@ class Stock_course_service:
 
         """
         try:
-            return delete_ingredient_stock(id_ingredient, quantite, id_unite)
+            return Stock_course_dao.delete_ingredient_stock(
+                id_ingredient, quantite, id_unite
+            )
         except Exception as e:
             logging.exception("Erreur dans retirer_du_stock : %s", e)
             return False
@@ -132,7 +129,7 @@ class Stock_course_service:
 
         """
         try:
-            res = get_liste_course(utilisateur)
+            res = Stock_course_dao.get_liste_course(utilisateur)
             if res is None:
                 logging.info(
                     "Aucune liste de courses trouvée pour cet utilisateur.",
@@ -169,7 +166,7 @@ class Stock_course_service:
 
         """
         try:
-            return updtate_liste_course(id_ingredient, quantite, id_unite)
+            return Stock_course_dao.updtate_liste_course(id_ingredient, quantite, id_unite)
         except Exception as e:
             logging.exception("Erreur dans modifier_liste_course : %s", e)
             return False
@@ -199,7 +196,7 @@ class Stock_course_service:
 
         """
         try:
-            return delete_ingredient_liste_course(
+            return Stock_course_dao.delete_ingredient_liste_course(
                 id_ingredient,
                 quantite,
                 id_unite,
