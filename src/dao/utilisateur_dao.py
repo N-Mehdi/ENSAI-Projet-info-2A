@@ -123,7 +123,7 @@ class UtilisateurDao(metaclass=Singleton):
 
         """
         try:
-            with DBConnection().connection as connection, connection.cursor as cursor:
+            with DBConnection().connection as connection, connection.cursor() as cursor:
                 cursor.execute(
                     """
                         DELETE FROM utilisateur
@@ -145,18 +145,19 @@ class UtilisateurDao(metaclass=Singleton):
         :return: The User object or None if not found
         """
         try:
-            with DBConnection().connection as connection, connection.cursor as cursor:
+            with DBConnection().connection as connection, connection.cursor() as cursor:
                 cursor.execute(
                     """
-                    SELECT pseudo, mail, mot_de_passe, date_naissance
-                    FROM users
-                    WHERE id = %(id_utilisateur)s
+                    SELECT id_utilisateur, pseudo, mail, mot_de_passe, date_naissance
+                    FROM utilisateur
+                    WHERE id_utilisateur = %(id_utilisateur)s
                     """,
                     {"id_utilisateur": id_utilisateur},
                 )
-            row = self.cur.fetchone()
+                row = cursor.fetchone()
             if row:
                 return User(
+                    id_utilisateur=row["id_utilisateur"],
                     pseudo=row["pseudo"],
                     mail=row["mail"],
                     date_naissance=row["date_naissance"],
@@ -260,7 +261,7 @@ class UtilisateurDao(metaclass=Singleton):
                 id_utilisateur=res["id_utilisateur"],
                 pseudo=res["pseudo"],
                 mail=res["mail"],
-                date_naissance=res["date_naissance"],
+                date_naissance=res["date_naissance"].isoformat() if res["date_naissance"] else None,
                 mot_de_passe_hashed=res["mot_de_passe"],
             )
         return utilisateur

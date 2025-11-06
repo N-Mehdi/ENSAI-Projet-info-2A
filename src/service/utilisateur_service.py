@@ -49,7 +49,7 @@ class UtilisateurService:
         db_utilisateur = self.utilisateur_dao.recuperer_par_pseudo(pseudo)
         if db_utilisateur is None:
             raise UserNotFoundError(pseudo=pseudo)
-        if not verifier_mot_de_passe(mot_de_passe, db_utilisateur.mot_de_passe):
+        if not verifier_mot_de_passe(mot_de_passe, db_utilisateur.mot_de_passe_hashed):
             raise AuthError
         return db_utilisateur
 

@@ -6,13 +6,12 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordRequestForm
 
-from src.dao.db_connection import DBConnection
 from src.dao.utilisateur_dao import UtilisateurDao
 from src.models import Token
 from src.service.utilisateur_service import UtilisateurService
 from src.utils import securite
-from src.utils.config import settings
 from src.utils.exceptions import AuthError
+from src.utils.settings import settings
 
 router = APIRouter(tags=["Login"])
 
@@ -38,7 +37,7 @@ def login_access_token(
             minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES,
         )
         access_token = securite.create_access_token(
-            user.id,
+            user.id_utilisateur,
             expires_delta=access_token_expires,
         )
         return Token(access_token=access_token, token_type=settings.TOKEN_TYPE)

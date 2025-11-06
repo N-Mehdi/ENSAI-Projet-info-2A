@@ -14,11 +14,11 @@ from src.dao.utilisateur_dao import UtilisateurDao
 from src.models import TokenPayload, User
 from src.service.utilisateur_service import UtilisateurService
 from src.utils import securite
-from src.utils.config import settings
 from src.utils.exceptions import UserNotFoundError
+from src.utils.settings import settings
 
 reusable_oauth2 = OAuth2PasswordBearer(
-    tokenUrl=f"{settings.API_STR}/login/access-token",
+    tokenUrl=f"{settings.ROOT_PATH}{settings.API_STR}/login/access-token",
 )
 
 TokenDep = Annotated[str, Depends(reusable_oauth2)]
