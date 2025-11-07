@@ -1,6 +1,15 @@
 from src.dao.utilisateur_dao import UtilisateurDao
-from src.models.utilisateurs import User, UserCreate, UserRegister
-from src.utils.exceptions import AuthError, ServiceError, UserNotFoundError
+from src.models.utilisateurs import (
+    DateInscriptionResponse,
+    User,
+    UserChangePassword,
+    UserCreate,
+    UserDelete,
+    UserRegister,
+    UserUpdatePassword,
+    UserUpdatePseudo,
+)
+from src.utils.exceptions import AuthError, EmptyFieldError, ServiceError, UserNotFoundError
 from src.utils.securite import hacher_mot_de_passe, verifier_mot_de_passe
 
 
@@ -13,6 +22,15 @@ class UtilisateurService:
 
     def creer_compte(self, donnees: UserRegister) -> str:
         """Créer un compte utilisateur en base de données."""
+        # Validation des champs vides
+        if not donnees.pseudo or not donnees.pseudo.strip():
+            raise EmptyFieldError("pseudo")
+        if not donnees.mail or not donnees.mail.strip():
+            raise EmptyFieldError("mail")
+        if not donnees.mot_de_passe or not donnees.mot_de_passe.strip():
+            raise EmptyFieldError("mot_de_passe")
+        if not donnees.date_naissance:
+            raise EmptyFieldError("date_naissance")
         # Récupérer le mot de passe brut
         mot_de_passe = donnees.mot_de_passe
 
@@ -23,7 +41,7 @@ class UtilisateurService:
         try:
             mot_de_passe_hashed = hacher_mot_de_passe(mot_de_passe)
         except Exception as e:
-            raise ValueError(f"Erreur lors du hachage du mot de passe : {e}")
+            raise ServiceError(f"Erreur lors du hachage du mot de passe : {e}")  # CHANGÉ
 
         # Préparer dict pour UserCreate
         compte = donnees.model_dump()
@@ -35,14 +53,12 @@ class UtilisateurService:
             user_create = UserCreate.model_validate(compte)
         except Exception as e:
             raise ServiceError(f"Erreur lors de la validation du modèle : {e}")
-        # Créer en BDD
-        try:
-            succes = self.utilisateur_dao.create_compte(user_create)
-            if not succes:
-                raise ServiceError("Impossible de créer le compte")
-        except Exception as e:
-            raise ServiceError(f"Erreur DAO lors de la création du compte : {e}") from e
-        return "compte crée avec succès."
+
+        succes = self.utilisateur_dao.create_compte(user_create)
+        if not succes:
+            raise ServiceError("Impossible de créer le compte")
+
+        return "compte créé avec succès."
 
     def authenticate(self, pseudo: str, mot_de_passe: str) -> User:
         """Authenticate a user by pseudo and mot_de_passe."""
@@ -53,44 +69,122 @@ class UtilisateurService:
             raise AuthError
         return db_utilisateur
 
-    def changer_mot_de_passe(self, utilisateur: User, ancien_mot_de_passe: str, nouveau_mot_de_passe: str) -> bool:
-        """Change le mot de passe d'un utilisateur après vérification de l'ancien mot de passe.
+    def supprimer_compte(self, donnees: UserDelete) -> str:
+        """Supprimer un compte utilisateur après authentification.
+
+        Vérifie le mot de passe avant de supprimer le compte pour des raisons de sécurité.
 
         Parameters
         ----------
-        utilisateur : User ou Utilisateur
-            L'utilisateur dont on veut changer le mot de passe
-        ancien_mot_de_passe : str
-            L'ancien mot de passe en clair
-        nouveau_mot_de_passe : str
-            Le nouveau mot de passe en clair
+        donnees : UserDelete
+            Contient le pseudo et mot_de_passe pour authentification
 
         Returns
         -------
-        bool
-            True si le mot de passe a été changé, False sinon.
+        str
+            Message de confirmation
 
         Raises
         ------
+        EmptyFieldError
+            Si un champ est vide
+        UserNotFoundError
+            Si l'utilisateur n'existe pas
+        AuthError
+            Si le mot de passe est incorrect
         ServiceError
-            Si l'ancien mot de passe est incorrect ou si la mise à jour échoue.
+            En cas d'erreur générale
 
         """
-        # Vérifier l'ancien mot de passe
-        if not verifier_mot_de_passe(ancien_mot_de_passe, utilisateur.mot_de_passe_hashed):
-            raise ServiceError("L'ancien mot de passe est incorrect")
+        # Validation des champs vides
+        if not donnees.pseudo or not donnees.pseudo.strip():
+            raise EmptyFieldError("pseudo")
+        if not donnees.mot_de_passe or not donnees.mot_de_passe.strip():
+            raise EmptyFieldError("mot_de_passe")
 
-        # Hasher le nouveau mot de passe
-        mot_de_passe_hashed = hacher_mot_de_passe(nouveau_mot_de_passe)
+        # Récupérer l'utilisateur pour vérifier le mot de passe
+        utilisateur = self.utilisateur_dao.recuperer_par_pseudo(donnees.pseudo)
+        if not utilisateur:
+            raise UserNotFoundError(pseudo=donnees.pseudo)
 
-        # Déléguer la mise à jour à la DAO
+        # Vérifier le mot de passe
+        if not verifier_mot_de_passe(donnees.mot_de_passe, utilisateur.mot_de_passe_hashed):
+            raise AuthError()
+
+        # Supprimer le compte
+        succes = self.utilisateur_dao.delete_compte(donnees.pseudo)
+        if not succes:
+            raise ServiceError("Impossible de supprimer le compte")
+
+        return "Compte supprimé avec succès."
+
+    def changer_mot_de_passe(self, donnees: UserChangePassword) -> str:
+        """Changer le mot de passe d'un utilisateur après vérification.
+
+        Vérifie l'ancien mot de passe avant de permettre le changement.
+
+        Parameters
+        ----------
+        donnees : UserChangePassword
+            Contient le pseudo, ancien et nouveau mot de passe
+
+        Returns
+        -------
+        str
+            Message de confirmation
+
+        Raises
+        ------
+        EmptyFieldError
+            Si un champ est vide
+        UserNotFoundError
+            Si l'utilisateur n'existe pas
+        AuthError
+            Si le mot de passe actuel est incorrect
+        ServiceError
+            En cas d'erreur générale
+
+        """
+        # Validation des champs vides
+        if not donnees.pseudo or not donnees.pseudo.strip():
+            raise EmptyFieldError("pseudo")
+        if not donnees.mot_de_passe_actuel or not donnees.mot_de_passe_actuel.strip():
+            raise EmptyFieldError("mot_de_passe_actuel")
+        if not donnees.mot_de_passe_nouveau or not donnees.mot_de_passe_nouveau.strip():
+            raise EmptyFieldError("mot_de_passe_nouveau")
+
+        # Vérifier que les deux mots de passe ne sont pas identiques
+        if donnees.mot_de_passe_actuel == donnees.mot_de_passe_nouveau:
+            raise ServiceError("Le nouveau mot de passe doit être différent de l'ancien")
+
+        # Récupérer l'utilisateur pour vérifier le mot de passe actuel
+        utilisateur = self.utilisateur_dao.recuperer_par_pseudo(donnees.pseudo)
+        if not utilisateur:
+            raise UserNotFoundError(pseudo=donnees.pseudo)
+
+        # Vérifier le mot de passe actuel
+        if not verifier_mot_de_passe(donnees.mot_de_passe_actuel, utilisateur.mot_de_passe_hashed):
+            raise AuthError()
+
+        # Hacher le nouveau mot de passe
+        mot_de_passe_nouveau = donnees.mot_de_passe_nouveau[:72]  # Tronquer pour bcrypt
         try:
-            succes = self.dao.update_mot_de_passe(utilisateur.id_utilisateur, mot_de_passe_hashed)
-            if not succes:
-                raise ServiceError("Impossible de changer le mot de passe")
-            return True
+            mot_de_passe_nouveau_hashed = hacher_mot_de_passe(mot_de_passe_nouveau)
         except Exception as e:
-            raise ServiceError("Impossible de changer le mot de passe") from e
+            raise ServiceError(f"Erreur lors du hachage du mot de passe : {e}")
+
+        # Préparer l'objet pour la DAO
+        mdps_update = UserUpdatePassword(
+            pseudo=donnees.pseudo,
+            mot_de_passe_nouveau_hashed=mot_de_passe_nouveau_hashed,
+        )
+
+        # Mettre à jour le mot de passe
+        succes = self.utilisateur_dao.update_mot_de_passe(mdps_update)
+        if not succes:
+            raise ServiceError("Impossible de mettre à jour le mot de passe")
+
+        return "Mot de passe modifié avec succès."
 
     def changer_pseudo(self, utilisateur, nouveau_pseudo: str) -> bool:
         """Change le pseudo d'un utilisateur après vérification qu'il n'existe pas déjà.
@@ -132,3 +226,91 @@ class UtilisateurService:
         if utilisateur is None:
             raise UserNotFoundError(id_utilisateur=id_utilisateur)
         return utilisateur
+
+    def changer_pseudo(self, donnees: UserUpdatePseudo, ancien_pseudo: str) -> str:
+        """Changer le pseudo d'un utilisateur.
+
+        Parameters
+        ----------
+        donnees : UserUpdatePseudo
+            Contient le nouveau pseudo
+        ancien_pseudo : str
+            Pseudo actuel de l'utilisateur (depuis le token/session)
+
+        Returns
+        -------
+        str
+            Message de confirmation
+
+        Raises
+        ------
+        EmptyFieldError
+            Si un champ est vide
+        UserNotFoundError
+            Si l'utilisateur n'existe pas
+        UserAlreadyExistsError
+            Si le nouveau pseudo existe déjà
+        ServiceError
+            Si les pseudos sont identiques ou erreur générale
+
+        """
+        # Validation des champs vides
+        if not ancien_pseudo or not ancien_pseudo.strip():
+            raise EmptyFieldError("ancien_pseudo")
+        if not donnees.nouveau_pseudo or not donnees.nouveau_pseudo.strip():
+            raise EmptyFieldError("nouveau_pseudo")
+
+        # Vérifier que les deux pseudos ne sont pas identiques
+        if ancien_pseudo == donnees.nouveau_pseudo:
+            raise ServiceError("Le nouveau pseudo doit être différent de l'ancien")
+
+        # Vérifier que l'ancien pseudo existe
+        utilisateur = self.utilisateur_dao.recuperer_par_pseudo(ancien_pseudo)
+        if not utilisateur:
+            raise UserNotFoundError(pseudo=ancien_pseudo)
+
+        # Mettre à jour le pseudo
+        succes = self.utilisateur_dao.update_pseudo(ancien_pseudo, donnees.nouveau_pseudo)
+        if not succes:
+            raise ServiceError("Impossible de mettre à jour le pseudo")
+
+        return "Pseudo modifié avec succès."
+
+    def obtenir_date_inscription(self, pseudo: str) -> DateInscriptionResponse:
+        """Obtenir la date d'inscription d'un utilisateur.
+
+        Parameters
+        ----------
+        pseudo : str
+            Pseudo de l'utilisateur connecté
+
+        Returns
+        -------
+        DateInscriptionResponse
+            Contient le pseudo et la date d'inscription
+
+        Raises
+        ------
+        EmptyFieldError
+            Si le pseudo est vide
+        UserNotFoundError
+            Si l'utilisateur n'existe pas
+        ServiceError
+            En cas d'erreur générale
+
+        """
+        # Validation du pseudo
+        if not pseudo or not pseudo.strip():
+            raise EmptyFieldError("pseudo")
+
+        # Récupérer la date d'inscription
+        date_inscription = self.utilisateur_dao.get_date_inscription(pseudo)
+
+        if date_inscription is None:
+            raise UserNotFoundError(pseudo=pseudo)
+
+        # Créer la réponse
+        return DateInscriptionResponse(
+            pseudo=pseudo,
+            date_inscription=date_inscription,
+        )

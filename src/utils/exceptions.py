@@ -45,6 +45,21 @@ class UserAlreadyExistsError(Exception):
         super().__init__(f"pseudo {pseudo} already exists")
 
 
+class MailAlreadyExistsError(Exception):
+    """Raised when attempting to create a user with an existing email.
+
+    :param mail: email that already exists
+    """
+
+    def __init__(self, mail: str) -> None:
+        """Initialize MailAlreadyExistsError.
+
+        :param mail: email that already exists
+        :return: None
+        """
+        super().__init__(f"Email {mail} already exists")
+
+
 class UserNotFoundError(Exception):
     """Raised when a user is not found.
 
@@ -77,3 +92,19 @@ class AuthError(Exception):
         :return: None
         """
         super().__init__("Could not validate credentials")
+
+
+class EmptyFieldError(Exception):
+    """Raised when a required field is empty.
+
+    :param field: name of the empty field
+    """
+
+    def __init__(self, field: str) -> None:
+        """Initialize EmptyFieldError.
+
+        :param field: name of the empty field
+        :return: None
+        """
+        super().__init__(f"Le champ '{field}' ne peut pas être vide")
+        self.field = field

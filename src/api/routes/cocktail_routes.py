@@ -104,7 +104,7 @@ def rechercher_cocktail_par_sequence_debut(sequence: str, max_resultats: int):
 
 
 @router.get("/nom/{nom}")
-def rechercher_cocktail_par_nom(nom: str, current_user: CurrentUser ):
+def rechercher_cocktail_par_nom(nom: str, current_user: CurrentUser):
     """Récupère tous le cocktail via son nom.
 
     Parameters

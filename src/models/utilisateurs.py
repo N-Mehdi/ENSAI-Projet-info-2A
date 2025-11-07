@@ -1,7 +1,9 @@
 """Modèles Pydantic pour les entités utilisateur.
-Définit des schémas pour la création d’utilisateur, l’inscription, la mise à jour,
+Définit des schémas pour la création d'utilisateur, l'inscription, la mise à jour,
 le changement de mot de passe, et la représentation en base de données.
 """
+
+from datetime import date
 
 from pydantic import BaseModel
 
@@ -54,15 +56,42 @@ class UserUpdateFull(UserUpdate):
 
 
 class UserUpdatePassword(BaseModel):
+    """Schéma pour changer le mot de passe d'un utilisateur dans la base de données."""
+
+    pseudo: str
+    mot_de_passe_nouveau_hashed: str
+
+
+class UserChangePassword(BaseModel):
     """Schéma pour changer le mot de passe d'un utilisateur."""
 
+    pseudo: str
     mot_de_passe_actuel: str
     mot_de_passe_nouveau: str
 
 
 class UserUpdatePseudo(BaseModel):
+    """Schéma pour changer le pseudo d'un utilisateur."""
+
     nouveau_pseudo: str
 
 
 class User(UserRead, UserCreate):
     """Schéma pour un utilisateur dans la base de données."""
+
+
+class UserDelete(BaseModel):
+    """Schéma pour supprimer un utilisateur dans la base de données."""
+
+    pseudo: str
+    mot_de_passe: str
+
+
+from pydantic import BaseModel
+
+
+class DateInscriptionResponse(BaseModel):
+    """Schéma de réponse pour la date d'inscription."""
+
+    pseudo: str
+    date_inscription: date
