@@ -69,6 +69,7 @@ class UtilisateurDao(metaclass=Singleton):
                 raise MailAlreadyExistsError(utilisateur.mail) from None
             # Cas générique si on ne peut pas identifier la colonne
             raise DAOError("Contrainte d'unicité violée") from None
+
         except Exception as e:
             logging.info(e)
             raise DAOError("Impossible de créer le compte") from e

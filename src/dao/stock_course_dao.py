@@ -2,243 +2,344 @@
 Class dao du business object Stock.
 """
 
-import logging
-
-from business_object.stock import Stock
 from dao.db_connection import DBConnection
-from utils.log_decorator import log
+from src.utils.log_decorator import log
+from utils.singleton import Singleton
 
 
-class Stock_course_dao:
+class StockCourseDao(metaclass=Singleton):
     """Classe contenant les méthodes agissants sur le stock d'un utilisateur."""
 
     @log
-    def get_stock(stock) -> Stock:  # pb : id_stock = id utilisateur??
-        # et parametre on pourrait ptetre mettre direct id_stock
-        """Méthode qui permet de renvoyer le stock d'un utilisateur.
+    def update_or_create_stock_item(
+        self,
+        id_utilisateur: int,
+        id_ingredient: int,
+        quantite: float,
+        id_unite: int,
+    ) -> bool:
+        """Ajoute ou met à jour un ingrédient dans le stock.
+
+        - Si l'ingrédient n'existe pas, il est créé avec la quantité donnée
+        - Si l'ingrédient existe, la quantité est ajoutée (cumul) et l'unité est mise à jour
 
         Parameters
         ----------
-        stock : Objet de la classe Stock
+        id_utilisateur : int
+            ID de l'utilisateur
+        id_ingredient : int
+            ID de l'ingrédient
+        quantite : float
+            Quantité à ajouter (cumulée si l'ingrédient existe déjà)
+        id_unite : int
+            ID de l'unité de mesure
 
         Returns
         -------
-        stock : Stock
-            Un objet de la classe Stock représetant le stock de l'utilisateur
+        bool
+            True si l'opération a réussi
 
         """
-        res = None
         with DBConnection().connection as connection, connection.cursor() as cursor:
             cursor.execute(
                 """
-                    SELECT id_ingredient, quantite, id_unite
-                    FROM stock
-                    WHERE id_stock = %(id_stock)s;
-                    """,
-                {"id_stock": stock.id_stock},
+                INSERT INTO stock (id_utilisateur, id_ingredient, quantite, id_unite)
+                VALUES (%(id_utilisateur)s, %(id_ingredient)s, %(quantite)s, %(id_unite)s)
+                ON CONFLICT (id_utilisateur, id_ingredient)
+                DO UPDATE SET
+                    quantite = stock.quantite + EXCLUDED.quantite,
+                    id_unite = EXCLUDED.id_unite
+                """,
+                #         ↑ Changement ici : addition au lieu de remplacement
+                {
+                    "id_utilisateur": id_utilisateur,
+                    "id_ingredient": id_ingredient,
+                    "quantite": quantite,
+                    "id_unite": id_unite,
+                },
             )
-            res = cursor.fetchone()
-        return res
+            return cursor.rowcount > 0
 
     @log
-    def update_ingredient_stock(id_ingredient, quantite, id_unite) -> bool:
-        """Méthode qui permet de modifier la quantité d'un ingredient dans le stock.
+    def get_stock(self, id_utilisateur: int, only_available: bool = True) -> list[dict]:
+        """Récupère le stock d'un utilisateur.
 
         Parameters
         ----------
+        id_utilisateur : int
+            ID de l'utilisateur
+        only_available : bool, optional
+            Si True, retourne seulement les ingrédients avec quantité > 0
+
+        Returns
+        -------
+        list[dict]
+            Liste des items du stock (dictionnaires bruts)
+
+        """
+        with DBConnection().connection as connection, connection.cursor() as cursor:
+            query = """
+                SELECT
+                    s.id_ingredient,
+                    i.nom as nom_ingredient,
+                    s.quantite,
+                    s.id_unite,
+                    u.abbreviation as code_unite,
+                    u.nom as nom_unite_complet
+                FROM stock s
+                JOIN ingredient i ON s.id_ingredient = i.id_ingredient
+                LEFT JOIN unite u ON s.id_unite = u.id_unite
+                WHERE s.id_utilisateur = %(id_utilisateur)s
+            """
+
+            if only_available:
+                query += " AND s.quantite > 0"
+
+            query += " ORDER BY i.nom"
+
+            cursor.execute(query, {"id_utilisateur": id_utilisateur})
+
+            rows = cursor.fetchall()
+
+            # Retourner les dictionnaires bruts (pas de StockItem ici)
+            return rows
+
+    @log
+    def get_stock_item(
+        self,
+        id_utilisateur: int,
+        id_ingredient: int,
+    ) -> dict | None:
+        """Récupère un item spécifique du stock.
+
+        Parameters
+        ----------
+        id_utilisateur : int
+            ID de l'utilisateur
         id_ingredient : int
-            Identifiant unique de l'ingrédient
-        quantite : float
-            Nouvelle quantité de l'ingrédient
-        id_unite : int
-            Identifiant unique de l'unité de mesure
+            ID de l'ingrédient
 
         Returns
         -------
-        created : bool
-            renvoie si la quantité a bien était modifiée et vaut la grandeur souhaitée
+        dict | None
+            L'item s'il existe (dictionnaire brut), None sinon
 
         """
-        updated = False
-        try:
-            with DBConnection().connection as connection, connection.cursor() as cursor:
-                cursor.execute(
-                    """
-                        UPDATE stock
-                        SET quantite = %(quantite)s, id_unite = %(id_unite)s
-                        WHERE id_ingredient = %(id_ingredient)s
-                        RETURNING id_ingredient;
-                        """,
-                    {
-                        "quantite": quantite,
-                        "id_unite": id_unite,
-                        "id_ingredient": id_ingredient,
-                    },
-                )
-                res = cursor.fetchone()
-                if res:
-                    updated = True
-        except Exception as e:
-            logging.info(e)
-
-        return updated
-
-    @log
-    def delete_ingredient_stock(id_ingredient, quantite, id_unite) -> bool:
-        """Méthode qui permet de supprimer une certaine quantité d'un ingredient dans
-        le stock.
-
-        Parameters
-        ----------
-        id_ingredient : int
-            Identifiant unique de l'ingrédient
-        quantite : float
-            Nouvelle quantité de l'ingrédient
-        id_unite : int
-            Identifiant unique de l'unité de mesure
-
-        Returns
-        -------
-        created : bool
-            renvoie si la quantité a bien était modifiée et vaut la grandeur souhaitée
-
-        """
-        updated = False
-        try:
-            with DBConnection().connection as connection, connection.cursor() as cursor:
-                cursor.execute(
-                    """
-                        UPDATE stock
-                        SET quantite = quantite - %(quantite)s, id_unite = %(id_unite)s
-                        WHERE id_ingredient = %(id_ingredient)s
-                        RETURNING id_ingredient;
-                        """,
-                    {
-                        "quantite": quantite,
-                        "id_unite": id_unite,
-                        "id_ingredient": id_ingredient,
-                    },
-                )
-                res = cursor.fetchone()
-                if res:
-                    updated = True
-        except Exception as e:
-            logging.info(e)
-
-        return updated
-
-    @log
-    def get_liste_course(utilisateur):
-        """Méthode qui permet de renvoyer la liste de course d'un utilisateur.
-
-        Parameters
-        ----------
-        utilisateur : Utilisateur
-        objet de classe utilisateur
-
-        Returns
-        -------
-        liste de course : ?
-            La liste de course de l'utilisateur
-
-        """
-        res = None
         with DBConnection().connection as connection, connection.cursor() as cursor:
             cursor.execute(
                 """
-                    SELECT id_ingredient, quantite, id_unite
-                    FROM liste_course
-                    WHERE id_utilisateur = %(id_utilisateur)s;
-                    """,
-                {"id_utilisateur": utilisateur.id_utilisateur},
+                SELECT 
+                    s.id_ingredient,
+                    i.nom as nom_ingredient,
+                    s.quantite,
+                    s.id_unite,
+                    u.abbreviation as code_unite,
+                    u.nom as nom_unite_complet
+                FROM stock s
+                JOIN ingredient i ON s.id_ingredient = i.id_ingredient
+                LEFT JOIN unite u ON s.id_unite = u.id_unite
+                WHERE s.id_utilisateur = %(id_utilisateur)s
+                AND s.id_ingredient = %(id_ingredient)s
+                """,
+                {
+                    "id_utilisateur": id_utilisateur,
+                    "id_ingredient": id_ingredient,
+                },
             )
-            res = cursor.fetchone()
-        return res
+
+        # Retourner le dictionnaire brut
+        return cursor.fetchone()
 
     @log
-    def updtate_liste_course(id_ingredient, quantite, id_unite) -> bool:
-        """Méthode qui permet de modifier la quantité d'un ingredient dans la liste de
-        course.
+    def decrement_stock_item(
+        self,
+        id_utilisateur: int,
+        id_ingredient: int,
+        quantite: float,
+    ) -> dict:
+        """Décrémente la quantité d'un ingrédient dans le stock.
 
         Parameters
         ----------
+        id_utilisateur : int
+            ID de l'utilisateur
         id_ingredient : int
-            Identifiant unique de l'ingrédient
+            ID de l'ingrédient
         quantite : float
-            Nouvelle quantité de l'ingrédient
-        id_unite : int
-            Identifiant unique de l'unité de mesure
+            Quantité à retirer (doit être > 0)
 
         Returns
         -------
-        created : bool
-            renvoie si la quantité a bien était modifiée et vaut la grandeur souhaitée
+        dict
+            Informations sur l'opération :
+            - nouvelle_quantite : float - La nouvelle quantité après décrémentation
+            - supprime : bool - True si la quantité atteint 0 (ligne supprimée)
+
+        Raises
+        ------
+        ValueError
+            Si la quantité à retirer est supérieure à la quantité disponible.
 
         """
-        updated = False
-        try:
-            with DBConnection().connection as connection, connection.cursor() as cursor:
+        with DBConnection().connection as connection, connection.cursor() as cursor:
+            # 1. Récupérer la quantité actuelle
+            cursor.execute(
+                """
+                SELECT quantite
+                FROM stock
+                WHERE id_utilisateur = %(id_utilisateur)s
+                AND id_ingredient = %(id_ingredient)s
+                """,
+                {
+                    "id_utilisateur": id_utilisateur,
+                    "id_ingredient": id_ingredient,
+                },
+            )
+
+            row = cursor.fetchone()
+            if not row:
+                raise ValueError("Ingrédient non trouvé dans le stock")
+
+            # Convertir Decimal en float
+            quantite_actuelle = float(row["quantite"])
+
+            # 2. Vérifier que la quantité à retirer n'est pas supérieure à la quantité actuelle
+            if quantite > quantite_actuelle:
+                raise ValueError(
+                    f"Impossible de retirer {quantite} (quantité disponible : {quantite_actuelle})",
+                )
+
+            nouvelle_quantite = quantite_actuelle - quantite
+
+            # 3. Si la nouvelle quantité est 0 (ou très proche de 0), supprimer la ligne
+            if nouvelle_quantite < 0.0001:  # Tolérance pour les arrondis flottants
                 cursor.execute(
                     """
-                        UPDATE liste_course
-                        SET quantite = %(quantite)s, id_unite = %(id_unite)s
-                        WHERE id_ingredient = %(id_ingredient)s
-                        RETURNING id_ingredient;
-                        """,
+                    DELETE FROM stock
+                    WHERE id_utilisateur = %(id_utilisateur)s
+                    AND id_ingredient = %(id_ingredient)s
+                    """,
                     {
-                        "quantite": quantite,
-                        "id_unite": id_unite,
+                        "id_utilisateur": id_utilisateur,
                         "id_ingredient": id_ingredient,
                     },
                 )
-                res = cursor.fetchone()
-                if res:
-                    updated = True
-        except Exception as e:
-            logging.info(e)
+                return {
+                    "nouvelle_quantite": 0.0,
+                    "supprime": True,
+                }
 
-        return updated
+            # 4. Sinon, mettre à jour la quantité
+            cursor.execute(
+                """
+                UPDATE stock
+                SET quantite = %(nouvelle_quantite)s
+                WHERE id_utilisateur = %(id_utilisateur)s
+                AND id_ingredient = %(id_ingredient)s
+                """,
+                {
+                    "id_utilisateur": id_utilisateur,
+                    "id_ingredient": id_ingredient,
+                    "nouvelle_quantite": nouvelle_quantite,
+                },
+            )
+
+            return {
+                "nouvelle_quantite": nouvelle_quantite,
+                "supprime": False,
+            }
 
     @log
-    def delete_ingredient_liste_course(id_ingredient, quantite, id_unite) -> bool:
-        """Méthode qui permet de supprimer une certaine quantité d'un ingredient dans
-        la liste de course.
+    def delete_stock_item(self, id_utilisateur: int, id_ingredient: int) -> bool:
+        """Supprime complètement un ingrédient du stock (quelle que soit la quantité).
+
+        Cette méthode supprime la ligne entière, utilisez decrement_stock_item()
+        pour retirer une quantité spécifique.
 
         Parameters
         ----------
+        id_utilisateur : int
+            ID de l'utilisateur
         id_ingredient : int
-            Identifiant unique de l'ingrédient
-        quantite : float
-            Nouvelle quantité de l'ingrédient
-        id_unite : int
-            Identifiant unique de l'unité de mesure
+            ID de l'ingrédient à supprimer
 
         Returns
         -------
-        created : bool
-            renvoie si la quantité a bien était modifiée et vaut la grandeur souhaitée
+        bool
+            True si la suppression a réussi
 
         """
-        updated = False
-        try:
-            with DBConnection().connection as connection, connection.cursor() as cursor:
-                cursor.execute(
-                    """
-                        UPDATE stock
-                        SET quantite = quantite - %(quantite)s, id_unite = %(id_unite)s
-                        WHERE id_ingredient = %(id_ingredient)s
-                        RETURNING id_ingredient;
-                        """,
-                    {
-                        "quantite": quantite,
-                        "id_unite": id_unite,
-                        "id_ingredient": id_ingredient,
-                    },
-                )
-                res = cursor.fetchone()
-                if res:
-                    updated = True
-        except Exception as e:
-            logging.info(e)
+        with DBConnection().connection as connection, connection.cursor() as cursor:
+            cursor.execute(
+                """
+                DELETE FROM stock
+                WHERE id_utilisateur = %(id_utilisateur)s
+                AND id_ingredient = %(id_ingredient)s
+                """,
+                {
+                    "id_utilisateur": id_utilisateur,
+                    "id_ingredient": id_ingredient,
+                },
+            )
+            return cursor.rowcount > 0
 
-        return updated
+    def get_full_stock(self, id_utilisateur: int) -> list[dict]:
+        """Récupère tous les ingrédients avec leur quantité dans le stock.
+        Les ingrédients non présents dans le stock auront quantite = 0.
+
+        Parameters
+        ----------
+        id_utilisateur : int
+            id de l'utilisateur
+
+        Returns
+        -------
+        list[dict]
+            Liste de tous les ingrédients avec leur quantité.
+
+        """
+        with DBConnection().connection as connection, connection.cursor() as cursor:
+            cursor.execute(
+                """
+                SELECT
+                    i.id_ingredient,
+                    i.nom as nom_ingredient,
+                    COALESCE(s.quantite, 0) as quantite,
+                    s.id_unite,
+                    u.abbreviation as code_unite,
+                    u.nom as nom_unite_complet
+                FROM ingredient i
+                LEFT JOIN stock s ON s.id_ingredient = i.id_ingredient 
+                                  AND s.id_utilisateur = %(id_utilisateur)s
+                LEFT JOIN unite u ON s.id_unite = u.id_unite
+                ORDER BY i.nom
+                """,
+                {"id_utilisateur": id_utilisateur},
+            )
+            return cursor.fetchall()
+
+    @log
+    def get_unite_info(self, id_unite: int) -> dict | None:
+        """Récupère les informations d'une unité.
+
+        Parameters
+        ----------
+        id_unite : int
+            ID de l'unité
+
+        Returns
+        -------
+        dict | None
+            Les infos de l'unité (abbreviation, type) ou None
+
+        """
+        with DBConnection().connection as connection, connection.cursor() as cursor:
+            cursor.execute(
+                """
+                SELECT abbreviation, type
+                FROM unite
+                WHERE id_unite = %(id_unite)s
+                """,
+                {"id_unite": id_unite},
+            )
+            return cursor.fetchone()

@@ -56,16 +56,6 @@ CREATE TABLE IF NOT EXISTS utilisateur (
     date_inscription DATE
 );
 
-
-CREATE TABLE IF NOT EXISTS avis (
-    id_utilisateur INTEGER,
-    id_cocktail INTEGER,
-    note NUMERIC,
-    commentaire TEXT,
-    favoris BOOLEAN,
-    PRIMARY KEY (id_utilisateur, id_cocktail)
-);
-
 CREATE TABLE IF NOT EXISTS acces (
     id_utilisateur INTEGER,
     id_cocktail INTEGER,
@@ -167,4 +157,55 @@ ADD COLUMN date_inscription timestamptz NOT NULL DEFAULT now();
 */
 
 -- Vider en cascade (vide aussi les tables dépendantes)
-TRUNCATE TABLE utilisateur RESTART IDENTITY CASCADE;
+-- TRUNCATE TABLE utilisateur RESTART IDENTITY CASCADE;
+
+-- ALTER TABLE cocktail_ingredient 
+-- ADD COLUMN quantite_numerique FLOAT;
+
+/* 
+CREATE TABLE IF NOT EXISTS cocktail_ingredient (
+    id_cocktail INT NOT NULL,
+    id_ingredient INT NOT NULL,
+    quantite VARCHAR(50),
+    id_unite VARCHAR(50),
+    PRIMARY KEY (id_cocktail, id_ingredient),
+    FOREIGN KEY (id_cocktail) REFERENCES cocktail(id_cocktail) ON DELETE CASCADE,
+    FOREIGN KEY (id_ingredient) REFERENCES ingredient(id_ingredient) ON DELETE CASCADE
+);
+
+
+ALTER TABLE cocktail_ingredient
+ALTER COLUMN id_unite TYPE INTEGER USING id_unite::INTEGER;
+
+ALTER TABLE cocktail_ingredient
+ADD CONSTRAINT fk_unite_cocktail_ingredient
+FOREIGN KEY (id_unite) REFERENCES unite(id_unite);
+
+-- Créer la table avis avec toutes les contraintes
+CREATE TABLE IF NOT EXISTS avis (
+    id_utilisateur INTEGER REFERENCES utilisateur(id_utilisateur) ON DELETE CASCADE,
+    id_cocktail INTEGER REFERENCES cocktail(id_cocktail) ON DELETE CASCADE,
+    note INTEGER CHECK (note IS NULL OR (note >= 0 AND note <= 10)),
+    commentaire TEXT CHECK (commentaire IS NULL OR LENGTH(commentaire) <= 1000),
+    favoris BOOLEAN DEFAULT FALSE NOT NULL,
+    date_creation TIMESTAMP DEFAULT NOW() NOT NULL,
+    date_modification TIMESTAMP DEFAULT NOW() NOT NULL,
+    PRIMARY KEY (id_utilisateur, id_cocktail)
+);
+
+ALTER TABLE avis ALTER COLUMN date_creation TYPE TIMESTAMP(0);
+ALTER TABLE avis Alter COLUMN date_modification TYPE TIMESTAMP(0);
+
+ALTER TABLE cocktail_ingredient
+ADD COLUMN X FLOAT,
+ADD COLUMN Y VARCHAR(20);
+
+
+ALTER TABLE cocktail_ingredient 
+ALTER COLUMN X TYPE NUMERIC(10,3)
+USING ROUND(X::NUMERIC, 3);
+
+
+ALTER TABLE cocktail_ingredient 
+ALTER COLUMN y TYPE VARCHAR(100);
+*/

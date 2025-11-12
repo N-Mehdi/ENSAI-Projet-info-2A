@@ -1,74 +1,125 @@
-from src.business_object.ingredient import Ingredient
-from src.utils.db_connection import DBConnection  # à adapter à ton projet
-from src.utils.logger import log  # idem
-from src.utils.singleton import Singleton  # idem
+from src.dao.db_connection import DBConnection
+from src.utils.log_decorator import log
+from src.utils.singleton import Singleton
 
 
 class IngredientDao(metaclass=Singleton):
-    """Classe contenant les méthodes agissant sur les ingrédients de la base de données."""
+    """DAO pour gérer les ingrédients."""
 
     @log
-    def rechercher_ingredient_par_nom(self, nom: str) -> Ingredient | None:
-        """Recherche un ingrédient par son nom exact.
+    def get_all_ingredients(self) -> list[dict]:
+        """Récupère tous les ingrédients.
+
+        Returns
+        -------
+        list[dict]
+            Liste de tous les ingrédients.
+
+        """
+        with DBConnection().connection as connection, connection.cursor() as cursor:
+            cursor.execute(
+                """
+                SELECT id_ingredient, nom
+                FROM ingredient
+                ORDER BY nom
+                """,
+            )
+            return cursor.fetchall()
+
+    @log
+    def get_by_name_with_suggestions(self, nom: str) -> dict:
+        """Cherche un ingrédient par son nom exact.
+        Si non trouvé, lève une exception avec des suggestions.
+
+        Parameters
         ----------
         nom : str
-            Nom de l'ingrédient à rechercher.
-        Retour
-        ------
-        Ingredient | None
-            L'objet Ingredient trouvé, ou None si aucun résultat.
-        """
-        with DBConnection().connection as connection, connection.cursor(dictionary=True) as cursor:
-            cursor.execute(
-                """
-                    SELECT id_ingredient, nom, alcool
-                    FROM ingredient
-                    WHERE nom = %(nom)s
-                    """,
-                {"nom": nom},
-            )
-            res = cursor.fetchone()
+            Nom de l'ingrédient (doit être normalisé au format Title Case)
 
-        if res:
-            return Ingredient(
-                id_ingredient=res["id_ingredient"],
-                nom=res["nom"],
-                ingredient_alcool=res["alcool"],
+        Returns
+        -------
+        dict
+            L'ingrédient trouvé
+
+        Raises
+        ------
+        IngredientNotFoundError
+            Si l'ingrédient n'existe pas (avec suggestions)
+
+        """
+        from src.utils.exceptions import IngredientNotFoundError
+        from src.utils.text_utils import normalize_ingredient_name
+
+        # Normaliser le nom
+        nom_normalized = normalize_ingredient_name(nom)
+
+        # Chercher l'ingrédient
+        ingredient = self.get_by_name(nom_normalized)
+
+        if not ingredient:
+            # Chercher des suggestions
+            suggestions_data = self.rechercher_ingredient_par_sequence_debut(
+                sequence=nom_normalized[:3] if len(nom_normalized) >= 3 else nom_normalized,
+                max_resultats=5,
             )
-        return None
+            suggestions = [ing.nom for ing in suggestions_data]
+            raise IngredientNotFoundError(nom_normalized, suggestions)
+
+        return ingredient
 
     @log
-    def rechercher_ingredient_par_premiere_lettre(self, lettre: str) -> list[Ingredient]:
-        """Recherche tous les ingrédients dont le nom commence par une certaine lettre.
+    def get_by_name(self, nom: str) -> dict | None:
+        """Cherche un ingrédient par son nom exact.
 
-        Paramètres
+        Parameters
         ----------
-        lettre : str
-            La première lettre du nom à filtrer.
+        nom : str
+            Nom de l'ingrédient (doit être normalisé au format Title Case)
 
-        Retour
-        ------
-        list[Ingredient]
-            Liste des ingrédients correspondants.
+        Returns
+        -------
+        dict | None
+            L'ingrédient s'il existe, None sinon
+
         """
-        with DBConnection().connection as connection, connection.cursor(dictionary=True) as cursor:
+        with DBConnection().connection as connection, connection.cursor() as cursor:
             cursor.execute(
                 """
-                    SELECT id_ingredient, nom, alcool
-                    FROM ingredient
-                    WHERE UPPER(nom) LIKE %(lettre)s
-                    """,
-                {"lettre": lettre.upper() + "%"},
+                SELECT id_ingredient, nom
+                FROM ingredient
+                WHERE nom = %(nom)s
+                """,
+                {"nom": nom},
             )
-            res = cursor.fetchall()
+            return cursor.fetchone()
 
-        liste_ingredients = []
-        for row in res:
-            liste_ingredients.append(
-                Ingredient(
-                    id_ingredient=row["id_ingredient"],
-                    nom=row["nom"],
-                    ingredient_alcool=row["alcool"],
-                ),
+    @log
+    def search_by_name(self, nom: str, limit: int = 10) -> list[dict]:
+        """Recherche des ingrédients dont le nom contient la chaîne donnée.
+        Utile pour l'auto-complétion et les suggestions.
+
+        Parameters
+        ----------
+        nom : str
+            Partie du nom à rechercher (insensible à la casse)
+        limit : int
+            Nombre max de résultats
+
+        Returns
+        -------
+        list[dict]
+            Liste des ingrédients correspondants
+
+        """
+        with DBConnection().connection as connection, connection.cursor() as cursor:
+            cursor.execute(
+                """
+                SELECT id_ingredient, nom
+                FROM ingredient
+                WHERE nom ILIKE %(nom)s
+                ORDER BY nom
+                LIMIT %(limit)s
+                """,
+                {"nom": f"%{nom}%", "limit": limit},
             )
-        return liste_ingredients
+            return cursor.fetchall()

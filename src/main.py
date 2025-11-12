@@ -15,7 +15,7 @@ app = FastAPI(
 
 @app.get("/")
 def root():
-    """Route racine de l'API"""
+    """Route racine de l'API."""
     return {
         "message": "Bienvenue sur l'API Cocktails",
         "documentation": "/docs",

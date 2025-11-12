@@ -1,4 +1,4 @@
-"""stock.py
+'''"""stock.py
 Ce module définit le stock d'un utilisateur.
 """
 
@@ -17,4 +17,4 @@ class Stock:
     def __init__(self, id_stock, nom):
         """Constructeur."""
         self.id_stock = id_stock
-        self.nom = nom
+        self.nom = nom'''

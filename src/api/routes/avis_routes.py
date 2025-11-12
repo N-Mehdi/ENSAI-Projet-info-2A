@@ -1,0 +1,200 @@
+from fastapi import APIRouter, HTTPException
+
+from src.api.deps import CurrentUser
+from src.models.avis import AvisCreate
+from src.service.avis_service import AvisService
+from src.utils.exceptions import (
+    AvisNotFoundError,
+    IngredientNotFoundError,
+    InvalidAvisError,
+    ServiceError,
+)
+
+router = APIRouter(prefix="/avis", tags=["Avis"])
+service = AvisService()
+
+
+@router.post(
+    "/add",
+    summary="➕ Ajouter ou modifier un avis",
+    description="""
+Ajoute ou modifie un avis sur un cocktail.
+
+🔒 Authentification requise
+
+**Règles :**
+- Au moins la note OU le commentaire doit être renseigné
+- Note : entier entre 0 et 10
+- Commentaire : max 1000 caractères
+- Si un avis existe déjà pour ce cocktail, il est mis à jour
+
+**Comportement UPSERT :**
+- Première fois → Crée l'avis
+- Déjà un avis → Met à jour note et commentaire
+""",
+)
+def add_avis(
+    avis: AvisCreate,
+    current_user: CurrentUser,
+):
+    """Ajoute ou modifie un avis."""
+    try:
+        message = service.create_or_update_avis(
+            id_utilisateur=current_user.id_utilisateur,
+            nom_cocktail=avis.nom_cocktail,
+            note=avis.note,
+            commentaire=avis.commentaire,
+        )
+        return {"status": "success", "message": message}
+
+    except InvalidAvisError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except IngredientNotFoundError as e:
+        raise HTTPException(
+            status_code=404,
+            detail={
+                "error": str(e),
+                "cocktail_recherche": e.nom_ingredient,
+                "suggestions": e.suggestions,
+            },
+        )
+    except ServiceError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+@router.delete(
+    "/{nom_cocktail}",
+    summary="🗑️ Supprimer mon avis",
+    description="""
+Supprime mon avis sur un cocktail.
+
+🔒 Authentification requise
+""",
+)
+def delete_avis(
+    nom_cocktail: str,
+    current_user: CurrentUser,
+):
+    """Supprime un avis."""
+    try:
+        message = service.delete_avis(
+            id_utilisateur=current_user.id_utilisateur,
+            nom_cocktail=nom_cocktail,
+        )
+        return {"status": "success", "message": message}
+
+    except AvisNotFoundError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+    except IngredientNotFoundError as e:
+        raise HTTPException(
+            status_code=404,
+            detail={
+                "error": str(e),
+                "cocktail_recherche": e.nom_ingredient,
+                "suggestions": e.suggestions,
+            },
+        )
+    except ServiceError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+@router.get(
+    "/mes-avis",
+    summary="📝 Mes avis",
+    description="""
+Récupère tous mes avis (format simplifié).
+
+🔒 Authentification requise
+
+**Format de réponse :**
+```json
+{
+  "pseudo_utilisateur": "mehdi",
+  "avis": [
+    {
+      "nom_cocktail": "Mojito",
+      "note": 9,
+      "commentaire": "Excellent cocktail !"
+    },
+    {
+      "nom_cocktail": "Margarita",
+      "note": 8,
+      "commentaire": null
+    }
+  ]
+}
+```
+""",
+)
+def get_mes_avis(current_user: CurrentUser):
+    """Récupère tous les avis de l'utilisateur connecté (format simplifié)."""
+    try:
+        return service.get_mes_avis_simple(
+            id_utilisateur=current_user.id_utilisateur,
+            pseudo=current_user.pseudo,
+        )
+    except ServiceError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+@router.get(
+    "/cocktail/{nom_cocktail}",
+    summary="📋 Voir tous les avis d'un cocktail",
+    description="""
+Récupère tous les avis d'un cocktail.
+
+✅ Pas d'authentification requise (endpoint public)
+
+**Informations retournées :**
+- Pseudo de l'utilisateur
+- Note
+- Commentaire
+- Date de création
+- Date de modification
+""",
+)
+def get_avis_cocktail(nom_cocktail: str, current_user: CurrentUser):
+    """Récupère tous les avis d'un cocktail."""
+    try:
+        return service.get_avis_cocktail(nom_cocktail)
+    except IngredientNotFoundError as e:
+        raise HTTPException(
+            status_code=404,
+            detail={
+                "error": str(e),
+                "cocktail_recherche": e.nom_ingredient,
+                "suggestions": e.suggestions,
+            },
+        )
+    except ServiceError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+@router.get(
+    "/summary/{nom_cocktail}",
+    summary="📊 Résumé des avis d'un cocktail",
+    description="""
+Récupère un résumé statistique des avis d'un cocktail.
+
+**Informations retournées :**
+- Nombre total d'avis
+- Note moyenne
+- Nombre de favoris
+""",
+)
+def get_avis_summary(nom_cocktail: str, current_user: CurrentUser):
+    """Récupère un résumé des avis."""
+    try:
+        return service.get_avis_summary(nom_cocktail)
+    except IngredientNotFoundError as e:
+        raise HTTPException(
+            status_code=404,
+            detail={
+                "error": str(e),
+                "cocktail_recherche": e.nom_ingredient,
+                "suggestions": e.suggestions,
+            },
+        )
+    except ServiceError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+

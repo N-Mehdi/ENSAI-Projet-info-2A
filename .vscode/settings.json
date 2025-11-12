@@ -8,5 +8,8 @@
     "python.linting.flake8Enabled": false,
     "editor.codeActionsOnSave": [
         "source.fixAll"
-    ]
+    ],
+    "files.exclude": {
+        "**/__pycache__": true
+    }
 }

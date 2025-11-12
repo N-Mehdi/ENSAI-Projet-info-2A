@@ -6,7 +6,7 @@ from passlib.context import CryptContext
 
 from src.utils.settings import settings
 
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto", bcrypt__rounds=12)
 ALGORITHM = "HS256"
 
 

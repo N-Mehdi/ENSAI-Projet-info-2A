@@ -108,3 +108,57 @@ class EmptyFieldError(Exception):
         """
         super().__init__(f"Le champ '{field}' ne peut pas être vide")
         self.field = field
+
+
+class StockError(ServiceError):
+    """Exception levée pour les erreurs liées au stock."""
+
+
+class IngredientNotFoundError(Exception):
+    """Exception levée quand un ingrédient n'est pas trouvé."""
+
+    def __init__(self, nom_ingredient: str, suggestions: list[str] = None):
+        self.nom_ingredient = nom_ingredient
+        self.suggestions = suggestions or []
+
+        message = f"Ingrédient '{nom_ingredient}' non trouvé."
+        if self.suggestions:
+            message += f" Vouliez-vous dire : {', '.join(self.suggestions[:3])} ?"
+
+        super().__init__(message)
+
+
+class InvalidQuantityError(StockError):
+    """Exception levée quand la quantité est invalide."""
+
+    def __init__(self, quantite: float):
+        super().__init__(f"Quantité invalide : {quantite}. La quantité doit être > 0")
+
+
+class InsufficientQuantityError(StockError):
+    """Exception levée quand la quantité à retirer est supérieure à la quantité disponible."""
+
+    def __init__(self, quantite_demandee: float, quantite_disponible: float):
+        self.quantite_demandee = quantite_demandee
+        self.quantite_disponible = quantite_disponible
+        super().__init__(
+            f"Quantité insuffisante : vous essayez de retirer {quantite_demandee}, "
+            f"mais seulement {quantite_disponible} disponible",
+        )
+
+
+class AvisError(ServiceError):
+    """Exception de base pour les erreurs liées aux avis."""
+
+
+class AvisNotFoundError(AvisError):
+    """Exception levée quand un avis n'est pas trouvé."""
+
+    def __init__(self, id_utilisateur: int, nom_cocktail: str):
+        super().__init__(
+            f"Aucun avis de l'utilisateur {id_utilisateur} pour le cocktail '{nom_cocktail}'",
+        )
+
+
+class InvalidAvisError(AvisError):
+    """Exception levée quand les données d'un avis sont invalides."""

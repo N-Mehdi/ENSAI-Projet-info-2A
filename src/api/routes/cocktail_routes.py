@@ -1,8 +1,8 @@
 from fastapi import APIRouter, HTTPException, status
 
+from src.api.deps import CurrentUser
 from src.dao.cocktail_dao import CocktailDao
 from src.service.cocktail_service import CocktailService
-from src.api.deps import CurrentUser
 
 router = APIRouter(prefix="/cocktails", tags=["Cocktails"])
 

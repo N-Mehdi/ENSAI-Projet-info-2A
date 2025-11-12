@@ -1,6 +1,6 @@
-       """return [self.pseudo, self.mail, self.date_naissance]"""
+"""return [self.pseudo, self.mail, self.date_naissance]"""
 
-    class Ingredient:
+class Ingredient:
     """Classe représentant un ingrédient.
 
     Attributs

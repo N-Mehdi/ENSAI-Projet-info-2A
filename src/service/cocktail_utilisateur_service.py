@@ -1,4 +1,4 @@
-from src.dao.cocktail_dao import CocktailDao
+'''''from src.dao.cocktail_dao import CocktailDao
 from src.dao.cocktail_utilisateur_dao import CocktailUtilisateurDao
 from src.business_object.cocktail import cocktail
 from src.business_object.utilisateur import utilisateur
@@ -71,4 +71,4 @@ class Cocktailutilisateurservice:
 
     def lister_cocktails_testes(self, id_utilisateur: int) -> list[int]:
         """Retourne la liste des IDs de cocktails testés d’un utilisateur."""
-        return self._cocktails_testes.get(id_utilisateur, [])
+        return self._cocktails_testes.get(id_utilisateur, [])'''''
