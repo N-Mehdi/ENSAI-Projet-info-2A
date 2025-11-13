@@ -15,7 +15,7 @@ service = AvisService()
 
 
 @router.post(
-    "/add",
+    "/ajouter",
     summary="➕ Ajouter ou modifier un avis",
     description="""
 Ajoute ou modifie un avis sur un cocktail.
@@ -197,4 +197,3 @@ def get_avis_summary(nom_cocktail: str, current_user: CurrentUser):
         )
     except ServiceError as e:
         raise HTTPException(status_code=400, detail=str(e))
-

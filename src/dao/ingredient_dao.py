@@ -123,3 +123,59 @@ class IngredientDao(metaclass=Singleton):
                 {"nom": f"%{nom}%", "limit": limit},
             )
             return cursor.fetchall()
+
+    def is_alcoholic(self, ingredient_id: int) -> bool:
+        """Vérifie si un ingrédient contient de l'alcool
+
+        Args:
+            ingredient_id: L'ID de l'ingrédient
+
+        Returns:
+            True si l'ingrédient contient de l'alcool
+            False si l'ingrédient ne contient pas d'alcool
+            None si l'ingrédient n'existe pas
+
+        """
+        with DBConnection().connection as connection, connection.cursor() as cursor:
+            cursor.execute(
+                """
+                        SELECT alcool
+                        FROM ingredient
+                        WHERE id_ingredient = %(ingredient_id)s
+                        """,
+                {"ingredient_id": ingredient_id},
+            )
+            result = cursor.fetchone()
+
+            if result is None:
+                return None
+
+            return result["alcool"]
+
+    def is_alcoholic_by_name(self, ingredient_name: str) -> bool:
+        """Vérifie si un ingrédient contient de l'alcool en utilisant son nom
+
+        Args:
+            ingredient_name: Le nom de l'ingrédient (insensible à la casse)
+
+        Returns:
+            True si l'ingrédient contient de l'alcool
+            False si l'ingrédient ne contient pas d'alcool
+            None si l'ingrédient n'existe pas
+
+        """
+        with DBConnection().connection as connection, connection.cursor() as cursor:
+            cursor.execute(
+                """
+                    SELECT alcool
+                    FROM ingredient
+                    WHERE LOWER(TRIM(nom)) = LOWER(TRIM(%(ingredient_name)s))
+                    """,
+                {"ingredient_name": ingredient_name},
+            )
+            result = cursor.fetchone()
+
+            if result is None:
+                return None
+
+            return result["alcool"]

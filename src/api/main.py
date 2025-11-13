@@ -8,6 +8,7 @@ from src.api.routes.liste_course_routes import router as liste_course_router
 from src.api.routes.login import router as login_router
 from src.api.routes.stock_course_routes import router as stock_course_router
 from src.api.routes.utilisateur_routes import router as utilisateur_router
+from src.api.routes.acces_routes import router as acces_router
 
 api_router = APIRouter(prefix="/api")
 
@@ -20,3 +21,4 @@ api_router.include_router(ingredient_router)
 api_router.include_router(favoris_router)
 api_router.include_router(avis_router)
 api_router.include_router(liste_course_router)
+api_router.include_router(acces_router)

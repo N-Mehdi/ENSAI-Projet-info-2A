@@ -209,3 +209,9 @@ USING ROUND(X::NUMERIC, 3);
 ALTER TABLE cocktail_ingredient 
 ALTER COLUMN y TYPE VARCHAR(100);
 */
+
+ALTER TABLE cocktail_ingredient RENAME COLUMN X TO qte;
+
+ALTER TABLE cocktail_ingredient RENAME COLUMN Y TO unite;
+
+--ALTER TABLE acces RENAME can_access TO has_access 

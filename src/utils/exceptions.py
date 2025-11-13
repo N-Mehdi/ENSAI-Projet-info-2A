@@ -162,3 +162,27 @@ class AvisNotFoundError(AvisError):
 
 class InvalidAvisError(AvisError):
     """Exception levée quand les données d'un avis sont invalides."""
+
+
+class UserNotFoundException(Exception):
+    """Exception levée quand un utilisateur n'est pas trouvé"""
+
+
+class AccessDeniedException(Exception):
+    """Exception levée quand l'accès est refusé"""
+
+
+class AccessAlreadyExistsException(Exception):
+    """Exception levée quand un accès existe déjà"""
+
+
+class AccessNotFoundException(Exception):
+    """Exception levée quand un accès n'existe pas"""
+
+
+class SelfAccessException(Exception):
+    """Exception levée quand un utilisateur essaie de se donner accès à lui-même"""
+
+
+class CocktailNotFoundException(Exception):
+    """Exception levée quand un cocktail n'est pas trouvé"""

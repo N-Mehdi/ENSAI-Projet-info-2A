@@ -9,7 +9,7 @@ from src.utils.exceptions import (
     ServiceError,
 )
 
-router = APIRouter(prefix="/liste-course", tags=["Liste de Course"])
+router = APIRouter(prefix="/liste-course", tags=["Liste de Courses"])
 service = ListeCourseService()
 
 
@@ -37,7 +37,7 @@ def get_my_liste_course(current_user: CurrentUser):
 
 
 @router.post(
-    "/add",
+    "/ajouter",
     summary="➕ Ajouter à la liste de course",
     description="""
 Ajoute un ingrédient à la liste de course.
@@ -187,8 +187,8 @@ def clear_liste_course(current_user: CurrentUser):
 
 
 @router.put(
-    "/toggle/{nom_ingredient}",
-    summary="✓ Cocher/Décocher un item",
+    "/cocher/{nom_ingredient}",
+    summary="✓ Cocher/Décocher un ingrédient",
     description="""
 Toggle le statut 'effectué' d'un item de la liste de course.
 

@@ -10,7 +10,7 @@ service = StockCourseService()
 
 
 @router.post(
-    "/add",
+    "/aajouterdd",
     summary="➕ Ajouter un ingrédient à mon stock",
     description="""
 Ajoute ou met à jour un ingrédient dans le stock de l'utilisateur connecté.
@@ -179,7 +179,7 @@ def get_my_ingredient(
 
 
 @router.delete(
-    "/remove",
+    "/retirer",
     summary="➖ Retirer une quantité d'un ingrédient",
     description="""
 Retire une quantité spécifique d'un ingrédient du stock.
@@ -303,7 +303,7 @@ def delete_ingredient_completely(
 
 
 @router.get(
-    "/full",
+    "/tout",
     summary="📋 Récupérer tous les ingrédients avec mon stock",
     description="""
 Récupère TOUS les ingrédients existants avec leur quantité dans mon stock.

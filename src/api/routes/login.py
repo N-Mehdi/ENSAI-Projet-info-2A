@@ -20,7 +20,7 @@ from src.utils.exceptions import (
 )
 from src.utils.settings import settings
 
-router = APIRouter(tags=["Login"])
+router = APIRouter(tags=["Inscription"])
 
 service = UtilisateurService(utilisateur_dao=UtilisateurDao())
 
