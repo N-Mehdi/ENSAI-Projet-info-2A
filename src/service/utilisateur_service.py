@@ -34,7 +34,7 @@ class UtilisateurService:
         mot_de_passe = donnees.mot_de_passe
 
         # Tronquer pour bcrypt si >72 bytes
-        mot_de_passe = mot_de_passe[:72]
+        """mot_de_passe = mot_de_passe[:72]"""
 
         # Hachage
         try:
@@ -166,7 +166,7 @@ class UtilisateurService:
             raise AuthError()
 
         # Hacher le nouveau mot de passe
-        mot_de_passe_nouveau = donnees.mot_de_passe_nouveau[:72]  # Tronquer pour bcrypt
+        """mot_de_passe_nouveau = donnees.mot_de_passe_nouveau[:72]"""  # Tronquer pour bcrypt
         try:
             mot_de_passe_nouveau_hashed = hacher_mot_de_passe(mot_de_passe_nouveau)
         except Exception as e:
