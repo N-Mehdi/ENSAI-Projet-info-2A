@@ -86,7 +86,7 @@ class CocktailUtilisateurDao(metaclass=Singleton):
 
     @log
     def get_cocktail_ingredient(self, id_cocktail):
-        """Récupère tous les ingrédients d'un cocktail donné"""
+        """Récupère tous les ingrédients d'un cocktail donné."""
         with DBConnection().connection as connection, connection.cursor() as cursor:
             cursor.execute(
                 "SELECT id_ingredient, quantite FROM cocktail_ingredient WHERE id_cocktail = %(id_cocktail)s",
@@ -103,9 +103,7 @@ class CocktailUtilisateurDao(metaclass=Singleton):
         id_ingredient,
         quantite,
     ) -> None:
-        """Modifie la quantité d'un ingrédient
-        dans la recette privée d'un utilisateur.
-        """
+        """Change la quantité d'un ingrédient dans la recette privée d'un utilisateur."""
         with DBConnection().connection as connection, connection.cursor() as cursor:
             # Vérifier si l'utilisateur est bien le propriétaire du cocktail
             cursor.execute(
@@ -311,124 +309,159 @@ class CocktailUtilisateurDao(metaclass=Singleton):
                 },
             )
 
+    @log
+    def get_teste(self, id_utilisateur: int) -> list[Cocktail]:
+        """Obtenir tous les cocktails testés par un utilisateur."""
+        with DBConnection().connection as connection, connection.cursor() as cursor:
+            cursor.execute(
+                "SELECT c.id_cocktail,                           "
+                "       c.nom,                                   "
+                "       c.categorie,                             "
+                "       c.verre,                                 "
+                "       c.alcool,                                "
+                "       c.image                                  "
+                "FROM cocktail c                                 "
+                "INNER JOIN avis a ON c.id_cocktail = a.id_cocktail "
+                "WHERE a.id_utilisateur = %(id_utilisateur)s     "
+                "AND a.teste = TRUE                              ",
+                {"id_utilisateur": id_utilisateur},
+            )
+            res = cursor.fetchall()
 
-@log
-def get_cocktail_id_by_name(self, nom_cocktail: str) -> int | None:
-    """Récupère l'ID d'un cocktail par son nom."""
-    with DBConnection().connection as connection, connection.cursor() as cursor:
-        cursor.execute(
-            "SELECT id_cocktail FROM cocktail WHERE LOWER(nom) = LOWER(%(nom)s)",
-            {"nom": nom_cocktail},
-        )
-        result = cursor.fetchone()
-        return result["id_cocktail"] if result else None
+        liste_cocktails_testes = []
 
+        if res:
+            for cocktail in res:
+                liste_cocktails_testes.append(
+                    Cocktail(
+                        id_cocktail=cocktail["id_cocktail"],
+                        nom=cocktail["nom"],
+                        categorie=cocktail["categorie"],
+                        verre=cocktail["verre"],
+                        alcool=cocktail["alcool"],
+                        image=cocktail["image"],
+                    ),
+                )
 
-@log
-def ajouter_cocktail_teste(self, id_utilisateur: int, nom_cocktail: str) -> dict:
-    """Ajoute un cocktail aux cocktails testés par son nom.
-    Crée l'avis s'il n'existe pas (avec note et commentaire NULL).
-    """
-    # Récupérer l'ID du cocktail par son nom
-    id_cocktail = self.get_cocktail_id_by_name(nom_cocktail)
+        return liste_cocktails_testes
 
-    if not id_cocktail:
-        raise ValueError(f"Cocktail '{nom_cocktail}' introuvable")
+    @log
+    def get_cocktail_id_by_name(self, nom_cocktail: str) -> int | None:
+        """Récupère l'ID d'un cocktail par son nom."""
+        with DBConnection().connection as connection, connection.cursor() as cursor:
+            cursor.execute(
+                "SELECT id_cocktail FROM cocktail WHERE LOWER(nom) = LOWER(%(nom)s)",
+                {"nom": nom_cocktail},
+            )
+            result = cursor.fetchone()
+            return result["id_cocktail"] if result else None
 
-    with DBConnection().connection as connection, connection.cursor() as cursor:
-        # Vérifier si déjà testé
-        cursor.execute(
-            """
-            SELECT teste
-            FROM avis
-            WHERE id_utilisateur = %(id_utilisateur)s
-            AND id_cocktail = %(id_cocktail)s
-            """,
-            {
-                "id_utilisateur": id_utilisateur,
-                "id_cocktail": id_cocktail,
-            },
-        )
-        result = cursor.fetchone()
+    @log
+    def ajouter_cocktail_teste(self, id_utilisateur: int, nom_cocktail: str) -> dict:
+        """Ajoute un cocktail aux cocktails testés par son nom.
+        Crée l'avis s'il n'existe pas (avec note et commentaire NULL).
+        """
+        # Récupérer l'ID du cocktail par son nom
+        id_cocktail = self.get_cocktail_id_by_name(nom_cocktail)
 
-        if result and result["teste"]:
+        if not id_cocktail:
+            raise ValueError(f"Cocktail '{nom_cocktail}' introuvable")
+
+        with DBConnection().connection as connection, connection.cursor() as cursor:
+            # Vérifier si déjà testé
+            cursor.execute(
+                """
+                SELECT teste
+                FROM avis
+                WHERE id_utilisateur = %(id_utilisateur)s
+                AND id_cocktail = %(id_cocktail)s
+                """,
+                {
+                    "id_utilisateur": id_utilisateur,
+                    "id_cocktail": id_cocktail,
+                },
+            )
+            result = cursor.fetchone()
+
+            if result and result["teste"]:
+                return {
+                    "nom_cocktail": nom_cocktail,
+                    "id_cocktail": id_cocktail,
+                    "teste": True,
+                    "deja_teste": True,
+                }
+
+            # Ajouter aux testés (ou créer l'avis si inexistant)
+            cursor.execute(
+                """
+                INSERT INTO avis (id_utilisateur, id_cocktail, note, commentaire, teste)
+                VALUES (%(id_utilisateur)s, %(id_cocktail)s, NULL, NULL, TRUE)
+                ON CONFLICT (id_utilisateur, id_cocktail)
+                DO UPDATE SET
+                    teste = TRUE,
+                    date_modification = NOW()
+                RETURNING teste
+                """,
+                {
+                    "id_utilisateur": id_utilisateur,
+                    "id_cocktail": id_cocktail,
+                },
+            )
+
             return {
                 "nom_cocktail": nom_cocktail,
                 "id_cocktail": id_cocktail,
                 "teste": True,
-                "deja_teste": True,
+                "deja_teste": False,
             }
 
-        # Ajouter aux testés
-        cursor.execute(
-            """
-            INSERT INTO avis (id_utilisateur, id_cocktail, note, commentaire, teste)
-            VALUES (%(id_utilisateur)s, %(id_cocktail)s, NULL, NULL, TRUE)
-            ON CONFLICT (id_utilisateur, id_cocktail)
-            DO UPDATE SET
-                teste = TRUE,
-                date_modification = NOW()
-            RETURNING teste
-            """,
-            {
-                "id_utilisateur": id_utilisateur,
+    @log
+    def retirer_cocktail_teste(self, id_utilisateur: int, nom_cocktail: str) -> dict:
+        """Retire un cocktail des cocktails testés par son nom."""
+        # Récupérer l'ID du cocktail par son nom
+        id_cocktail = self.get_cocktail_id_by_name(nom_cocktail)
+
+        if not id_cocktail:
+            raise ValueError(f"Cocktail '{nom_cocktail}' introuvable")
+
+        with DBConnection().connection as connection, connection.cursor() as cursor:
+            # Vérifier si le cocktail est testé
+            cursor.execute(
+                """
+                SELECT teste
+                FROM avis
+                WHERE id_utilisateur = %(id_utilisateur)s
+                AND id_cocktail = %(id_cocktail)s
+                """,
+                {
+                    "id_utilisateur": id_utilisateur,
+                    "id_cocktail": id_cocktail,
+                },
+            )
+            result = cursor.fetchone()
+
+            if not result or not result["teste"]:
+                raise ValueError(
+                    f"Le cocktail '{nom_cocktail}' n'est pas dans vos cocktails testés",
+                )
+
+            # Retirer des testés
+            cursor.execute(
+                """
+                UPDATE avis
+                SET teste = FALSE,
+                    date_modification = NOW()
+                WHERE id_utilisateur = %(id_utilisateur)s
+                AND id_cocktail = %(id_cocktail)s
+                """,
+                {
+                    "id_utilisateur": id_utilisateur,
+                    "id_cocktail": id_cocktail,
+                },
+            )
+
+            return {
+                "nom_cocktail": nom_cocktail,
                 "id_cocktail": id_cocktail,
-            },
-        )
-
-        return {
-            "nom_cocktail": nom_cocktail,
-            "id_cocktail": id_cocktail,
-            "teste": True,
-            "deja_teste": False,
-        }
-
-
-@log
-def retirer_cocktail_teste(self, id_utilisateur: int, nom_cocktail: str) -> dict:
-    """Retire un cocktail des cocktails testés par son nom."""
-    # Récupérer l'ID du cocktail par son nom
-    id_cocktail = self.get_cocktail_id_by_name(nom_cocktail)
-
-    if not id_cocktail:
-        raise ValueError(f"Cocktail '{nom_cocktail}' introuvable")
-
-    with DBConnection().connection as connection, connection.cursor() as cursor:
-        # Vérifier si le cocktail est testé
-        cursor.execute(
-            """
-            SELECT teste
-            FROM avis
-            WHERE id_utilisateur = %(id_utilisateur)s
-            AND id_cocktail = %(id_cocktail)s
-            """,
-            {
-                "id_utilisateur": id_utilisateur,
-                "id_cocktail": id_cocktail,
-            },
-        )
-        result = cursor.fetchone()
-
-        if not result or not result["teste"]:
-            raise ValueError(f"Le cocktail '{nom_cocktail}' n'est pas dans vos cocktails testés")
-
-        # Retirer des testés
-        cursor.execute(
-            """
-            UPDATE avis
-            SET teste = FALSE,
-                date_modification = NOW()
-            WHERE id_utilisateur = %(id_utilisateur)s
-            AND id_cocktail = %(id_cocktail)s
-            """,
-            {
-                "id_utilisateur": id_utilisateur,
-                "id_cocktail": id_cocktail,
-            },
-        )
-
-        return {
-            "nom_cocktail": nom_cocktail,
-            "id_cocktail": id_cocktail,
-            "teste": False,
-        }
+                "teste": False,
+            }

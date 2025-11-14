@@ -1,4 +1,6 @@
-from fastapi import APIRouter, HTTPException, status
+from typing import Annotated
+
+from fastapi import APIRouter, HTTPException, Query, status
 
 from src.api.deps import CurrentUser
 from src.models.cocktail_prive import CocktailResponse
@@ -8,8 +10,6 @@ router = APIRouter(prefix="/cocktails-teste", tags=["Cocktails testés"])
 
 service = CocktailUtilisateurService()
 
-
-# Dans cocktail_utilisateur_router.py
 
 from pydantic import BaseModel, Field
 
@@ -21,9 +21,11 @@ class CocktailTesteRequest(BaseModel):
 
 
 @router.get(
-    "/voir/cocktails/testes",
+    "/voir/cocktails-testes",
     response_model=list[CocktailResponse],
-    summary="Récupérer mes cocktails testés",
+    summary="Récupérer les cocktails testés",
+    description="Récupère tous les cocktails testés par l'utilisateur connecté. "
+    "L'utilisateur propriétaire est automatiquement récupéré depuis le token JWT.",
 )
 def get_mes_cocktails_testes(current_user: CurrentUser):
     """Récupère tous les cocktails testés par l'utilisateur connecté."""
@@ -48,19 +50,21 @@ def get_mes_cocktails_testes(current_user: CurrentUser):
 
 
 @router.post(
-    "/ajouter/cocktails/testes",
+    "/ajouter/cocktail-teste",
     status_code=status.HTTP_201_CREATED,
     summary="Ajouter un cocktail aux testés",
+    description="Ajoute un cocktail aux cocktails testés de l'utilisateur connecté. "
+    "L'utilisateur propriétaire est automatiquement récupéré depuis le token JWT.",
 )
 def ajouter_cocktail_teste(
-    request: CocktailTesteRequest,
+    nom_cocktail: Annotated[str, Query(description="Le nom du cocktail à marquer comme testé")],
     current_user: CurrentUser,
 ):
     """Ajoute un cocktail aux cocktails testés pour l'utilisateur connecté."""
     try:
         result = service.ajouter_cocktail_teste(
             current_user.id_utilisateur,
-            request.nom_cocktail,
+            nom_cocktail,
         )
 
         if result.get("deja_teste"):
@@ -91,16 +95,18 @@ def ajouter_cocktail_teste(
     "/retirer/cocktails/testes",
     status_code=status.HTTP_200_OK,
     summary="Retirer un cocktail des testés",
+    description="Retire un cocktail des cocktails testés de l'utilisateur connecté. "
+    "L'utilisateur propriétaire est automatiquement récupéré depuis le token JWT.",
 )
 def retirer_cocktail_teste(
-    request: CocktailTesteRequest,
+    nom_cocktail: Annotated[str, Query(description="Le nom du cocktail dont retirer le statut testé")],
     current_user: CurrentUser,
 ):
     """Retire un cocktail des cocktails testés pour l'utilisateur connecté."""
     try:
         result = service.retirer_cocktail_teste(
             current_user.id_utilisateur,
-            request.nom_cocktail,
+            nom_cocktail,
         )
 
         return {

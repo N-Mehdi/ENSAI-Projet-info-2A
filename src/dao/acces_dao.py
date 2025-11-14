@@ -244,20 +244,6 @@ class AccesDAO(metaclass=Singleton):
             connection.commit()
             return cursor.rowcount > 0
 
-    def get_cocktail_id_by_name(self, cocktail_name: str) -> int | None:
-        """Récupère l'ID d'un cocktail par son nom."""
-        with DBConnection().connection as connection, connection.cursor() as cursor:
-            cursor.execute(
-                """
-                    SELECT id_cocktail
-                    FROM cocktail
-                    WHERE LOWER(TRIM(nom)) = LOWER(TRIM(%(cocktail_name)s))
-                    """,
-                {"cocktail_name": cocktail_name},
-            )
-            result = cursor.fetchone()
-            return result["id_cocktail"] if result else None
-
     def is_cocktail_in_private_list(self, owner_id: int, cocktail_id: int) -> bool:
         """Vérifie si un cocktail est dans la liste privée d'un utilisateur."""
         with DBConnection().connection as connection, connection.cursor() as cursor:

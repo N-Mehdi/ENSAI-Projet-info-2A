@@ -10,7 +10,7 @@ service = StockCourseService()
 
 
 @router.post(
-    "/aajouterdd",
+    "/ajouter",
     summary="➕ Ajouter un ingrédient à mon stock",
     description="""
 Ajoute ou met à jour un ingrédient dans le stock de l'utilisateur connecté.

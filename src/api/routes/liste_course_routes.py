@@ -1,9 +1,8 @@
 """doc."""
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Query
 
 from src.api.deps import CurrentUser
-from src.models.liste_course import ListeCourseItemAdd
 from src.service.liste_course_service import ListeCourseService
 from src.utils.exceptions import (
     IngredientNotFoundError,
@@ -38,6 +37,9 @@ def get_my_liste_course(current_user: CurrentUser):
         raise HTTPException(status_code=400, detail=str(e))
 
 
+from typing import Annotated
+
+
 @router.post(
     "/ajouter",
     summary="➕ Ajouter à la liste de course",
@@ -58,16 +60,18 @@ Ajoute un ingrédient à la liste de course.
 """,
 )
 def add_to_liste_course(
-    item: ListeCourseItemAdd,
+    nom_ingredient: Annotated[str, Query(min_length=2, description="Nom de l'ingrédient", example="Vodka")],
+    quantite: Annotated[float, Query(gt=0, description="Quantité à acheter (doit être > 0)", example=500.0)],
+    id_unite: Annotated[int, Query(description="ID de l'unité (voir GET /api/ref/unites)", example=2)],
     current_user: CurrentUser,
 ):
     """Ajoute un ingrédient à la liste de course."""
     try:
         message = service.add_to_liste_course(
             id_utilisateur=current_user.id_utilisateur,
-            nom_ingredient=item.nom_ingredient,
-            quantite=item.quantite,
-            id_unite=item.id_unite,
+            nom_ingredient=nom_ingredient,
+            quantite=quantite,
+            id_unite=id_unite,
         )
         return {"status": "success", "message": message}
 
