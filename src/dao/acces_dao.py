@@ -5,18 +5,10 @@ from src.utils.singleton import Singleton
 
 
 class AccesDAO(metaclass=Singleton):
-    """DAO pour gérer les accès aux cocktails privés"""
+    """DAO pour gérer les accès aux cocktails privés."""
 
     def get_user_id_by_pseudo(self, pseudo: str) -> int | None:
-        """Récupère l'ID d'un utilisateur par son pseudo
-
-        Args:
-            pseudo: Le pseudo de l'utilisateur
-
-        Returns:
-            L'ID de l'utilisateur ou None si non trouvé
-
-        """
+        """Récupère l'ID d'un utilisateur par son pseudo."""
         with DBConnection().connection as connection, connection.cursor() as cursor:
             cursor.execute(
                 """
@@ -30,17 +22,7 @@ class AccesDAO(metaclass=Singleton):
             return result["id_utilisateur"] if result else None
 
     def grant_access(self, owner_id: int, user_id: int) -> bool:
-        """Donne l'accès à un utilisateur pour voir les cocktails privés du propriétaire
-        L'utilisateur aura une ligne (is_owner=false) pour chaque cocktail privé du propriétaire
-
-        Args:
-            owner_id: L'ID du propriétaire des cocktails
-            user_id: L'ID de l'utilisateur qui reçoit l'accès
-
-        Returns:
-            True si au moins un accès a été créé
-
-        """
+        """Donne l'accès à un utilisateur pour voir les cocktails privés du propriétaire."""
         with DBConnection().connection as connection, connection.cursor() as cursor:
             # Récupérer tous les cocktails privés du propriétaire
             cursor.execute(
@@ -86,16 +68,7 @@ class AccesDAO(metaclass=Singleton):
             return created
 
     def revoke_access(self, owner_id: int, user_id: int) -> bool:
-        """Retire l'accès d'un utilisateur à tous les cocktails privés du propriétaire
-
-        Args:
-            owner_id: L'ID du propriétaire des cocktails
-            user_id: L'ID de l'utilisateur dont on retire l'accès
-
-        Returns:
-            True si au moins un accès a été retiré, False si aucun
-
-        """
+        """Retire l'accès d'un utilisateur à tous les cocktails privés du propriétaire."""
         with DBConnection().connection as connection, connection.cursor() as cursor:
             # Récupérer tous les cocktails privés du propriétaire
             cursor.execute(
@@ -127,16 +100,7 @@ class AccesDAO(metaclass=Singleton):
             return cursor.rowcount > 0
 
     def has_access(self, owner_id: int, viewer_id: int) -> bool:
-        """Vérifie si un utilisateur a accès aux cocktails privés d'un propriétaire
-
-        Args:
-            owner_id: L'ID du propriétaire des cocktails
-            viewer_id: L'ID de l'utilisateur qui veut voir
-
-        Returns:
-            True si l'utilisateur a accès (il a au moins une ligne avec has_access=true)
-
-        """
+        """Vérifie si un utilisateur a accès aux cocktails privés d'un propriétaire."""
         # Le propriétaire a toujours accès à ses propres cocktails
         if owner_id == viewer_id:
             return True
@@ -164,15 +128,7 @@ class AccesDAO(metaclass=Singleton):
             return cursor.fetchone() is not None
 
     def get_users_with_access(self, owner_id: int) -> list[str]:
-        """Récupère la liste des pseudos des utilisateurs ayant accès aux cocktails privés
-
-        Args:
-            owner_id: L'ID du propriétaire des cocktails
-
-        Returns:
-            Liste des pseudos (sans doublons)
-
-        """
+        """Récupère la liste des pseudos des utilisateurs ayant accès aux cocktails privés."""
         with DBConnection().connection as connection, connection.cursor() as cursor:
             # Trouver tous les utilisateurs qui ont des lignes d'accès aux cocktails du propriétaire
             cursor.execute(
@@ -197,16 +153,7 @@ class AccesDAO(metaclass=Singleton):
             return [row["pseudo"] for row in results]
 
     def get_private_cocktails(self, owner_id: int) -> list[dict[str, Any]]:
-        """Récupère la liste des cocktails privés d'un utilisateur
-        Les cocktails privés sont identifiés par leur présence dans la table acces avec is_owner = true
-
-        Args:
-            owner_id: L'ID du propriétaire des cocktails
-
-        Returns:
-            Liste des cocktails avec leurs détails
-
-        """
+        """Récupère la liste des cocktails privés d'un utilisateur."""
         with DBConnection().connection as connection, connection.cursor() as cursor:
             cursor.execute(
                 """
@@ -254,16 +201,7 @@ class AccesDAO(metaclass=Singleton):
             return result
 
     def add_cocktail_to_private_list(self, owner_id: int, cocktail_id: int) -> bool:
-        """Ajoute un cocktail à la liste privée d'un utilisateur
-
-        Args:
-            owner_id: L'ID du propriétaire
-            cocktail_id: L'ID du cocktail à ajouter
-
-        Returns:
-            True si le cocktail a été ajouté, False s'il était déjà dans la liste
-
-        """
+        """Ajoute un cocktail à la liste privée d'un utilisateur."""
         with DBConnection().connection as connection, connection.cursor() as cursor:
             # Vérifier si le cocktail existe déjà dans la liste privée
             cursor.execute(
@@ -292,16 +230,7 @@ class AccesDAO(metaclass=Singleton):
             return True
 
     def remove_cocktail_from_private_list(self, owner_id: int, cocktail_id: int) -> bool:
-        """Retire un cocktail de la liste privée d'un utilisateur
-
-        Args:
-            owner_id: L'ID du propriétaire
-            cocktail_id: L'ID du cocktail à retirer
-
-        Returns:
-            True si le cocktail a été retiré, False s'il n'était pas dans la liste
-
-        """
+        """Retire un cocktail de la liste privée d'un utilisateur."""
         with DBConnection().connection as connection, connection.cursor() as cursor:
             cursor.execute(
                 """
@@ -316,15 +245,7 @@ class AccesDAO(metaclass=Singleton):
             return cursor.rowcount > 0
 
     def get_cocktail_id_by_name(self, cocktail_name: str) -> int | None:
-        """Récupère l'ID d'un cocktail par son nom
-
-        Args:
-            cocktail_name: Le nom du cocktail
-
-        Returns:
-            L'ID du cocktail ou None si non trouvé
-
-        """
+        """Récupère l'ID d'un cocktail par son nom."""
         with DBConnection().connection as connection, connection.cursor() as cursor:
             cursor.execute(
                 """
@@ -338,16 +259,7 @@ class AccesDAO(metaclass=Singleton):
             return result["id_cocktail"] if result else None
 
     def is_cocktail_in_private_list(self, owner_id: int, cocktail_id: int) -> bool:
-        """Vérifie si un cocktail est dans la liste privée d'un utilisateur
-
-        Args:
-            owner_id: L'ID du propriétaire
-            cocktail_id: L'ID du cocktail
-
-        Returns:
-            True si le cocktail est dans la liste privée
-
-        """
+        """Vérifie si un cocktail est dans la liste privée d'un utilisateur."""
         with DBConnection().connection as connection, connection.cursor() as cursor:
             cursor.execute(
                 """

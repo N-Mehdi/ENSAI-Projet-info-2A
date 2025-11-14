@@ -1,0 +1,31 @@
+"""doc."""
+
+from pydantic import BaseModel, Field
+
+
+class CocktailCreate(BaseModel):
+    """Modèle pour créer un cocktail privé."""
+
+    nom: str = Field(..., description="Nom du cocktail")
+    categorie: str | None = Field(None, description="Catégorie du cocktail")
+    verre: str | None = Field(None, description="Type de verre")
+    alcool: bool | None = Field(None, description="Contient de l'alcool")
+    image: str | None = Field(None, description="URL de l'image")
+
+
+class IngredientUpdate(BaseModel):
+    """Modèle pour ajouter ou modifier un ingrédient."""
+
+    id_ingredient: int = Field(..., description="ID de l'ingrédient")
+    quantite: float = Field(..., gt=0, description="Quantité de l'ingrédient")
+
+
+class CocktailResponse(BaseModel):
+    """Modèle de réponse pour un cocktail."""
+
+    id_cocktail: int
+    nom: str
+    categorie: str | None
+    verre: str | None
+    alcool: bool | None
+    image: str | None

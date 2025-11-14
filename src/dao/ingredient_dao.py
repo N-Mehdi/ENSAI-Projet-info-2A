@@ -1,6 +1,8 @@
 from src.dao.db_connection import DBConnection
+from src.utils.exceptions import IngredientNotFoundError
 from src.utils.log_decorator import log
 from src.utils.singleton import Singleton
+from src.utils.text_utils import normalize_ingredient_name
 
 
 class IngredientDao(metaclass=Singleton):
@@ -47,9 +49,6 @@ class IngredientDao(metaclass=Singleton):
             Si l'ingrédient n'existe pas (avec suggestions)
 
         """
-        from src.utils.exceptions import IngredientNotFoundError
-        from src.utils.text_utils import normalize_ingredient_name
-
         # Normaliser le nom
         nom_normalized = normalize_ingredient_name(nom)
 
@@ -125,17 +124,7 @@ class IngredientDao(metaclass=Singleton):
             return cursor.fetchall()
 
     def is_alcoholic(self, ingredient_id: int) -> bool:
-        """Vérifie si un ingrédient contient de l'alcool
-
-        Args:
-            ingredient_id: L'ID de l'ingrédient
-
-        Returns:
-            True si l'ingrédient contient de l'alcool
-            False si l'ingrédient ne contient pas d'alcool
-            None si l'ingrédient n'existe pas
-
-        """
+        """Vérifie si un ingrédient contient de l'alcool."""
         with DBConnection().connection as connection, connection.cursor() as cursor:
             cursor.execute(
                 """
@@ -153,17 +142,7 @@ class IngredientDao(metaclass=Singleton):
             return result["alcool"]
 
     def is_alcoholic_by_name(self, ingredient_name: str) -> bool:
-        """Vérifie si un ingrédient contient de l'alcool en utilisant son nom
-
-        Args:
-            ingredient_name: Le nom de l'ingrédient (insensible à la casse)
-
-        Returns:
-            True si l'ingrédient contient de l'alcool
-            False si l'ingrédient ne contient pas d'alcool
-            None si l'ingrédient n'existe pas
-
-        """
+        """Vérifie si un ingrédient contient de l'alcool en utilisant son nom."""
         with DBConnection().connection as connection, connection.cursor() as cursor:
             cursor.execute(
                 """

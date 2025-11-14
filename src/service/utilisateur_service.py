@@ -7,7 +7,6 @@ from src.models.utilisateurs import (
     UserDelete,
     UserRegister,
     UserUpdatePassword,
-    UserUpdatePseudo,
 )
 from src.utils.exceptions import AuthError, EmptyFieldError, ServiceError, UserNotFoundError
 from src.utils.securite import hacher_mot_de_passe, verifier_mot_de_passe
@@ -61,7 +60,7 @@ class UtilisateurService:
         return "compte créé avec succès."
 
     def authenticate(self, pseudo: str, mot_de_passe: str) -> User:
-        """Authenticate a user by pseudo and mot_de_passe."""
+        """Authentifie un utilisateur par son pseudo et son mot de passe."""
         db_utilisateur = self.utilisateur_dao.recuperer_par_pseudo(pseudo)
         if db_utilisateur is None:
             raise UserNotFoundError(pseudo=pseudo)
@@ -226,55 +225,6 @@ class UtilisateurService:
         if utilisateur is None:
             raise UserNotFoundError(id_utilisateur=id_utilisateur)
         return utilisateur
-
-    def changer_pseudo(self, donnees: UserUpdatePseudo, ancien_pseudo: str) -> str:
-        """Changer le pseudo d'un utilisateur.
-
-        Parameters
-        ----------
-        donnees : UserUpdatePseudo
-            Contient le nouveau pseudo
-        ancien_pseudo : str
-            Pseudo actuel de l'utilisateur (depuis le token/session)
-
-        Returns
-        -------
-        str
-            Message de confirmation
-
-        Raises
-        ------
-        EmptyFieldError
-            Si un champ est vide
-        UserNotFoundError
-            Si l'utilisateur n'existe pas
-        UserAlreadyExistsError
-            Si le nouveau pseudo existe déjà
-        ServiceError
-            Si les pseudos sont identiques ou erreur générale
-
-        """
-        # Validation des champs vides
-        if not ancien_pseudo or not ancien_pseudo.strip():
-            raise EmptyFieldError("ancien_pseudo")
-        if not donnees.nouveau_pseudo or not donnees.nouveau_pseudo.strip():
-            raise EmptyFieldError("nouveau_pseudo")
-
-        # Vérifier que les deux pseudos ne sont pas identiques
-        if ancien_pseudo == donnees.nouveau_pseudo:
-            raise ServiceError("Le nouveau pseudo doit être différent de l'ancien")
-
-        # Vérifier que l'ancien pseudo existe
-        utilisateur = self.utilisateur_dao.recuperer_par_pseudo(ancien_pseudo)
-        if not utilisateur:
-            raise UserNotFoundError(pseudo=ancien_pseudo)
-
-        # Mettre à jour le pseudo
-        succes = self.utilisateur_dao.update_pseudo(ancien_pseudo, donnees.nouveau_pseudo)
-        if not succes:
-            raise ServiceError("Impossible de mettre à jour le pseudo")
-
-        return "Pseudo modifié avec succès."
 
     def obtenir_date_inscription(self, pseudo: str) -> DateInscriptionResponse:
         """Obtenir la date d'inscription d'un utilisateur.

@@ -1,4 +1,14 @@
+"""doc."""
+
+import sys
+from pathlib import Path
+
+import uvicorn
 from fastapi import FastAPI
+
+if __name__ == "__main__":
+    root_dir = Path(__file__).parent.parent
+    sys.path.insert(0, str(root_dir))
 
 from src.api.main import api_router
 from src.utils.settings import settings
@@ -14,7 +24,7 @@ app = FastAPI(
 
 
 @app.get("/")
-def root():
+def root() -> dict:
     """Route racine de l'API."""
     return {
         "message": "Bienvenue sur l'API Cocktails",
@@ -27,8 +37,12 @@ def root():
 
 app.include_router(api_router)
 
-# ouvrir la APIREST :
-# python -m uvicorn src.main:app --reload --host 0.0.0.0 --port 8000
+if __name__ == "__main__":
+    import uvicorn
 
-# pour la fermer :
-# soit avec le raccourci "ctrl + c" soit "kill %1" dans le terminal
+    uvicorn.run(
+        "src.main:app",
+        host="0.0.0.0",
+        port=8000,
+        reload=True,
+    )

@@ -1,0 +1,120 @@
+from fastapi import APIRouter, HTTPException, status
+
+from src.api.deps import CurrentUser
+from src.models.cocktail_prive import CocktailResponse
+from src.service.cocktail_utilisateur_service import CocktailUtilisateurService
+
+router = APIRouter(prefix="/cocktails-teste", tags=["Cocktails testés"])
+
+service = CocktailUtilisateurService()
+
+
+# Dans cocktail_utilisateur_router.py
+
+from pydantic import BaseModel, Field
+
+
+class CocktailTesteRequest(BaseModel):
+    """Modèle pour marquer un cocktail comme testé."""
+
+    nom_cocktail: str = Field(..., description="Nom du cocktail", example="Margarita")
+
+
+@router.get(
+    "/voir/cocktails/testes",
+    response_model=list[CocktailResponse],
+    summary="Récupérer mes cocktails testés",
+)
+def get_mes_cocktails_testes(current_user: CurrentUser):
+    """Récupère tous les cocktails testés par l'utilisateur connecté."""
+    try:
+        cocktails = service.get_cocktails_testes(current_user.id_utilisateur)
+        return [
+            CocktailResponse(
+                id_cocktail=c.id_cocktail,
+                nom=c.nom,
+                categorie=c.categorie,
+                verre=c.verre,
+                alcool=c.alcool,
+                image=c.image,
+            )
+            for c in cocktails
+        ]
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Erreur lors de la récupération des cocktails testés : {e!s}",
+        )
+
+
+@router.post(
+    "/ajouter/cocktails/testes",
+    status_code=status.HTTP_201_CREATED,
+    summary="Ajouter un cocktail aux testés",
+)
+def ajouter_cocktail_teste(
+    request: CocktailTesteRequest,
+    current_user: CurrentUser,
+):
+    """Ajoute un cocktail aux cocktails testés pour l'utilisateur connecté."""
+    try:
+        result = service.ajouter_cocktail_teste(
+            current_user.id_utilisateur,
+            request.nom_cocktail,
+        )
+
+        if result.get("deja_teste"):
+            return {
+                "message": f"Le cocktail '{result['nom_cocktail']}' est déjà dans vos cocktails testés",
+                "nom_cocktail": result["nom_cocktail"],
+                "teste": True,
+            }
+
+        return {
+            "message": f"Cocktail '{result['nom_cocktail']}' ajouté aux testés",
+            "nom_cocktail": result["nom_cocktail"],
+            "teste": True,
+        }
+    except ValueError as e:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=str(e),
+        )
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Erreur lors de l'ajout : {e!s}",
+        )
+
+
+@router.delete(
+    "/retirer/cocktails/testes",
+    status_code=status.HTTP_200_OK,
+    summary="Retirer un cocktail des testés",
+)
+def retirer_cocktail_teste(
+    request: CocktailTesteRequest,
+    current_user: CurrentUser,
+):
+    """Retire un cocktail des cocktails testés pour l'utilisateur connecté."""
+    try:
+        result = service.retirer_cocktail_teste(
+            current_user.id_utilisateur,
+            request.nom_cocktail,
+        )
+
+        return {
+            "message": f"Cocktail '{result['nom_cocktail']}' retiré des testés",
+            "nom_cocktail": result["nom_cocktail"],
+            "teste": False,
+        }
+    except ValueError as e:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=str(e),
+        )
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Erreur lors du retrait : {e!s}",
+        )

@@ -71,7 +71,7 @@ class AvisDao(metaclass=Singleton):
         with DBConnection().connection as connection, connection.cursor() as cursor:
             cursor.execute(
                 """
-                SELECT 
+                SELECT
                     a.id_utilisateur,
                     u.pseudo as pseudo_utilisateur,
                     a.id_cocktail,
@@ -126,7 +126,7 @@ class AvisDao(metaclass=Singleton):
         with DBConnection().connection as connection, connection.cursor() as cursor:
             cursor.execute(
                 """
-                SELECT 
+                SELECT
                     a.id_utilisateur,
                     u.pseudo as pseudo_utilisateur,
                     a.id_cocktail,
@@ -163,56 +163,7 @@ class AvisDao(metaclass=Singleton):
             )
             return cursor.rowcount > 0
 
-    @log
-    def toggle_favoris(self, id_utilisateur: int, id_cocktail: int) -> dict:
-        """Toggle le statut favoris d'un cocktail.
-        Crée l'avis s'il n'existe pas (avec note et commentaire NULL).
-        """
-        with DBConnection().connection as connection, connection.cursor() as cursor:
-            cursor.execute(
-                """
-                INSERT INTO avis (id_utilisateur, id_cocktail, note, commentaire, favoris)
-                VALUES (%(id_utilisateur)s, %(id_cocktail)s, NULL, NULL, TRUE)
-                ON CONFLICT (id_utilisateur, id_cocktail)
-                DO UPDATE SET
-                    favoris = NOT avis.favoris,
-                    date_modification = NOW()
-                RETURNING favoris
-                """,
-                {
-                    "id_utilisateur": id_utilisateur,
-                    "id_cocktail": id_cocktail,
-                },
-            )
-            result = cursor.fetchone()
-            return {"favoris": result["favoris"]}
 
-    @log
-    def get_favoris_by_user(self, id_utilisateur: int) -> list[dict]:
-        """Récupère tous les cocktails favoris d'un utilisateur."""
-        with DBConnection().connection as connection, connection.cursor() as cursor:
-            cursor.execute(
-                """
-                SELECT 
-                    a.id_utilisateur,
-                    u.pseudo as pseudo_utilisateur,
-                    a.id_cocktail,
-                    c.nom as nom_cocktail,
-                    a.note,
-                    a.commentaire,
-                    a.favoris,
-                    a.date_creation,
-                    a.date_modification
-                FROM avis a
-                JOIN utilisateur u ON a.id_utilisateur = u.id_utilisateur
-                JOIN cocktail c ON a.id_cocktail = c.id_cocktail
-                WHERE a.id_utilisateur = %(id_utilisateur)s
-                  AND a.favoris = TRUE
-                ORDER BY a.date_modification DESC
-                """,
-                {"id_utilisateur": id_utilisateur},
-            )
-            return cursor.fetchall()
 
     @log
     def get_avis_summary(self, id_cocktail: int) -> dict:
@@ -220,7 +171,7 @@ class AvisDao(metaclass=Singleton):
         with DBConnection().connection as connection, connection.cursor() as cursor:
             cursor.execute(
                 """
-                SELECT 
+                SELECT
                     c.id_cocktail,
                     c.nom as nom_cocktail,
                     COUNT(*) as nombre_avis,
@@ -243,6 +194,34 @@ class AvisDao(metaclass=Singleton):
                     "nombre_favoris": int(result["nombre_favoris"]) if result["nombre_favoris"] else 0,
                 }
             return None
+
+
+    @log
+    def get_favoris_by_user(self, id_utilisateur: int) -> list[dict]:
+        """Récupère tous les cocktails favoris d'un utilisateur."""
+        with DBConnection().connection as connection, connection.cursor() as cursor:
+            cursor.execute(
+                """
+                SELECT
+                    a.id_utilisateur,
+                    u.pseudo as pseudo_utilisateur,
+                    a.id_cocktail,
+                    c.nom as nom_cocktail,
+                    a.note,
+                    a.commentaire,
+                    a.favoris,
+                    a.date_creation,
+                    a.date_modification
+                FROM avis a
+                JOIN utilisateur u ON a.id_utilisateur = u.id_utilisateur
+                JOIN cocktail c ON a.id_cocktail = c.id_cocktail
+                WHERE a.id_utilisateur = %(id_utilisateur)s
+                  AND a.favoris = TRUE
+                ORDER BY a.date_modification DESC
+                """,
+                {"id_utilisateur": id_utilisateur},
+            )
+            return cursor.fetchall()
 
     @log
     def add_favoris(self, id_utilisateur: int, id_cocktail: int) -> dict:

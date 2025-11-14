@@ -50,7 +50,6 @@ class StockCourseDao(metaclass=Singleton):
                     quantite = stock.quantite + EXCLUDED.quantite,
                     id_unite = EXCLUDED.id_unite
                 """,
-                #         ↑ Changement ici : addition au lieu de remplacement
                 {
                     "id_utilisateur": id_utilisateur,
                     "id_ingredient": id_ingredient,
@@ -99,10 +98,7 @@ class StockCourseDao(metaclass=Singleton):
 
             cursor.execute(query, {"id_utilisateur": id_utilisateur})
 
-            rows = cursor.fetchall()
-
-            # Retourner les dictionnaires bruts (pas de StockItem ici)
-            return rows
+            return cursor.fetchall()
 
     @log
     def get_stock_item(
@@ -128,7 +124,7 @@ class StockCourseDao(metaclass=Singleton):
         with DBConnection().connection as connection, connection.cursor() as cursor:
             cursor.execute(
                 """
-                SELECT 
+                SELECT
                     s.id_ingredient,
                     i.nom as nom_ingredient,
                     s.quantite,
@@ -182,7 +178,7 @@ class StockCourseDao(metaclass=Singleton):
 
         """
         with DBConnection().connection as connection, connection.cursor() as cursor:
-            # 1. Récupérer la quantité actuelle
+            # Récupérer la quantité actuelle
             cursor.execute(
                 """
                 SELECT quantite
@@ -203,7 +199,7 @@ class StockCourseDao(metaclass=Singleton):
             # Convertir Decimal en float
             quantite_actuelle = float(row["quantite"])
 
-            # 2. Vérifier que la quantité à retirer n'est pas supérieure à la quantité actuelle
+            # Vérifier que la quantité à retirer n'est pas supérieure à la quantité actuelle
             if quantite > quantite_actuelle:
                 raise ValueError(
                     f"Impossible de retirer {quantite} (quantité disponible : {quantite_actuelle})",
@@ -211,7 +207,7 @@ class StockCourseDao(metaclass=Singleton):
 
             nouvelle_quantite = quantite_actuelle - quantite
 
-            # 3. Si la nouvelle quantité est 0 (ou très proche de 0), supprimer la ligne
+            # Si la nouvelle quantité est 0 (ou très proche de 0), supprimer la ligne
             if nouvelle_quantite < 0.0001:  # Tolérance pour les arrondis flottants
                 cursor.execute(
                     """
@@ -229,7 +225,7 @@ class StockCourseDao(metaclass=Singleton):
                     "supprime": True,
                 }
 
-            # 4. Sinon, mettre à jour la quantité
+            # Sinon, mettre à jour la quantité
             cursor.execute(
                 """
                 UPDATE stock

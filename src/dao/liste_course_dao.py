@@ -25,7 +25,7 @@ class ListeCourseDao(metaclass=Singleton):
         with DBConnection().connection as connection, connection.cursor() as cursor:
             cursor.execute(
                 """
-                SELECT 
+                SELECT
                     lc.id_ingredient,
                     i.nom as nom_ingredient,
                     lc.quantite,
@@ -104,10 +104,10 @@ class ListeCourseDao(metaclass=Singleton):
                 elif (
                     type_unite_existante
                     and new_unite_info
-                    and type_unite_existante == new_unite_info["type_unite"]  # ← CORRIGÉ ICI
+                    and type_unite_existante == new_unite_info["type_unite"]
                     and type_unite_existante == "liquide"
                 ):
-                    # Unités différentes mais même type (liquide) → convertir et additionner
+                    # Unités différentes mais même type (liquide) -> convertir et additionner
                     code_unite_nouvelle = new_unite_info["abbreviation"]
 
                     # Convertir tout en ml
@@ -135,7 +135,7 @@ class ListeCourseDao(metaclass=Singleton):
                             },
                         )
                     else:
-                        # Conversion impossible → remplacer
+                        # Conversion impossible -> remplacer
                         cursor.execute(
                             """
                             UPDATE liste_course
@@ -153,7 +153,7 @@ class ListeCourseDao(metaclass=Singleton):
                             },
                         )
                 else:
-                    # Types différents ou non convertibles → remplacer
+                    # Types différents ou non convertibles -> remplacer
                     cursor.execute(
                         """
                         UPDATE liste_course
@@ -171,7 +171,7 @@ class ListeCourseDao(metaclass=Singleton):
                         },
                     )
             else:
-                # L'ingrédient n'existe pas → créer
+                # L'ingrédient n'existe pas -> créer
                 cursor.execute(
                     """
                     INSERT INTO liste_course (id_utilisateur, id_ingredient, quantite, id_unite, effectue)
