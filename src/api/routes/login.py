@@ -14,6 +14,7 @@ from src.utils.exceptions import (
     AuthError,
     DAOError,
     EmptyFieldError,
+    InvalidBirthDateError,
     MailAlreadyExistsError,
     ServiceError,
     UserAlreadyExistsError,
@@ -82,6 +83,7 @@ def creer_compte(donnees: UserRegister) -> str:
         - Champ vide : "Le champ '{nom_champ}' ne peut pas être vide"
         - Pseudo déjà utilisé : "Username already registered"
         - Email déjà utilisé : "Email already registered"
+        - Date de naissance invalide : "Invalid birth date: must be in the past and user must be at least 13 years old"
 
     HTTPException (500 - Internal Server Error)
         - Erreur lors de la création du compte
@@ -111,6 +113,17 @@ def creer_compte(donnees: UserRegister) -> str:
     ```
     Erreur 400 : "Username already registered"
 
+    Requête avec date de naissance invalide :
+    ```json
+    {
+        "pseudo": "bob",
+        "mail": "bob@example.com",
+        "mot_de_passe": "MotDePasse123!",
+        "date_naissance": "2025-01-01"
+    }
+    ```
+    Erreur 400 : "Invalid birth date: must be in the past."
+
     """
     try:
         return service.creer_compte(donnees)
@@ -118,7 +131,12 @@ def creer_compte(donnees: UserRegister) -> str:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=str(e),
-        )  # "Le champ 'pseudo' ne peut pas être vide"
+        )
+    except InvalidBirthDateError as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(e),
+        ) from None
     except UserAlreadyExistsError:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,

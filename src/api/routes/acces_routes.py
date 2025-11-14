@@ -1,15 +1,17 @@
+"""doc."""
+
 from fastapi import APIRouter, HTTPException, Path, Query
 
 from src.api.deps import CurrentUser
 from src.models.acces import AccessList, AccessResponse, PrivateCocktailsList
 from src.service.acces_service import AccesService
 from utils.exceptions import (
-    AccessAlreadyExistsException,
-    AccessDeniedException,
-    AccessNotFoundException,
-    CocktailNotFoundException,
-    SelfAccessException,
-    UserNotFoundException,
+    AccessAlreadyExistsError,
+    AccessDeniedError,
+    AccessNotFoundError,
+    CocktailNotFoundError,
+    SelfAccessError,
+    UserNotFoundError,
 )
 
 router = APIRouter(prefix="/cocktails-prives", tags=["Cocktails Privés"])
@@ -48,11 +50,11 @@ def add_cocktail_to_private_list(
     try:
         result = acces_service.add_cocktail_to_private_list(current_user.pseudo, cocktail_id)
         return result
-    except UserNotFoundException as e:
+    except UserNotFoundError as e:
         raise HTTPException(status_code=404, detail=str(e))
-    except CocktailNotFoundException as e:
+    except CocktailNotFoundError as e:
         raise HTTPException(status_code=404, detail=str(e))
-    except AccessAlreadyExistsException as e:
+    except AccessAlreadyExistsError as e:
         raise HTTPException(status_code=409, detail=str(e))
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Erreur serveur: {e!s}")
@@ -88,11 +90,11 @@ def add_cocktail_to_private_list_by_name(
     try:
         result = acces_service.add_cocktail_to_private_list_by_name(current_user.pseudo, cocktail_name)
         return result
-    except UserNotFoundException as e:
+    except UserNotFoundError as e:
         raise HTTPException(status_code=404, detail=str(e))
-    except CocktailNotFoundException as e:
+    except CocktailNotFoundError as e:
         raise HTTPException(status_code=404, detail=str(e))
-    except AccessAlreadyExistsException as e:
+    except AccessAlreadyExistsError as e:
         raise HTTPException(status_code=409, detail=str(e))
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Erreur serveur: {e!s}")
@@ -125,9 +127,9 @@ def remove_cocktail_from_private_list(
     try:
         result = acces_service.remove_cocktail_from_private_list(current_user.pseudo, cocktail_id)
         return result
-    except UserNotFoundException as e:
+    except UserNotFoundError as e:
         raise HTTPException(status_code=404, detail=str(e))
-    except AccessNotFoundException as e:
+    except AccessNotFoundError as e:
         raise HTTPException(status_code=404, detail=str(e))
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Erreur serveur: {e!s}")
@@ -161,11 +163,11 @@ def remove_cocktail_from_private_list_by_name(
     try:
         result = acces_service.remove_cocktail_from_private_list_by_name(current_user.pseudo, cocktail_name)
         return result
-    except UserNotFoundException as e:
+    except UserNotFoundError as e:
         raise HTTPException(status_code=404, detail=str(e))
-    except CocktailNotFoundException as e:
+    except CocktailNotFoundError as e:
         raise HTTPException(status_code=404, detail=str(e))
-    except AccessNotFoundException as e:
+    except AccessNotFoundError as e:
         raise HTTPException(status_code=404, detail=str(e))
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Erreur serveur: {e!s}")
@@ -204,11 +206,11 @@ def grant_access(
     try:
         result = acces_service.grant_access_to_user(current_user.pseudo, user_pseudo)
         return result
-    except UserNotFoundException as e:
+    except UserNotFoundError as e:
         raise HTTPException(status_code=404, detail=str(e))
-    except SelfAccessException as e:
+    except SelfAccessError as e:
         raise HTTPException(status_code=400, detail=str(e))
-    except AccessAlreadyExistsException as e:
+    except AccessAlreadyExistsError as e:
         raise HTTPException(status_code=409, detail=str(e))
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Erreur serveur: {e!s}")
@@ -240,9 +242,9 @@ def revoke_access(
     try:
         result = acces_service.revoke_access_from_user(current_user.pseudo, user_pseudo)
         return result
-    except UserNotFoundException as e:
+    except UserNotFoundError as e:
         raise HTTPException(status_code=404, detail=str(e))
-    except AccessNotFoundException as e:
+    except AccessNotFoundError as e:
         raise HTTPException(status_code=404, detail=str(e))
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Erreur serveur: {e!s}")
@@ -271,7 +273,7 @@ def get_access_list(
     try:
         result = acces_service.get_users_with_access(current_user.pseudo)
         return result
-    except UserNotFoundException as e:
+    except UserNotFoundError as e:
         raise HTTPException(status_code=404, detail=str(e))
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Erreur serveur: {e!s}")
@@ -309,9 +311,9 @@ def view_private_cocktails(
     try:
         result = acces_service.view_private_cocktails(owner_pseudo, current_user.pseudo)
         return result
-    except UserNotFoundException as e:
+    except UserNotFoundError as e:
         raise HTTPException(status_code=404, detail=str(e))
-    except AccessDeniedException as e:
+    except AccessDeniedError as e:
         raise HTTPException(status_code=403, detail=str(e))
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Erreur serveur: {e!s}")
@@ -341,7 +343,7 @@ def get_my_private_cocktails(
     try:
         result = acces_service.get_my_private_cocktails(current_user.pseudo)
         return result
-    except UserNotFoundException as e:
+    except UserNotFoundError as e:
         raise HTTPException(status_code=404, detail=str(e))
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Erreur serveur: {e!s}")

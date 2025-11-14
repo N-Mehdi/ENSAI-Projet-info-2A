@@ -1,14 +1,15 @@
+"""doc."""
+
 from fastapi import APIRouter, HTTPException, status
 
 from src.api.deps import CurrentUser
 from src.dao.utilisateur_dao import UtilisateurDao
-from src.models.utilisateurs import DateInscriptionResponse, UserChangePassword, UserDelete, UserRegister, UserUpdatePseudo
+from src.models.utilisateurs import DateInscriptionResponse, UserChangePassword, UserDelete, UserUpdatePseudo
 from src.service.utilisateur_service import UtilisateurService
 from src.utils.exceptions import (
     AuthError,
     DAOError,
     EmptyFieldError,
-    MailAlreadyExistsError,
     ServiceError,
     UserAlreadyExistsError,
     UserNotFoundError,
@@ -17,6 +18,7 @@ from src.utils.exceptions import (
 router = APIRouter(prefix="/compte", tags=["Compte"])
 
 service = UtilisateurService(utilisateur_dao=UtilisateurDao())
+
 
 @router.put(
     "/pseudo",
@@ -102,7 +104,7 @@ def changer_pseudo(
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=str(e),
-        )
+        ) from None
     except UserNotFoundError:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -183,7 +185,7 @@ def changer_pseudo(
     },
     tags=["Compte"],
 )
-def changer_mot_de_passe(donnees: UserChangePassword, current_user: CurrentUser) -> str:
+def changer_mot_de_passe(donnees: UserChangePassword, _current_user: CurrentUser) -> str:
     """Changer le mot de passe d'un utilisateur.
 
     L'utilisateur doit fournir :
@@ -202,7 +204,7 @@ def changer_mot_de_passe(donnees: UserChangePassword, current_user: CurrentUser)
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=str(e),
-        )
+        ) from None
     except UserNotFoundError:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -291,7 +293,7 @@ def obtenir_date_inscription(
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=str(e),
-        )
+        ) from None
     except UserNotFoundError:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -358,7 +360,7 @@ def obtenir_date_inscription(
     },
     tags=["Compte"],
 )
-def supprimer_compte(donnees: UserDelete, current_user: CurrentUser) -> str:
+def supprimer_compte(donnees: UserDelete, _current_user: CurrentUser) -> str:
     """Supprimer un compte utilisateur après authentification.
 
     L'utilisateur doit fournir son pseudo et mot de passe pour confirmer

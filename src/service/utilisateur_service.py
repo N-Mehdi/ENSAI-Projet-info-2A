@@ -1,3 +1,7 @@
+"""doc."""
+
+from datetime import date
+
 from src.dao.utilisateur_dao import UtilisateurDao
 from src.models.utilisateurs import (
     DateInscriptionResponse,
@@ -8,7 +12,7 @@ from src.models.utilisateurs import (
     UserRegister,
     UserUpdatePassword,
 )
-from src.utils.exceptions import AuthError, EmptyFieldError, ServiceError, UserNotFoundError
+from src.utils.exceptions import AuthError, EmptyFieldError, InvalidBirthDateError, ServiceError, UserNotFoundError
 from src.utils.securite import hacher_mot_de_passe, verifier_mot_de_passe
 
 
@@ -30,22 +34,24 @@ class UtilisateurService:
             raise EmptyFieldError("mot_de_passe")
         if not donnees.date_naissance:
             raise EmptyFieldError("date_naissance")
+
+        # Parser et valider la date de naissance
+        birth_date = self._parse_and_validate_birth_date(donnees.date_naissance)
+
         # Récupérer le mot de passe brut
         mot_de_passe = donnees.mot_de_passe
-
-        # Tronquer pour bcrypt si >72 bytes
-        """mot_de_passe = mot_de_passe[:72]"""
 
         # Hachage
         try:
             mot_de_passe_hashed = hacher_mot_de_passe(mot_de_passe)
         except Exception as e:
-            raise ServiceError(f"Erreur lors du hachage du mot de passe : {e}")  # CHANGÉ
+            raise ServiceError(f"Erreur lors du hachage du mot de passe : {e}")
 
         # Préparer dict pour UserCreate
         compte = donnees.model_dump()
         compte.pop("mot_de_passe", None)
         compte["mot_de_passe_hashed"] = mot_de_passe_hashed
+        compte["date_naissance"] = birth_date.isoformat()  # Utiliser la date parsée
 
         # Valider le modèle
         try:
@@ -166,9 +172,8 @@ class UtilisateurService:
             raise AuthError()
 
         # Hacher le nouveau mot de passe
-        """mot_de_passe_nouveau = donnees.mot_de_passe_nouveau[:72]"""  # Tronquer pour bcrypt
         try:
-            mot_de_passe_nouveau_hashed = hacher_mot_de_passe(mot_de_passe_nouveau)
+            mot_de_passe_nouveau_hashed = hacher_mot_de_passe(donnees.mot_de_passe_nouveau)
         except Exception as e:
             raise ServiceError(f"Erreur lors du hachage du mot de passe : {e}")
 
@@ -184,6 +189,69 @@ class UtilisateurService:
             raise ServiceError("Impossible de mettre à jour le mot de passe")
 
         return "Mot de passe modifié avec succès."
+
+    def _parse_and_validate_birth_date(self, birth_date_input) -> date:
+        """Parse et valide la date de naissance.
+
+        Parameters
+        ----------
+        birth_date_input : date | str
+            Date de naissance à parser et valider
+
+        Returns
+        -------
+        date
+            Date de naissance parsée et validée
+
+        Raises
+        ------
+        InvalidBirthDateError
+            Si la date est invalide, dans le futur, si l'utilisateur a moins de 13 ans,
+            ou si la date est non réaliste (>150 ans)
+
+        """
+        # Si c'est déjà un objet date, on l'utilise directement
+        if isinstance(birth_date_input, date):
+            birth_date = birth_date_input
+        # Sinon, on parse la string
+        elif isinstance(birth_date_input, str):
+            try:
+                birth_date = date.fromisoformat(birth_date_input)
+            except ValueError:
+                raise InvalidBirthDateError(
+                    "Date de naissance invalide. Format attendu : AAAA-MM-JJ (ex: 2000-12-25). "
+                    "Vérifiez que le mois (1-12) et le jour sont valides pour ce mois.",
+                )
+        else:
+            raise InvalidBirthDateError(
+                "Date de naissance doit être une chaîne de caractères ou un objet date",
+            )
+
+        # Validation de la logique métier
+        today = date.today()
+
+        # Date dans le futur
+        if birth_date >= today:
+            raise InvalidBirthDateError(
+                "La date de naissance doit être dans le passé",
+            )
+
+        # Calculer l'âge
+        age = (today - birth_date).days / 365.25
+
+        # Âge minimum
+        if age < 13:
+            raise InvalidBirthDateError(
+                "Vous devez avoir au moins 13 ans pour créer un compte",
+            )
+
+        # Âge maximum (date réaliste)
+        if age > 150:
+            raise InvalidBirthDateError(
+                "Date de naissance non réaliste",
+            )
+
+        return birth_date
 
     def changer_pseudo(self, utilisateur, nouveau_pseudo: str) -> bool:
         """Change le pseudo d'un utilisateur après vérification qu'il n'existe pas déjà.
