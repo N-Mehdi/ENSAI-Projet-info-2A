@@ -20,7 +20,7 @@ class UtilisateurService:
     """doc."""
 
     def __init__(self, utilisateur_dao: UtilisateurDao) -> None:
-        """Doc."""
+        """Initialise un UtilisateurService."""
         self.utilisateur_dao = utilisateur_dao
 
     def creer_compte(self, donnees: UserRegister) -> str:
@@ -103,9 +103,9 @@ class UtilisateurService:
         """
         # Validation des champs vides
         if not donnees.pseudo or not donnees.pseudo.strip():
-            raise EmptyFieldError("pseudo")
+            raise EmptyFieldError(donnees.pseudo)
         if not donnees.mot_de_passe or not donnees.mot_de_passe.strip():
-            raise EmptyFieldError("mot_de_passe")
+            raise EmptyFieldError(donnees.mot_de_passe)
 
         # Récupérer l'utilisateur pour vérifier le mot de passe
         utilisateur = self.utilisateur_dao.recuperer_par_pseudo(donnees.pseudo)

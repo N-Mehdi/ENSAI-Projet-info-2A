@@ -14,10 +14,14 @@ class CocktailDao(metaclass=Singleton):
     """
 
     @log
-    def rechercher_cocktail_par_nom(self, nom) -> Cocktail:
+    @staticmethod
+    def rechercher_cocktail_par_nom(nom) -> Cocktail:
+        """Doc."""
         with DBConnection().connection as connection, connection.cursor() as cursor:
             cursor.execute(
-                "SELECT *                       FROM cocktail                  WHERE nom = %(nom)s            ",
+                """SELECT *
+                FROM cocktail
+                WHERE nom = %(nom)s  """,
                 {"nom": nom.title()},
             )
             res = cursor.fetchone()
@@ -34,11 +38,12 @@ class CocktailDao(metaclass=Singleton):
         return cocktail
 
     @log
+    @staticmethod
     def rechercher_cocktail_par_sequence_debut(
-        self,
         sequence,
         max_resultats,
     ) -> list[Cocktail]:
+        """Doc."""
         with DBConnection().connection as connection, connection.cursor() as cursor:
             cursor.execute(
                 "SELECT *                       "
@@ -64,10 +69,14 @@ class CocktailDao(metaclass=Singleton):
                 liste_cocktails.append(cocktail)
         return liste_cocktails
 
-    def rechercher_cocktail_aleatoire():
-        pass
+    @log
+    @staticmethod
+    def rechercher_cocktail_aleatoire() -> Cocktail:
+        """Doc."""
 
-    def get_cocktail_id_by_name(self, cocktail_name: str) -> int | None:
+    @log
+    @staticmethod
+    def get_cocktail_id_by_name(cocktail_name: str) -> int | None:
         """Récupère l'ID d'un cocktail par son nom."""
         with DBConnection().connection as connection, connection.cursor() as cursor:
             cursor.execute(

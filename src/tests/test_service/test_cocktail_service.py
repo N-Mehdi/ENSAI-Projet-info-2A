@@ -10,7 +10,8 @@ from src.service.cocktail_service import CocktailService
 class TestCocktailService:
     """Tests pour CocktailService."""
 
-    def test_rechercher_cocktail_par_nom_succes(self):
+    def test_rechercher_cocktail_par_nom_succes(self) -> None:
+        """Teste la recherche d'un cocktail par nom avec succès."""
         # GIVEN
         nom = "Margarita"
 
@@ -30,7 +31,15 @@ class TestCocktailService:
         )
         assert resultat == cocktail_attendu
 
-    def test_rechercher_cocktail_par_nom_non_trouve(self):
+    def test_rechercher_cocktail_par_nom_non_trouve(self) -> None:
+        """Teste la recherche d'un cocktail par nom qui n'existe pas.
+
+        Raises
+        ------
+        LookupError
+            Quand le cocktail n'est pas trouvé
+
+        """
         # GIVEN
         nom = "Margaritaa"
 
@@ -41,7 +50,15 @@ class TestCocktailService:
         with pytest.raises(LookupError, match=f"Aucun cocktail trouvé pour le nom '{nom}'"):
             service.rechercher_cocktail_par_nom(nom)
 
-    def test_rechercher_cocktail_par_nom_type_error(self):
+    def test_rechercher_cocktail_par_nom_type_error(self) -> None:
+        """Teste la recherche avec un type de nom invalide.
+
+        Raises
+        ------
+        TypeError
+            Quand le nom n'est pas une chaîne de caractères
+
+        """
         # GIVEN
         nom = 12345  # Le nom n'est pas une chaîne de caractères
 
@@ -52,7 +69,15 @@ class TestCocktailService:
         with pytest.raises(TypeError, match="Le nom du cocktail doit être une chaîne de caractères."):
             service.rechercher_cocktail_par_nom(nom)
 
-    def test_rechercher_cocktail_par_nom_value_error(self):
+    def test_rechercher_cocktail_par_nom_value_error(self) -> None:
+        """Teste la recherche avec un nom vide.
+
+        Raises
+        ------
+        ValueError
+            Quand le nom est une chaîne vide
+
+        """
         # GIVEN
         nom = ""  # Le nom est une chaîne vide
 
@@ -63,7 +88,15 @@ class TestCocktailService:
         with pytest.raises(ValueError, match="Le nom du cocktail doit être fourni."):
             service.rechercher_cocktail_par_nom(nom)
 
-    def test_rechercher_cocktail_par_nom_none(self):
+    def test_rechercher_cocktail_par_nom_none(self) -> None:
+        """Teste la recherche avec un nom None.
+
+        Raises
+        ------
+        ValueError
+            Quand le nom est None
+
+        """
         # GIVEN
         nom = None  # Le nom est None
 
@@ -76,7 +109,8 @@ class TestCocktailService:
 
     # Tests pour rechercher_cocktail_sequence_debut
 
-    def test_rechercher_cocktail_par_sequence_debut_succes(self):
+    def test_rechercher_cocktail_par_sequence_debut_succes(self) -> None:
+        """Teste la recherche de cocktails par séquence de début avec succès."""
         # GIVEN
         sequence = "ma"
         max_resultats = 3
@@ -115,7 +149,15 @@ class TestCocktailService:
         ]
         assert resultat == cocktails_attendus
 
-    def test_rechercher_cocktail_par_sequence_debut_non_trouve(self):
+    def test_rechercher_cocktail_par_sequence_debut_non_trouve(self) -> None:
+        """Teste la recherche par séquence qui ne retourne aucun résultat.
+
+        Raises
+        ------
+        LookupError
+            Quand aucun cocktail ne correspond à la séquence
+
+        """
         # GIVEN
         sequence = "Maaa"
         max_resultats = 1
@@ -127,7 +169,15 @@ class TestCocktailService:
         with pytest.raises(LookupError, match=f"Aucun cocktail trouvé pour la séquence '{sequence}'"):
             service.rechercher_cocktail_par_sequence_debut(sequence, max_resultats)
 
-    def test_rechercher_cocktail_par_sequence_debut_value_error_sequence(self):
+    def test_rechercher_cocktail_par_sequence_debut_value_error_sequence(self) -> None:
+        """Teste la recherche avec une séquence vide.
+
+        Raises
+        ------
+        ValueError
+            Quand la séquence est vide
+
+        """
         # GIVEN
         sequence = ""
         max_resultats = 1
@@ -139,7 +189,15 @@ class TestCocktailService:
         with pytest.raises(ValueError, match="La séquence doit être fournie."):
             service.rechercher_cocktail_par_sequence_debut(sequence, max_resultats)
 
-    def test_rechercher_cocktail_par_sequence_debut_none(self):
+    def test_rechercher_cocktail_par_sequence_debut_none(self) -> None:
+        """Teste la recherche avec une séquence None.
+
+        Raises
+        ------
+        ValueError
+            Quand la séquence est None
+
+        """
         # GIVEN
         sequence = None
         max_resultats = 1
@@ -151,7 +209,15 @@ class TestCocktailService:
         with pytest.raises(ValueError, match="La séquence doit être fournie."):
             service.rechercher_cocktail_par_sequence_debut(sequence, max_resultats)
 
-    def test_rechercher_cocktail_par_sequence_debut_type_error_sequence(self):
+    def test_rechercher_cocktail_par_sequence_debut_type_error_sequence(self) -> None:
+        """Teste la recherche avec un type de séquence invalide.
+
+        Raises
+        ------
+        TypeError
+            Quand la séquence n'est pas une chaîne de caractères
+
+        """
         # GIVEN
         sequence = 12345
         max_resultats = 1
@@ -163,7 +229,15 @@ class TestCocktailService:
         with pytest.raises(TypeError, match="L'argument 'sequence' doit être une chaîne de caractères."):
             service.rechercher_cocktail_par_sequence_debut(sequence, max_resultats)
 
-    def test_rechercher_cocktail_par_sequence_debut_type_error_max_resultats(self):
+    def test_rechercher_cocktail_par_sequence_debut_type_error_max_resultats(self) -> None:
+        """Teste la recherche avec un type de max_resultats invalide.
+
+        Raises
+        ------
+        TypeError
+            Quand max_resultats n'est pas un entier
+
+        """
         # GIVEN
         sequence = "Ma"
         max_resultats = "a"
@@ -175,7 +249,15 @@ class TestCocktailService:
         with pytest.raises(TypeError, match="L'argument 'max_resultats' doit être un entier."):
             service.rechercher_cocktail_par_sequence_debut(sequence, max_resultats)
 
-    def test_rechercher_cocktail_par_sequence_debut_value_error_max_resultats(self):
+    def test_rechercher_cocktail_par_sequence_debut_value_error_max_resultats(self) -> None:
+        """Teste la recherche avec un max_resultats négatif.
+
+        Raises
+        ------
+        ValueError
+            Quand max_resultats est inférieur à 1
+
+        """
         # GIVEN
         sequence = "Ma"
         max_resultats = -1

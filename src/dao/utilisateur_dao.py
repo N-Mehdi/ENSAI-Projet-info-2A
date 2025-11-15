@@ -156,20 +156,21 @@ class UtilisateurDao(metaclass=Singleton):
         return res > 0
 
     def read(self, id_utilisateur: int) -> User | None:
-        """Read a user by their ID.
-
-        :param user_id: ID of the user to read
-        :raises DAOError: Raised if DB error occurs
-        :return: The User object or None if not found
-        """
+        """Doc."""
         try:
             with DBConnection().connection as connection, connection.cursor() as cursor:
                 cursor.execute(
                     """
-                        SELECT id_utilisateur, pseudo, mail, mot_de_passe, date_naissance
-                        FROM utilisateur
-                        WHERE id_utilisateur = %(id_utilisateur)s
-                        """,
+                    SELECT
+                        id_utilisateur,
+                        pseudo,
+                        mail,
+                        mot_de_passe,
+                        date_naissance,
+                        date_inscription
+                    FROM utilisateur
+                    WHERE id_utilisateur = %(id_utilisateur)s
+                    """,
                     {"id_utilisateur": id_utilisateur},
                 )
                 row = cursor.fetchone()
@@ -180,27 +181,38 @@ class UtilisateurDao(metaclass=Singleton):
                     mail=row["mail"],
                     date_naissance=row["date_naissance"].isoformat(),
                     mot_de_passe_hashed=row["mot_de_passe"],
+                    date_inscription=row["date_inscription"].isoformat() if row["date_inscription"] else None,  # ✅ AJOUTÉ
                 )
             return None
         except DBError as exc:
             raise DAOError from exc
 
     def recuperer_par_pseudo(self, pseudo: str) -> User | None:
-        """Récupérer le mot de passe hashé et le pseudo d'un utilisateur par son email.
+        """Récupérer le mot de passe hashé et le pseudo d'un utilisateur par son pseudo.
 
         Parameters
         ----------
-            mail: L'email de l'utilisateur.
+            pseudo: Le pseudo de l'utilisateur.
 
         Returns
         -------
-            dict avec {mail : mot_de_passe} si trouvé, None sinon.
+            User si trouvé, None sinon.
 
         """
         try:
             with DBConnection().connection as connection, connection.cursor() as cursor:
                 cursor.execute(
-                    "SELECT * FROM utilisateur WHERE pseudo = %(pseudo)s",
+                    """
+                    SELECT
+                        id_utilisateur,
+                        pseudo,
+                        mail,
+                        date_naissance,
+                        mot_de_passe,
+                        date_inscription
+                    FROM utilisateur
+                    WHERE pseudo = %(pseudo)s
+                    """,
                     {"pseudo": pseudo},
                 )
                 res = cursor.fetchone()
@@ -216,6 +228,7 @@ class UtilisateurDao(metaclass=Singleton):
                 mail=res["mail"],
                 date_naissance=res["date_naissance"].isoformat() if res["date_naissance"] else None,
                 mot_de_passe_hashed=res["mot_de_passe"],
+                date_inscription=res["date_inscription"].isoformat() if res["date_inscription"] else None,  # ✅ AJOUTÉ
             )
         return utilisateur
 

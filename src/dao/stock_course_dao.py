@@ -11,8 +11,8 @@ class StockCourseDao(metaclass=Singleton):
     """Classe contenant les méthodes agissants sur le stock d'un utilisateur."""
 
     @log
+    @staticmethod
     def update_or_create_stock_item(
-        self,
         id_utilisateur: int,
         id_ingredient: int,
         quantite: float,
@@ -60,7 +60,8 @@ class StockCourseDao(metaclass=Singleton):
             return cursor.rowcount > 0
 
     @log
-    def get_stock(self, id_utilisateur: int, only_available: bool = True) -> list[dict]:
+    @staticmethod
+    def get_stock(id_utilisateur: int, only_available: bool = True) -> list[dict]:
         """Récupère le stock d'un utilisateur.
 
         Parameters
@@ -101,8 +102,8 @@ class StockCourseDao(metaclass=Singleton):
             return cursor.fetchall()
 
     @log
+    @staticmethod
     def get_stock_item(
-        self,
         id_utilisateur: int,
         id_ingredient: int,
     ) -> dict | None:
@@ -147,8 +148,8 @@ class StockCourseDao(metaclass=Singleton):
         return cursor.fetchone()
 
     @log
+    @staticmethod
     def decrement_stock_item(
-        self,
         id_utilisateur: int,
         id_ingredient: int,
         quantite: float,
@@ -246,7 +247,8 @@ class StockCourseDao(metaclass=Singleton):
             }
 
     @log
-    def delete_stock_item(self, id_utilisateur: int, id_ingredient: int) -> bool:
+    @staticmethod
+    def delete_stock_item(id_utilisateur: int, id_ingredient: int) -> bool:
         """Supprime complètement un ingrédient du stock (quelle que soit la quantité).
 
         Cette méthode supprime la ligne entière, utilisez decrement_stock_item()
@@ -279,7 +281,9 @@ class StockCourseDao(metaclass=Singleton):
             )
             return cursor.rowcount > 0
 
-    def get_full_stock(self, id_utilisateur: int) -> list[dict]:
+    @log
+    @staticmethod
+    def get_full_stock(id_utilisateur: int) -> list[dict]:
         """Récupère tous les ingrédients avec leur quantité dans le stock.
         Les ingrédients non présents dans le stock auront quantite = 0.
 
@@ -315,7 +319,8 @@ class StockCourseDao(metaclass=Singleton):
             return cursor.fetchall()
 
     @log
-    def get_unite_info(self, id_unite: int) -> dict | None:
+    @staticmethod
+    def get_unite_info(id_unite: int) -> dict | None:
         """Récupère les informations d'une unité.
 
         Parameters

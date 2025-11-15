@@ -11,7 +11,7 @@ class StockCourseService:
     """Service pour gérer le stock des utilisateurs."""
 
     def __init__(self) -> None:
-        """doc."""
+        """Initialise un StockCourseService."""
         self.stock_dao = StockCourseDao()
         self.ingredient_dao = IngredientDao()
 

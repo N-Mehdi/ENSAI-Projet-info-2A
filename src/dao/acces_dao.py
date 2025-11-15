@@ -1,4 +1,5 @@
 """doc."""
+
 from typing import Any
 
 from dao.db_connection import DBConnection
@@ -8,7 +9,8 @@ from src.utils.singleton import Singleton
 class AccesDAO(metaclass=Singleton):
     """DAO pour gérer les accès aux cocktails privés."""
 
-    def get_user_id_by_pseudo(self, pseudo: str) -> int | None:
+    @staticmethod
+    def get_user_id_by_pseudo(pseudo: str) -> int | None:
         """Récupère l'ID d'un utilisateur par son pseudo."""
         with DBConnection().connection as connection, connection.cursor() as cursor:
             cursor.execute(
@@ -22,7 +24,8 @@ class AccesDAO(metaclass=Singleton):
             result = cursor.fetchone()
             return result["id_utilisateur"] if result else None
 
-    def grant_access(self, owner_id: int, user_id: int) -> bool:
+    @staticmethod
+    def grant_access(owner_id: int, user_id: int) -> bool:
         """Donne l'accès à un utilisateur pour voir les cocktails privés du propriétaire."""
         with DBConnection().connection as connection, connection.cursor() as cursor:
             # Récupérer tous les cocktails privés du propriétaire
@@ -48,7 +51,7 @@ class AccesDAO(metaclass=Singleton):
                     """
                         SELECT 1
                         FROM acces
-                        WHERE id_utilisateur = %(user_id)s 
+                        WHERE id_utilisateur = %(user_id)s
                         AND id_cocktail = %(cocktail_id)s
                         """,
                     {"user_id": user_id, "cocktail_id": cocktail["id_cocktail"]},
@@ -68,7 +71,8 @@ class AccesDAO(metaclass=Singleton):
             connection.commit()
             return created
 
-    def revoke_access(self, owner_id: int, user_id: int) -> bool:
+    @staticmethod
+    def revoke_access(owner_id: int, user_id: int) -> bool:
         """Retire l'accès d'un utilisateur à tous les cocktails privés du propriétaire."""
         with DBConnection().connection as connection, connection.cursor() as cursor:
             # Récupérer tous les cocktails privés du propriétaire
@@ -100,7 +104,8 @@ class AccesDAO(metaclass=Singleton):
             connection.commit()
             return cursor.rowcount > 0
 
-    def has_access(self, owner_id: int, viewer_id: int) -> bool:
+    @staticmethod
+    def has_access(owner_id: int, viewer_id: int) -> bool:
         """Vérifie si un utilisateur a accès aux cocktails privés d'un propriétaire."""
         # Le propriétaire a toujours accès à ses propres cocktails
         if owner_id == viewer_id:
@@ -116,10 +121,10 @@ class AccesDAO(metaclass=Singleton):
                     AND a1.has_access = true
                     AND a1.is_owner = false
                     AND EXISTS (
-                        SELECT 1 
-                        FROM acces a2 
-                        WHERE a2.id_cocktail = a1.id_cocktail 
-                        AND a2.id_utilisateur = %(owner_id)s 
+                        SELECT 1
+                        FROM acces a2
+                        WHERE a2.id_cocktail = a1.id_cocktail
+                        AND a2.id_utilisateur = %(owner_id)s
                         AND a2.is_owner = true
                     )
                     LIMIT 1
@@ -128,7 +133,8 @@ class AccesDAO(metaclass=Singleton):
             )
             return cursor.fetchone() is not None
 
-    def get_users_with_access(self, owner_id: int) -> list[str]:
+    @staticmethod
+    def get_users_with_access(owner_id: int) -> list[str]:
         """Récupère la liste des pseudos des utilisateurs ayant accès aux cocktails privés."""
         with DBConnection().connection as connection, connection.cursor() as cursor:
             # Trouver tous les utilisateurs qui ont des lignes d'accès aux cocktails du propriétaire
@@ -140,10 +146,10 @@ class AccesDAO(metaclass=Singleton):
                     WHERE a1.has_access = true
                     AND a1.is_owner = false
                     AND EXISTS (
-                        SELECT 1 
-                        FROM acces a2 
-                        WHERE a2.id_cocktail = a1.id_cocktail 
-                        AND a2.id_utilisateur = %(owner_id)s 
+                        SELECT 1
+                        FROM acces a2
+                        WHERE a2.id_cocktail = a1.id_cocktail
+                        AND a2.id_utilisateur = %(owner_id)s
                         AND a2.is_owner = true
                     )
                     ORDER BY u.pseudo
@@ -153,7 +159,8 @@ class AccesDAO(metaclass=Singleton):
             results = cursor.fetchall()
             return [row["pseudo"] for row in results]
 
-    def get_private_cocktails(self, owner_id: int) -> list[dict[str, Any]]:
+    @staticmethod
+    def get_private_cocktails(owner_id: int) -> list[dict[str, Any]]:
         """Récupère la liste des cocktails privés d'un utilisateur."""
         with DBConnection().connection as connection, connection.cursor() as cursor:
             cursor.execute(
@@ -201,7 +208,8 @@ class AccesDAO(metaclass=Singleton):
 
             return result
 
-    def add_cocktail_to_private_list(self, owner_id: int, cocktail_id: int) -> bool:
+    @staticmethod
+    def add_cocktail_to_private_list(owner_id: int, cocktail_id: int) -> bool:
         """Ajoute un cocktail à la liste privée d'un utilisateur."""
         with DBConnection().connection as connection, connection.cursor() as cursor:
             # Vérifier si le cocktail existe déjà dans la liste privée
@@ -209,7 +217,7 @@ class AccesDAO(metaclass=Singleton):
                 """
                     SELECT 1
                     FROM acces
-                    WHERE id_utilisateur = %(owner_id)s 
+                    WHERE id_utilisateur = %(owner_id)s
                     AND id_cocktail = %(cocktail_id)s
                     AND is_owner = true
                     """,
@@ -230,13 +238,14 @@ class AccesDAO(metaclass=Singleton):
             connection.commit()
             return True
 
-    def remove_cocktail_from_private_list(self, owner_id: int, cocktail_id: int) -> bool:
+    @staticmethod
+    def remove_cocktail_from_private_list(owner_id: int, cocktail_id: int) -> bool:
         """Retire un cocktail de la liste privée d'un utilisateur."""
         with DBConnection().connection as connection, connection.cursor() as cursor:
             cursor.execute(
                 """
                     DELETE FROM acces
-                    WHERE id_utilisateur = %(owner_id)s 
+                    WHERE id_utilisateur = %(owner_id)s
                     AND id_cocktail = %(cocktail_id)s
                     AND is_owner = true
                     """,
@@ -245,14 +254,15 @@ class AccesDAO(metaclass=Singleton):
             connection.commit()
             return cursor.rowcount > 0
 
-    def is_cocktail_in_private_list(self, owner_id: int, cocktail_id: int) -> bool:
+    @staticmethod
+    def is_cocktail_in_private_list(owner_id: int, cocktail_id: int) -> bool:
         """Vérifie si un cocktail est dans la liste privée d'un utilisateur."""
         with DBConnection().connection as connection, connection.cursor() as cursor:
             cursor.execute(
                 """
                     SELECT 1
                     FROM acces
-                    WHERE id_utilisateur = %(owner_id)s 
+                    WHERE id_utilisateur = %(owner_id)s
                     AND id_cocktail = %(cocktail_id)s
                     AND is_owner = true
                     """,

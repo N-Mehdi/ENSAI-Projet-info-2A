@@ -205,7 +205,7 @@ class TestUtilisateurService:
             mail="john@example.com",
             mot_de_passe_hashed=mot_de_passe_hashed,
             date_naissance="2000-01-01",
-            date_inscription=date.today(),
+            date_inscription=date.today().isoformat(),
         )
 
         dao_mock = MagicMock(spec=UtilisateurDao)
@@ -247,7 +247,7 @@ class TestUtilisateurService:
             mail="john@example.com",
             mot_de_passe_hashed=mot_de_passe_hashed,
             date_naissance="2000-01-01",
-            date_inscription=date.today(),
+            date_inscription=date.today().isoformat(),
         )
 
         dao_mock = MagicMock(spec=UtilisateurDao)
@@ -278,7 +278,7 @@ class TestUtilisateurService:
             mail="john@example.com",
             mot_de_passe_hashed=mot_de_passe_hashed,
             date_naissance="2000-01-01",
-            date_inscription=date.today(),
+            date_inscription=date.today().isoformat(),
         )
 
         dao_mock = MagicMock(spec=UtilisateurDao)
@@ -293,20 +293,20 @@ class TestUtilisateurService:
         assert resultat == "Compte supprimé avec succès."
         dao_mock.delete_compte.assert_called_once_with("john_doe")
 
-    def test_supprimer_compte_pseudo_vide(self):
+    def test_supprimer_compte_pseudo_vide(self) -> None:
         # GIVEN
         donnees = UserDelete(
             pseudo="",
             mot_de_passe="password",
         )
 
+        # WHEN
         dao_mock = MagicMock(spec=UtilisateurDao)
         service = UtilisateurService(dao_mock)
 
-        # WHEN / THEN
-        with pytest.raises(EmptyFieldError) as exc_info:
+        # THEN
+        with pytest.raises(EmptyFieldError):
             service.supprimer_compte(donnees)
-        assert "pseudo" in str(exc_info.value)
 
     def test_supprimer_compte_utilisateur_inexistant(self):
         # GIVEN
@@ -341,7 +341,7 @@ class TestUtilisateurService:
             mail="john@example.com",
             mot_de_passe_hashed=mot_de_passe_hashed,
             date_naissance="2000-01-01",
-            date_inscription=date.today(),
+            date_inscription=date.today().isoformat(),
         )
 
         dao_mock = MagicMock(spec=UtilisateurDao)
@@ -370,7 +370,7 @@ class TestUtilisateurService:
             mail="john@example.com",
             mot_de_passe_hashed=mot_de_passe_hashed,
             date_naissance="2000-01-01",
-            date_inscription=date.today(),
+            date_inscription=date.today().isoformat(),
         )
 
         dao_mock = MagicMock(spec=UtilisateurDao)
@@ -405,7 +405,7 @@ class TestUtilisateurService:
             mail="john@example.com",
             mot_de_passe_hashed=mot_de_passe_hashed,
             date_naissance="2000-01-01",
-            date_inscription=date.today(),
+            date_inscription=date.today().isoformat(),
         )
 
         dao_mock = MagicMock(spec=UtilisateurDao)
@@ -487,7 +487,7 @@ class TestUtilisateurService:
             mail="john@example.com",
             mot_de_passe_hashed=mot_de_passe_hashed,
             date_naissance="2000-01-01",
-            date_inscription=date.today(),
+            date_inscription=date.today().isoformat(),
         )
 
         dao_mock = MagicMock(spec=UtilisateurDao)

@@ -11,12 +11,12 @@ class AvisService:
     """Service pour gérer les avis sur les cocktails."""
 
     def __init__(self) -> None:
-        """Doc."""
+        """Initialise un AvisService."""
         self.avis_dao = AvisDao()
         self.cocktail_dao = CocktailDao()
 
     def _get_cocktail_by_name(self, nom_cocktail: str) -> dict:
-        """Récupère un cocktail par son nom (normalisé).
+        """Récupère un cocktail par son nom.
 
         Parameters
         ----------
@@ -88,7 +88,7 @@ class AvisService:
         """
         # Validation : au moins note OU commentaire
         if note is None and commentaire is None:
-            raise InvalidAvisError("Au moins la note ou le commentaire doit être renseigné")
+            raise InvalidAvisError
 
         # Récupérer le cocktail
         cocktail = self._get_cocktail_by_name(nom_cocktail)
@@ -105,7 +105,7 @@ class AvisService:
             return f"Avis ajouté/modifié avec succès pour '{cocktail['nom']}'"
 
         except Exception as e:
-            raise ServiceError(f"Erreur lors de la création/modification de l'avis : {e}")
+            raise ServiceError from e
 
     def get_avis_cocktail(self, nom_cocktail: str) -> list[AvisResponse]:
         """Récupère tous les avis d'un cocktail."""

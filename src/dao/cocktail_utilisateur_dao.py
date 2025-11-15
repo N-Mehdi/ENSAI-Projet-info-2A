@@ -12,7 +12,8 @@ class CocktailUtilisateurDao(metaclass=Singleton):
     """
 
     @log
-    def get_prive(self, id_utilisateur) -> list[Cocktail]:
+    @staticmethod
+    def get_prive(id_utilisateur) -> list[Cocktail]:
         """Obtenir tous les cocktails privés d'un utilisateur."""
         with DBConnection().connection as connection, connection.cursor() as cursor:
             cursor.execute(
@@ -48,7 +49,8 @@ class CocktailUtilisateurDao(metaclass=Singleton):
         return liste_cocktails_prives
 
     @log
-    def insert_cocktail_prive(self, id_utilisateur, cocktail: Cocktail) -> int:
+    @staticmethod
+    def insert_cocktail_prive(id_utilisateur, cocktail: Cocktail) -> int:
         """Ajoute un nouveau cocktail privé d'un utilisateur."""
         # Ajout du cocktail dans la base de données et récupération de son id
         sql_insert_cocktail = """
@@ -87,7 +89,8 @@ class CocktailUtilisateurDao(metaclass=Singleton):
         return new_cocktail_id
 
     @log
-    def get_cocktail_ingredient(self, id_cocktail):
+    @staticmethod
+    def get_cocktail_ingredient(id_cocktail) -> dict:
         """Récupère tous les ingrédients d'un cocktail donné."""
         with DBConnection().connection as connection, connection.cursor() as cursor:
             cursor.execute(
@@ -98,8 +101,8 @@ class CocktailUtilisateurDao(metaclass=Singleton):
             return {row[0]: row[1] for row in cursor.fetchall()}
 
     @log
+    @staticmethod
     def update_cocktail_prive_modif_ingredient(
-        self,
         id_utilisateur,
         id_cocktail,
         id_ingredient,
@@ -139,8 +142,8 @@ class CocktailUtilisateurDao(metaclass=Singleton):
                 )
 
     @log
+    @staticmethod
     def update_cocktail_prive_ajout_ingredient(
-        self,
         id_utilisateur,
         id_cocktail,
         id_ingredient,
@@ -181,8 +184,8 @@ class CocktailUtilisateurDao(metaclass=Singleton):
                 )
 
     @log
+    @staticmethod
     def update_cocktail_prive_supprimer_ingredient(
-        self,
         id_utilisateur,
         id_cocktail,
         id_ingredient,
@@ -220,7 +223,8 @@ class CocktailUtilisateurDao(metaclass=Singleton):
                 )
 
     @log
-    def delete_cocktail_prive(self, id_utilisateur, id_cocktail) -> None:
+    @staticmethod
+    def delete_cocktail_prive(id_utilisateur, id_cocktail) -> None:
         """Supprime le cocktail privé d'un utilisateur."""
         sql_delete_acces = """
         DELETE FROM acces
@@ -246,7 +250,8 @@ class CocktailUtilisateurDao(metaclass=Singleton):
             )
 
     @log
-    def get_favoris(self, id_utilisateur) -> list[Cocktail]:
+    @staticmethod
+    def get_favoris(id_utilisateur) -> list[Cocktail]:
         """Obtenir tous les cocktails favoris d'un utilisateur."""
         with DBConnection().connection as connection, connection.cursor() as cursor:
             cursor.execute(
@@ -257,9 +262,9 @@ class CocktailUtilisateurDao(metaclass=Singleton):
                 "       c.alcool                                 "
                 "       c.image                                  "
                 "FROM cocktail c                                 "
-                "INNER JOIN avis a using id_cocktail            "
+                "INNER JOIN avis a using id_cocktail             "
                 "WHERE id_utilisateur = %(id_utilisateur)s       "
-                "AND a.favoris = TRUE                           ",
+                "AND a.favoris = TRUE                            ",
                 {"id_utilisateur": id_utilisateur},
             )
             res = cursor.fetchall()
@@ -282,7 +287,8 @@ class CocktailUtilisateurDao(metaclass=Singleton):
         return liste_cocktails_favoris
 
     @log
-    def update_cocktail_favoris(self, id_utilisateur, id_cocktail) -> None:
+    @staticmethod
+    def update_cocktail_favoris(id_utilisateur, id_cocktail) -> None:
         """Ajoute un cocktail dans les favoris d'un utilisateur."""
         with DBConnection().connection as connection, connection.cursor() as cursor:
             cursor.execute(
@@ -297,7 +303,8 @@ class CocktailUtilisateurDao(metaclass=Singleton):
             )
 
     @log
-    def delete_cocktail_favoris(self, id_utilisateur, id_cocktail) -> None:
+    @staticmethod
+    def delete_cocktail_favoris(id_utilisateur, id_cocktail) -> None:
         """Supprime un cocktail des favoris d'un utilisateur."""
         with DBConnection().connection as connection, connection.cursor() as cursor:
             cursor.execute(
@@ -312,7 +319,8 @@ class CocktailUtilisateurDao(metaclass=Singleton):
             )
 
     @log
-    def get_teste(self, id_utilisateur: int) -> list[Cocktail]:
+    @staticmethod
+    def get_teste(id_utilisateur: int) -> list[Cocktail]:
         """Obtenir tous les cocktails testés par un utilisateur."""
         with DBConnection().connection as connection, connection.cursor() as cursor:
             cursor.execute(
@@ -348,7 +356,8 @@ class CocktailUtilisateurDao(metaclass=Singleton):
         return liste_cocktails_testes
 
     @log
-    def get_cocktail_id_by_name(self, nom_cocktail: str) -> int | None:
+    @staticmethod
+    def get_cocktail_id_by_name(nom_cocktail: str) -> int | None:
         """Récupère l'ID d'un cocktail par son nom."""
         with DBConnection().connection as connection, connection.cursor() as cursor:
             cursor.execute(

@@ -12,6 +12,7 @@ class ListeCourseService:
     """Service pour gérer la liste de course des utilisateurs."""
 
     def __init__(self) -> None:
+        """Initialise un ListeCourseService."""
         self.liste_course_dao = ListeCourseDao()
         self.stock_dao = StockCourseDao()
         self.ingredient_dao = IngredientDao()

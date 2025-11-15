@@ -3,8 +3,6 @@ Définit des schémas pour la création d'utilisateur, l'inscription, la mise à
 le changement de mot de passe, et la représentation en base de données.
 """
 
-from datetime import date
-
 from pydantic import BaseModel
 
 
@@ -79,7 +77,7 @@ class UserUpdatePseudo(BaseModel):
 class User(UserRead, UserCreate):
     """Schéma pour un utilisateur dans la base de données."""
 
-    date_inscription: date
+    date_inscription: str
 
 
 class UserDelete(BaseModel):

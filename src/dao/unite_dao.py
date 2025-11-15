@@ -72,4 +72,3 @@ class UniteDAO:
 
             row = cursor.fetchone()
             return row["nom_unite"] if row else None
-

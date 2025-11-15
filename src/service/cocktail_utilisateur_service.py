@@ -9,7 +9,7 @@ class CocktailUtilisateurService:
     """Service pour gérer les cocktails testés d'un utilisateur."""
 
     def __init__(self) -> None:
-        """Doc."""
+        """Initialise un CocktailUtilisateurService."""
         self.dao = CocktailUtilisateurDao()
 
     # ----------------- cocktails testés -----------------

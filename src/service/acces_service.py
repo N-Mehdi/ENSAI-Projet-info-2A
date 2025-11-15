@@ -23,7 +23,7 @@ class AccesService:
     """Service pour gérer les accès aux cocktails privés."""
 
     def __init__(self) -> None:
-        """Doc."""
+        """Initialise un AccesService."""
         self.dao = AccesDAO()
         self.dao_cocktail = CocktailDao()
 

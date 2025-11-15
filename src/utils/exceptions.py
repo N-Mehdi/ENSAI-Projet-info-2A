@@ -170,6 +170,12 @@ class AvisNotFoundError(AvisError):
 class InvalidAvisError(AvisError):
     """Exception levée quand les données d'un avis sont invalides."""
 
+    def __init__(self) -> None:
+        """Initialise InvalidAvisError."""
+        super().__init__(
+            "Au moins la note ou le commentaire doit être renseigné",
+        )
+
 
 class AccessDeniedError(Exception):
     """Exception levée quand l'accès est refusé."""

@@ -1,0 +1,481 @@
+"""Tests pour ListeCourseService."""
+
+from unittest.mock import MagicMock
+
+import pytest
+
+from src.dao.ingredient_dao import IngredientDao
+from src.dao.liste_course_dao import ListeCourseDao
+from src.dao.stock_course_dao import StockCourseDao
+from src.models.liste_course import ListeCourse
+from src.service.liste_course_service import ListeCourseService
+from src.utils.exceptions import IngredientNotFoundError, ServiceError
+
+
+class TestListeCourseService:
+    """Tests pour ListeCourseService."""
+
+    # ========== Tests pour get_liste_course ==========
+
+    def test_get_liste_course_succes(self) -> None:
+        """Teste la récupération de la liste de course avec succès."""
+        # GIVEN
+        id_utilisateur = 1
+        rows = [
+            {
+                "id_ingredient": 1,
+                "nom_ingredient": "Vodka",
+                "quantite": 500.0,
+                "effectue": False,
+                "id_unite": 1,
+                "code_unite": "ml",
+                "nom_unite_complet": "millilitre",
+            },
+            {
+                "id_ingredient": 2,
+                "nom_ingredient": "Sucre",
+                "quantite": 200.0,
+                "effectue": True,
+                "id_unite": 2,
+                "code_unite": "g",
+                "nom_unite_complet": "gramme",
+            },
+        ]
+
+        liste_course_dao_mock = MagicMock(spec=ListeCourseDao)
+        liste_course_dao_mock.get_liste_course.return_value = rows
+
+        stock_dao_mock = MagicMock(spec=StockCourseDao)
+        ingredient_dao_mock = MagicMock(spec=IngredientDao)
+
+        # WHEN
+        service = ListeCourseService()
+        service.liste_course_dao = liste_course_dao_mock
+        service.stock_dao = stock_dao_mock
+        service.ingredient_dao = ingredient_dao_mock
+        resultat = service.get_liste_course(id_utilisateur)
+
+        # THEN
+        assert isinstance(resultat, ListeCourse)
+        assert resultat.id_utilisateur == id_utilisateur
+        assert len(resultat.items) == 2
+        assert resultat.nombre_items == 2
+        assert resultat.nombre_effectues == 1
+
+    def test_get_liste_course_vide(self) -> None:
+        """Teste la récupération d'une liste de course vide."""
+        # GIVEN
+        id_utilisateur = 1
+
+        liste_course_dao_mock = MagicMock(spec=ListeCourseDao)
+        liste_course_dao_mock.get_liste_course.return_value = []
+
+        stock_dao_mock = MagicMock(spec=StockCourseDao)
+        ingredient_dao_mock = MagicMock(spec=IngredientDao)
+
+        # WHEN
+        service = ListeCourseService()
+        service.liste_course_dao = liste_course_dao_mock
+        service.stock_dao = stock_dao_mock
+        service.ingredient_dao = ingredient_dao_mock
+        resultat = service.get_liste_course(id_utilisateur)
+
+        # THEN
+        assert resultat.nombre_items == 0
+        assert resultat.nombre_effectues == 0
+
+    # ========== Tests pour add_to_liste_course ==========
+
+    def test_add_to_liste_course_succes(self) -> None:
+        """Teste l'ajout d'un ingrédient à la liste de course avec succès."""
+        # GIVEN
+        id_utilisateur = 1
+        nom_ingredient = "vodka"
+        quantite = 500.0
+        id_unite = 1
+
+        ingredient = {
+            "id_ingredient": 1,
+            "nom": "Vodka",
+        }
+
+        liste_course_dao_mock = MagicMock(spec=ListeCourseDao)
+        liste_course_dao_mock.add_to_liste_course.return_value = None
+
+        stock_dao_mock = MagicMock(spec=StockCourseDao)
+
+        ingredient_dao_mock = MagicMock(spec=IngredientDao)
+        ingredient_dao_mock.get_by_name_with_suggestions.return_value = ingredient
+
+        # WHEN
+        service = ListeCourseService()
+        service.liste_course_dao = liste_course_dao_mock
+        service.stock_dao = stock_dao_mock
+        service.ingredient_dao = ingredient_dao_mock
+        resultat = service.add_to_liste_course(id_utilisateur, nom_ingredient, quantite, id_unite)
+
+        # THEN
+        assert "Vodka" in resultat
+        assert "ajouté à la liste de course" in resultat
+        liste_course_dao_mock.add_to_liste_course.assert_called_once()
+
+    def test_add_to_liste_course_ingredient_inexistant(self) -> None:
+        """Teste l'ajout d'un ingrédient inexistant.
+
+        Raises
+        ------
+        IngredientNotFoundError
+            Quand l'ingrédient n'existe pas
+
+        """
+        # GIVEN
+        id_utilisateur = 1
+        nom_ingredient = "ingredient_inconnu"
+        quantite = 100.0
+        id_unite = 1
+
+        liste_course_dao_mock = MagicMock(spec=ListeCourseDao)
+        stock_dao_mock = MagicMock(spec=StockCourseDao)
+
+        ingredient_dao_mock = MagicMock(spec=IngredientDao)
+        ingredient_dao_mock.get_by_name_with_suggestions.side_effect = IngredientNotFoundError(
+            "ingredient_inconnu",
+            [],
+        )
+
+        # WHEN
+        service = ListeCourseService()
+        service.liste_course_dao = liste_course_dao_mock
+        service.stock_dao = stock_dao_mock
+        service.ingredient_dao = ingredient_dao_mock
+
+        # THEN
+        with pytest.raises(IngredientNotFoundError):
+            service.add_to_liste_course(id_utilisateur, nom_ingredient, quantite, id_unite)
+
+    # ========== Tests pour remove_from_liste_course ==========
+
+    def test_remove_from_liste_course_succes(self) -> None:
+        """Teste le retrait d'un ingrédient de la liste de course avec succès."""
+        # GIVEN
+        id_utilisateur = 1
+        nom_ingredient = "vodka"
+
+        ingredient = {
+            "id_ingredient": 1,
+            "nom": "Vodka",
+        }
+
+        liste_course_dao_mock = MagicMock(spec=ListeCourseDao)
+        liste_course_dao_mock.remove_from_liste_course.return_value = True
+
+        stock_dao_mock = MagicMock(spec=StockCourseDao)
+
+        ingredient_dao_mock = MagicMock(spec=IngredientDao)
+        ingredient_dao_mock.get_by_name_with_suggestions.return_value = ingredient
+
+        # WHEN
+        service = ListeCourseService()
+        service.liste_course_dao = liste_course_dao_mock
+        service.stock_dao = stock_dao_mock
+        service.ingredient_dao = ingredient_dao_mock
+        resultat = service.remove_from_liste_course(id_utilisateur, nom_ingredient)
+
+        # THEN
+        assert "Vodka" in resultat
+        assert "retiré de la liste de course" in resultat
+
+    def test_remove_from_liste_course_non_present(self) -> None:
+        """Teste le retrait d'un ingrédient non présent dans la liste.
+
+        Raises
+        ------
+        ServiceError
+            Quand l'ingrédient n'est pas dans la liste de course
+
+        """
+        # GIVEN
+        id_utilisateur = 1
+        nom_ingredient = "vodka"
+
+        ingredient = {
+            "id_ingredient": 1,
+            "nom": "Vodka",
+        }
+
+        liste_course_dao_mock = MagicMock(spec=ListeCourseDao)
+        liste_course_dao_mock.remove_from_liste_course.return_value = False
+
+        stock_dao_mock = MagicMock(spec=StockCourseDao)
+
+        ingredient_dao_mock = MagicMock(spec=IngredientDao)
+        ingredient_dao_mock.get_by_name_with_suggestions.return_value = ingredient
+
+        # WHEN
+        service = ListeCourseService()
+        service.liste_course_dao = liste_course_dao_mock
+        service.stock_dao = stock_dao_mock
+        service.ingredient_dao = ingredient_dao_mock
+
+        # THEN
+        with pytest.raises(ServiceError) as exc_info:
+            service.remove_from_liste_course(id_utilisateur, nom_ingredient)
+        assert "n'est pas dans votre liste de course" in str(exc_info.value)
+
+    # ========== Tests pour clear_liste_course ==========
+
+    def test_clear_liste_course_succes(self) -> None:
+        """Teste le vidage de la liste de course avec succès."""
+        # GIVEN
+        id_utilisateur = 1
+
+        liste_course_dao_mock = MagicMock(spec=ListeCourseDao)
+        liste_course_dao_mock.clear_liste_course.return_value = 5
+
+        stock_dao_mock = MagicMock(spec=StockCourseDao)
+        ingredient_dao_mock = MagicMock(spec=IngredientDao)
+
+        # WHEN
+        service = ListeCourseService()
+        service.liste_course_dao = liste_course_dao_mock
+        service.stock_dao = stock_dao_mock
+        service.ingredient_dao = ingredient_dao_mock
+        resultat = service.clear_liste_course(id_utilisateur)
+
+        # THEN
+        assert "vidée" in resultat
+        assert "5" in resultat
+        assert "ingrédients supprimés" in resultat
+
+    def test_clear_liste_course_deja_vide(self) -> None:
+        """Teste le vidage d'une liste de course déjà vide."""
+        # GIVEN
+        id_utilisateur = 1
+
+        liste_course_dao_mock = MagicMock(spec=ListeCourseDao)
+        liste_course_dao_mock.clear_liste_course.return_value = 0
+
+        stock_dao_mock = MagicMock(spec=StockCourseDao)
+        ingredient_dao_mock = MagicMock(spec=IngredientDao)
+
+        # WHEN
+        service = ListeCourseService()
+        service.liste_course_dao = liste_course_dao_mock
+        service.stock_dao = stock_dao_mock
+        service.ingredient_dao = ingredient_dao_mock
+        resultat = service.clear_liste_course(id_utilisateur)
+
+        # THEN
+        assert "déjà vide" in resultat
+
+    def test_clear_liste_course_un_element(self) -> None:
+        """Teste le vidage d'une liste avec un seul élément."""
+        # GIVEN
+        id_utilisateur = 1
+
+        liste_course_dao_mock = MagicMock(spec=ListeCourseDao)
+        liste_course_dao_mock.clear_liste_course.return_value = 1
+
+        stock_dao_mock = MagicMock(spec=StockCourseDao)
+        ingredient_dao_mock = MagicMock(spec=IngredientDao)
+
+        # WHEN
+        service = ListeCourseService()
+        service.liste_course_dao = liste_course_dao_mock
+        service.stock_dao = stock_dao_mock
+        service.ingredient_dao = ingredient_dao_mock
+        resultat = service.clear_liste_course(id_utilisateur)
+
+        # THEN
+        assert "1 ingrédient supprimé" in resultat
+
+    # ========== Tests pour toggle_effectue ==========
+
+    def test_toggle_effectue_vers_true(self) -> None:
+        """Teste le basculement d'un item vers effectué."""
+        # GIVEN
+        id_utilisateur = 1
+        nom_ingredient = "vodka"
+
+        ingredient = {
+            "id_ingredient": 1,
+            "nom": "Vodka",
+        }
+
+        liste_course_dao_mock = MagicMock(spec=ListeCourseDao)
+        liste_course_dao_mock.toggle_effectue.return_value = True
+
+        stock_dao_mock = MagicMock(spec=StockCourseDao)
+
+        ingredient_dao_mock = MagicMock(spec=IngredientDao)
+        ingredient_dao_mock.get_by_name_with_suggestions.return_value = ingredient
+
+        # WHEN
+        service = ListeCourseService()
+        service.liste_course_dao = liste_course_dao_mock
+        service.stock_dao = stock_dao_mock
+        service.ingredient_dao = ingredient_dao_mock
+        resultat = service.toggle_effectue(id_utilisateur, nom_ingredient)
+
+        # THEN
+        assert resultat["effectue"] is True
+        assert "coché" in resultat["message"]
+        assert "Vodka" in resultat["message"]
+
+    def test_toggle_effectue_vers_false(self) -> None:
+        """Teste le basculement d'un item vers non effectué."""
+        # GIVEN
+        id_utilisateur = 1
+        nom_ingredient = "vodka"
+
+        ingredient = {
+            "id_ingredient": 1,
+            "nom": "Vodka",
+        }
+
+        liste_course_dao_mock = MagicMock(spec=ListeCourseDao)
+        liste_course_dao_mock.toggle_effectue.return_value = False
+
+        stock_dao_mock = MagicMock(spec=StockCourseDao)
+
+        ingredient_dao_mock = MagicMock(spec=IngredientDao)
+        ingredient_dao_mock.get_by_name_with_suggestions.return_value = ingredient
+
+        # WHEN
+        service = ListeCourseService()
+        service.liste_course_dao = liste_course_dao_mock
+        service.stock_dao = stock_dao_mock
+        service.ingredient_dao = ingredient_dao_mock
+        resultat = service.toggle_effectue(id_utilisateur, nom_ingredient)
+
+        # THEN
+        assert resultat["effectue"] is False
+        assert "décoché" in resultat["message"]
+
+    # ========== Tests pour remove_from_liste_course_and_add_to_stock ==========
+
+    def test_remove_and_add_to_stock_nouveau_dans_stock(self) -> None:
+        """Teste le transfert d'un ingrédient vers un stock vide."""
+        # GIVEN
+        id_utilisateur = 1
+        nom_ingredient = "vodka"
+
+        ingredient = {
+            "id_ingredient": 1,
+            "nom": "Vodka",
+        }
+
+        liste_item = {
+            "quantite": 500.0,
+            "id_unite": 1,
+            "type_unite": "liquide",
+            "code_unite": "ml",
+        }
+
+        liste_course_dao_mock = MagicMock(spec=ListeCourseDao)
+        liste_course_dao_mock.get_liste_course_item.return_value = liste_item
+        liste_course_dao_mock.remove_from_liste_course.return_value = True
+
+        stock_dao_mock = MagicMock(spec=StockCourseDao)
+        stock_dao_mock.get_stock_item.return_value = None
+        stock_dao_mock.add_stock_item.return_value = None
+
+        ingredient_dao_mock = MagicMock(spec=IngredientDao)
+        ingredient_dao_mock.get_by_name_with_suggestions.return_value = ingredient
+
+        # WHEN
+        service = ListeCourseService()
+        service.liste_course_dao = liste_course_dao_mock
+        service.stock_dao = stock_dao_mock
+        service.ingredient_dao = ingredient_dao_mock
+        resultat = service.remove_from_liste_course_and_add_to_stock(id_utilisateur, nom_ingredient)
+
+        # THEN
+        assert "Vodka" in resultat
+        assert "ajouté au stock" in resultat
+        stock_dao_mock.add_stock_item.assert_called_once()
+
+    def test_remove_and_add_to_stock_meme_unite(self) -> None:
+        """Teste le transfert avec la même unité dans le stock."""
+        # GIVEN
+        id_utilisateur = 1
+        nom_ingredient = "vodka"
+
+        ingredient = {
+            "id_ingredient": 1,
+            "nom": "Vodka",
+        }
+
+        liste_item = {
+            "quantite": 500.0,
+            "id_unite": 1,
+            "type_unite": "liquide",
+            "code_unite": "ml",
+        }
+
+        stock_item = {
+            "quantite": 300.0,
+            "id_unite": 1,
+        }
+
+        liste_course_dao_mock = MagicMock(spec=ListeCourseDao)
+        liste_course_dao_mock.get_liste_course_item.return_value = liste_item
+        liste_course_dao_mock.remove_from_liste_course.return_value = True
+
+        stock_dao_mock = MagicMock(spec=StockCourseDao)
+        stock_dao_mock.get_stock_item.return_value = stock_item
+        stock_dao_mock.update_stock_quantity.return_value = None
+
+        ingredient_dao_mock = MagicMock(spec=IngredientDao)
+        ingredient_dao_mock.get_by_name_with_suggestions.return_value = ingredient
+
+        # WHEN
+        service = ListeCourseService()
+        service.liste_course_dao = liste_course_dao_mock
+        service.stock_dao = stock_dao_mock
+        service.ingredient_dao = ingredient_dao_mock
+        resultat = service.remove_from_liste_course_and_add_to_stock(id_utilisateur, nom_ingredient)
+
+        # THEN
+        assert "Vodka" in resultat
+        stock_dao_mock.update_stock_quantity.assert_called_once()
+        # Vérifier que la quantité est 800 (300 + 500)
+        call_args = stock_dao_mock.update_stock_quantity.call_args
+        assert call_args[1]["quantite"] == 800.0
+
+    def test_remove_and_add_to_stock_non_dans_liste(self) -> None:
+        """Teste le transfert d'un ingrédient non présent dans la liste.
+
+        Raises
+        ------
+        ServiceError
+            Quand l'ingrédient n'est pas dans la liste de course
+
+        """
+        # GIVEN
+        id_utilisateur = 1
+        nom_ingredient = "vodka"
+
+        ingredient = {
+            "id_ingredient": 1,
+            "nom": "Vodka",
+        }
+
+        liste_course_dao_mock = MagicMock(spec=ListeCourseDao)
+        liste_course_dao_mock.get_liste_course_item.return_value = None
+
+        stock_dao_mock = MagicMock(spec=StockCourseDao)
+
+        ingredient_dao_mock = MagicMock(spec=IngredientDao)
+        ingredient_dao_mock.get_by_name_with_suggestions.return_value = ingredient
+
+        # WHEN
+        service = ListeCourseService()
+        service.liste_course_dao = liste_course_dao_mock
+        service.stock_dao = stock_dao_mock
+        service.ingredient_dao = ingredient_dao_mock
+
+        # THEN
+        with pytest.raises(ServiceError) as exc_info:
+            service.remove_from_liste_course_and_add_to_stock(id_utilisateur, nom_ingredient)
+        assert "n'est pas dans votre liste de course" in str(exc_info.value)
