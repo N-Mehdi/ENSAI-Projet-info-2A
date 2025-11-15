@@ -1,3 +1,5 @@
+"""doc."""
+
 from pydantic import BaseModel, Field
 
 

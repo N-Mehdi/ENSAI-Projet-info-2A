@@ -27,7 +27,7 @@ class Utilisateur:
         date_naissance: str,
         mot_de_passe: str | None = None,
         id_utilisateur: int | None = None,
-    ):
+    ) -> None:
         """Constructeur."""
         self.id_utilisateur = id_utilisateur
         self.pseudo = pseudo

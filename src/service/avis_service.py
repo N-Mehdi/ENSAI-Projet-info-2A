@@ -1,3 +1,5 @@
+"""doc."""
+
 from src.dao.avis_dao import AvisDao
 from src.dao.cocktail_dao import CocktailDao
 from src.models.avis import AvisResponse, AvisSummary
@@ -8,7 +10,8 @@ from src.utils.text_utils import normalize_ingredient_name
 class AvisService:
     """Service pour gérer les avis sur les cocktails."""
 
-    def __init__(self):
+    def __init__(self) -> None:
+        """Doc."""
         self.avis_dao = AvisDao()
         self.cocktail_dao = CocktailDao()
 

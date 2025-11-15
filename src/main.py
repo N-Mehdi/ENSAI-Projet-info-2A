@@ -46,3 +46,6 @@ if __name__ == "__main__":
         port=8000,
         reload=True,
     )
+
+# pour lancer l'api :
+# uv run src/main.py

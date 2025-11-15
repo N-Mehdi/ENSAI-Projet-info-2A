@@ -1,3 +1,5 @@
+"""doc."""
+
 from src.dao.acces_dao import AccesDAO
 from src.dao.cocktail_dao import CocktailDao
 from src.models.acces import (
@@ -20,7 +22,8 @@ from src.utils.exceptions import (
 class AccesService:
     """Service pour gérer les accès aux cocktails privés."""
 
-    def __init__(self):
+    def __init__(self) -> None:
+        """Doc."""
         self.dao = AccesDAO()
         self.dao_cocktail = CocktailDao()
 
@@ -81,18 +84,7 @@ class AccesService:
         )
 
     def get_users_with_access(self, owner_pseudo: str) -> AccessList:
-        """Récupère la liste des utilisateurs ayant accès aux cocktails privés
-
-        Args:
-            owner_pseudo: Le pseudo du propriétaire des cocktails
-
-        Returns:
-            AccessList avec la liste des utilisateurs
-
-        Raises:
-            UserNotFoundError: Si le propriétaire n'existe pas
-
-        """
+        """Récupère la liste des utilisateurs ayant accès aux cocktails privés."""
         owner_id = self.dao.get_user_id_by_pseudo(owner_pseudo)
         if owner_id is None:
             raise UserNotFoundError(f"Utilisateur '{owner_pseudo}' introuvable")
@@ -142,18 +134,7 @@ class AccesService:
         )
 
     def get_my_private_cocktails(self, owner_pseudo: str) -> PrivateCocktailsList:
-        """Récupère ses propres cocktails privés
-
-        Args:
-            owner_pseudo: Le pseudo du propriétaire
-
-        Returns:
-            PrivateCocktailsList avec la liste des cocktails
-
-        Raises:
-            UserNotFoundError: Si l'utilisateur n'existe pas
-
-        """
+        """Récupère ses propres cocktails privés."""
         return self.view_private_cocktails(owner_pseudo, owner_pseudo)
 
     def add_cocktail_to_private_list(self, owner_pseudo: str, cocktail_id: int) -> AccessResponse:

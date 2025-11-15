@@ -1,3 +1,5 @@
+"""doc."""
+
 from fastapi import APIRouter, HTTPException, Query, status
 
 from src.api.deps import CurrentUser

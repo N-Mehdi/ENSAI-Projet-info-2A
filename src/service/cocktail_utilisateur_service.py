@@ -8,7 +8,8 @@ from src.utils.log_decorator import log
 class CocktailUtilisateurService:
     """Service pour gérer les cocktails testés d'un utilisateur."""
 
-    def __init__(self):
+    def __init__(self) -> None:
+        """Doc."""
         self.dao = CocktailUtilisateurDao()
 
     # ----------------- cocktails testés -----------------

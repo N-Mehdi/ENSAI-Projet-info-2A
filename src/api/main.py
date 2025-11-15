@@ -1,3 +1,5 @@
+"""doc."""
+
 from fastapi import APIRouter
 
 from src.api.routes.acces_routes import router as acces_router

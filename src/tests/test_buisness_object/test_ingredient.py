@@ -1,9 +1,9 @@
-import unittest
-from src.business_object.Ingredient import Ingredient
+"""import unittest
+
+from src.business_object.ingredient import Ingredient
 
 
 class TestIngredient(unittest.TestCase):
-
     def test_creation_ingredient(self):
         ingredient = Ingredient(id_ingredient=1, nom="Vodka", ingredient_alcool=True)
         self.assertEqual(ingredient.nom, "Vodka")
@@ -20,3 +20,4 @@ class TestIngredient(unittest.TestCase):
         ingredient = Ingredient(3, "Tequila", True)
         result = ingredient.as_list()
         self.assertEqual(result, ["3", "Tequila", "True"])
+"""

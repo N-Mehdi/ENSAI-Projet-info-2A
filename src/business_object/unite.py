@@ -1,3 +1,6 @@
+"""doc."""
+
+
 class Unite:
     """Classe représentant une unité de mesure.
 
@@ -13,7 +16,7 @@ class Unite:
         type de grandeur mesurée (exemple : "volume")
     """
 
-    def __init__(self, id_unite, nom, abbreviation, type_unite):
+    def __init__(self, id_unite, nom, abbreviation, type_unite) -> None:
         """Constructeur."""
         self.id_unite = id_unite
         self.nom = nom

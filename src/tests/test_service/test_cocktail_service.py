@@ -1,6 +1,4 @@
-"""test_cocktail_service.py
-Classe de test de cocktail_service.
-"""
+"""Classe de test de cocktail_service."""
 
 import pytest
 
@@ -10,7 +8,7 @@ from src.service.cocktail_service import CocktailService
 
 
 class TestCocktailService:
-    # Tests pour rechercher_cocktail_par_nom
+    """Tests pour CocktailService."""
 
     def test_rechercher_cocktail_par_nom_succes(self):
         # GIVEN

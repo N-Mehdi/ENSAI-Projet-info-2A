@@ -1,10 +1,13 @@
+"""doc."""
+
 from src.dao.ingredient_dao import IngredientDao
 
 
 class IngredientService:
     """Service pour gérer les informations d'alcool des ingrédients"""
 
-    def __init__(self):
+    def __init__(self) -> None:
+        """Doc."""
         self.dao = IngredientDao()
 
     def check_if_alcoholic(self, ingredient_id: int) -> dict:

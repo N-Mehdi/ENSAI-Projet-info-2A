@@ -30,7 +30,7 @@ class Cocktail:
         verre: str,
         alcool: bool,
         image: str,
-    ):
+    ) -> None:
         """Constructeur."""
         self.id_cocktail = id_cocktail
         self.nom = nom

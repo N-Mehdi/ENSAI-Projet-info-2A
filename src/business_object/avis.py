@@ -1,3 +1,6 @@
+"""doc."""
+
+
 class Avis:
     """Classe représentant un avis.
 
@@ -25,7 +28,7 @@ class Avis:
         commentaire: str | None = None,
         favoris: bool = False,
         teste: bool = False,
-    ):
+    ) -> None:
         """Constructeur."""
         self.id_utilisateur = id_utilisateur
         self.id_cocktail = id_cocktail

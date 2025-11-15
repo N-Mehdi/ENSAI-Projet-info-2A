@@ -1,3 +1,4 @@
+"""doc."""
 from src.dao.db_connection import DBConnection
 from src.utils.exceptions import IngredientNotFoundError
 from src.utils.log_decorator import log

@@ -1,7 +1,9 @@
+"""doc."""
+
 from fastapi import APIRouter, HTTPException, Query, status
 
 from src.api.deps import CurrentUser
-from src.models.stock import StockItemAddByName, StockItemRemove
+from src.models.stock import Stock, StockItem, StockItemAddByName, StockItemRemove
 from src.service.stock_course_service import StockCourseService
 from src.utils.exceptions import IngredientNotFoundError, InsufficientQuantityError, InvalidQuantityError, ServiceError
 
@@ -11,7 +13,7 @@ service = StockCourseService()
 
 @router.post(
     "/ajouter",
-    summary="➕ Ajouter un ingrédient à mon stock",
+    summary="➕  Ajouter un ingrédient à mon stock",
     description="""
 Ajoute ou met à jour un ingrédient dans le stock de l'utilisateur connecté.
 
@@ -43,7 +45,7 @@ Pour voir la liste complète : `GET /api/ref/ingredients`
 def add_to_stock(
     item: StockItemAddByName,
     current_user: CurrentUser,
-):
+) -> dict[str, str]:
     """Ajoute un ingrédient au stock en utilisant son nom."""
     try:
         message = service.add_or_update_ingredient_by_name(
@@ -58,7 +60,7 @@ def add_to_stock(
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=str(e),
-        )
+        ) from e
     except IngredientNotFoundError as e:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -67,17 +69,17 @@ def add_to_stock(
                 "ingredient_recherche": e.nom_ingredient,
                 "suggestions": e.suggestions,
             },
-        )
+        ) from e
     except ServiceError as e:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=str(e),
-        )
+        ) from e
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Erreur interne : {e!s}",
-        )
+        ) from e
 
 
 @router.get(
@@ -99,7 +101,7 @@ def get_my_stock(
         True,
         description="Si True, retourne seulement les ingrédients disponibles",
     ),
-):
+) -> Stock:
     try:
         stock = service.get_user_stock(
             id_utilisateur=current_user.id_utilisateur,
@@ -111,12 +113,12 @@ def get_my_stock(
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=str(e),
-        )
+        ) from e
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Erreur interne : {e!s}",
-        )
+        ) from e
 
 
 @router.get(
@@ -139,7 +141,7 @@ Le nom sera normalisé automatiquement (ex: "vodka" → "Vodka")
 def get_my_ingredient(
     nom_ingredient: str,
     current_user: CurrentUser,
-):
+) -> StockItem:
     """Récupère un ingrédient spécifique de mon stock par son nom."""
     try:
         item = service.get_ingredient_from_stock_by_name(
@@ -165,17 +167,17 @@ def get_my_ingredient(
                 "ingredient_recherche": e.nom_ingredient,
                 "suggestions": e.suggestions,
             },
-        )
+        ) from e
     except ServiceError as e:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=str(e),
-        )
+        ) from e
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Erreur interne : {e!s}",
-        )
+        ) from e
 
 
 @router.delete(
@@ -204,7 +206,7 @@ utilisez `DELETE /ingredient/{nom_ingredient}`
 def remove_quantity_from_stock(
     item: StockItemRemove,
     current_user: CurrentUser,
-):
+) -> dict[str, str]:
     """Retire une quantité d'un ingrédient du stock."""
     try:
         message = service.remove_ingredient_by_name(
@@ -218,7 +220,7 @@ def remove_quantity_from_stock(
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=str(e),
-        )
+        ) from e
     except InsufficientQuantityError as e:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -227,7 +229,7 @@ def remove_quantity_from_stock(
                 "quantite_demandee": e.quantite_demandee,
                 "quantite_disponible": e.quantite_disponible,
             },
-        )
+        ) from e
     except IngredientNotFoundError as e:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -236,17 +238,17 @@ def remove_quantity_from_stock(
                 "ingredient_recherche": e.nom_ingredient,
                 "suggestions": e.suggestions,
             },
-        )
+        ) from e
     except ServiceError as e:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=str(e),
-        )
+        ) from e
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Erreur interne : {e!s}",
-        )
+        ) from e
 
 
 @router.delete(
@@ -272,7 +274,7 @@ Le nom sera normalisé automatiquement (ex: "vodka" → "Vodka")
 def delete_ingredient_completely(
     nom_ingredient: str,
     current_user: CurrentUser,
-):
+) -> dict[str, str]:
     """Supprime complètement un ingrédient du stock."""
     try:
         message = service.delete_ingredient_by_name(
@@ -289,17 +291,17 @@ def delete_ingredient_completely(
                 "ingredient_recherche": e.nom_ingredient,
                 "suggestions": e.suggestions,
             },
-        )
+        ) from e
     except ServiceError as e:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=str(e),
-        )
+        ) from e
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Erreur interne : {e!s}",
-        )
+        ) from e
 
 
 @router.get(
@@ -318,7 +320,7 @@ avec indication de ce que vous possédez.
 )
 def get_full_stock(
     current_user: CurrentUser,
-):
+) -> list[dict]:
     """Récupère tous les ingrédients avec indication de quantité dans mon stock."""
     try:
         return service.get_full_stock_list(current_user.id_utilisateur)
@@ -327,9 +329,9 @@ def get_full_stock(
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=str(e),
-        )
+        ) from e
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Erreur interne : {e!s}",
-        )
+        ) from e

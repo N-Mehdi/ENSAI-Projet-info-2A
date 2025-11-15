@@ -1,14 +1,15 @@
-from typing import Literal
+"""doc."""
+
+from typing import ClassVar, Literal
 
 
 class UnitConverter:
     """Convertisseur d'unités pour les ingrédients de cocktails.
-
     Gère la conversion des unités liquides vers ml et des unités solides vers g.
     """
 
     # Conversions liquides → ml
-    LIQUID_TO_ML = {
+    LIQUID_TO_ML: ClassVar[dict[str, float]] = {
         "oz": 29.5735,  # Fluid ounce
         "fl oz": 29.5735,  # Fluid ounce (explicite)
         "ml": 1.0,  # Millilitre
@@ -28,7 +29,7 @@ class UnitConverter:
     }
 
     # Conversions solides → g
-    SOLID_TO_G = {
+    SOLID_TO_G: ClassVar[dict[str, float]] = {
         "g": 1.0,  # Gramme
         "kg": 1000.0,  # Kilogramme
         "oz": 28.3495,  # Ounce (masse) - pour ingrédients solides
@@ -40,7 +41,7 @@ class UnitConverter:
     }
 
     # Unités spéciales sans conversion
-    SPECIAL_UNITS = {
+    SPECIAL_UNITS: ClassVar[set[str]] = {
         "dash",  # Pour bitters (compte, pas volume exact)
         "drop",  # Goutte
         "pinch",  # Pincée

@@ -1,3 +1,5 @@
+"""doc."""
+
 from business_object.cocktail import Cocktail
 from dao.db_connection import DBConnection
 from utils.log_decorator import log
@@ -31,17 +33,17 @@ class CocktailUtilisateurDao(metaclass=Singleton):
         liste_cocktails_prives = []
 
         if res:
-            for cocktail in res:
-                liste_cocktails_prives.append(
-                    Cocktail(
-                        id_cocktail=cocktail["id_cocktail"],
-                        nom=cocktail["nom"],
-                        categorie=cocktail["categorie"],
-                        verre=cocktail["verre"],
-                        alcool=cocktail["alcool"],
-                        image=cocktail["image"],
-                    ),
+            liste_cocktails_prives = [
+                Cocktail(
+                    id_cocktail=cocktail["id_cocktail"],
+                    nom=cocktail["nom"],
+                    categorie=cocktail["categorie"],
+                    verre=cocktail["verre"],
+                    alcool=cocktail["alcool"],
+                    image=cocktail["image"],
                 )
+                for cocktail in res
+            ]
 
         return liste_cocktails_prives
 
@@ -133,7 +135,7 @@ class CocktailUtilisateurDao(metaclass=Singleton):
             else:
                 # Si l'utilisateur n'est pas le propriétaire
                 raise PermissionError(
-                    "L'utilisateur n'est pas le propriétaire du cocktail.",
+                    "L'utilisateur n'es pas le propriétaire du cocktail.",
                 )
 
     @log
@@ -265,17 +267,17 @@ class CocktailUtilisateurDao(metaclass=Singleton):
         liste_cocktails_favoris = []
 
         if res:
-            for cocktail in res:
-                liste_cocktails_favoris.append(
-                    Cocktail(
-                        id_cocktail=cocktail["id_cocktail"],
-                        nom=cocktail["nom"],
-                        categorie=cocktail["categorie"],
-                        verre=cocktail["verre"],
-                        alcool=cocktail["alcool"],
-                        image=cocktail["image"],
-                    ),
+            liste_cocktails_favoris = [
+                Cocktail(
+                    id_cocktail=cocktail["id_cocktail"],
+                    nom=cocktail["nom"],
+                    categorie=cocktail["categorie"],
+                    verre=cocktail["verre"],
+                    alcool=cocktail["alcool"],
+                    image=cocktail["image"],
                 )
+                for cocktail in res
+            ]
 
         return liste_cocktails_favoris
 
@@ -331,17 +333,17 @@ class CocktailUtilisateurDao(metaclass=Singleton):
         liste_cocktails_testes = []
 
         if res:
-            for cocktail in res:
-                liste_cocktails_testes.append(
-                    Cocktail(
-                        id_cocktail=cocktail["id_cocktail"],
-                        nom=cocktail["nom"],
-                        categorie=cocktail["categorie"],
-                        verre=cocktail["verre"],
-                        alcool=cocktail["alcool"],
-                        image=cocktail["image"],
-                    ),
+            liste_cocktails_testes = [
+                Cocktail(
+                    id_cocktail=cocktail["id_cocktail"],
+                    nom=cocktail["nom"],
+                    categorie=cocktail["categorie"],
+                    verre=cocktail["verre"],
+                    alcool=cocktail["alcool"],
+                    image=cocktail["image"],
                 )
+                for cocktail in res
+            ]
 
         return liste_cocktails_testes
 

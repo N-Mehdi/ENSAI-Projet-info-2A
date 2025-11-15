@@ -1,3 +1,5 @@
+"""doc."""
+
 from src.dao.ingredient_dao import IngredientDao
 from src.dao.stock_course_dao import StockCourseDao
 from src.models.stock import Stock, StockItem
@@ -8,7 +10,8 @@ from src.utils.text_utils import normalize_ingredient_name
 class StockCourseService:
     """Service pour gérer le stock des utilisateurs."""
 
-    def __init__(self):
+    def __init__(self) -> None:
+        """doc."""
         self.stock_dao = StockCourseDao()
         self.ingredient_dao = IngredientDao()
 

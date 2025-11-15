@@ -1,3 +1,5 @@
+"""doc."""
+
 from pydantic import BaseModel, Field
 
 
@@ -8,18 +10,18 @@ class ListeCourseItemAdd(BaseModel):
         ...,
         min_length=2,
         description="Nom de l'ingrédient",
-        example="Vodka",
+        json_schema_extra={"example": "Vodka"},
     )
     quantite: float = Field(
         ...,
         gt=0,
         description="Quantité à acheter (doit être > 0)",
-        example=500.0,
+        json_schema_extra={"example": 500.0},
     )
     id_unite: int = Field(
         ...,
         description="ID de l'unité (voir GET /api/ref/unites)",
-        example=2,
+        json_schema_extra={"example": 2},
     )
 
 
@@ -30,7 +32,7 @@ class ListeCourseItem(BaseModel):
     nom_ingredient: str
     quantite: float
     effectue: bool
-    id_unite: int | None  # ← Changé de "unite" à "id_unite"
+    id_unite: int | None
     code_unite: str | None
     nom_unite_complet: str | None
 

@@ -19,7 +19,7 @@ from src.utils.securite import hacher_mot_de_passe, verifier_mot_de_passe
 class UtilisateurService:
     """doc."""
 
-    def __init__(self, utilisateur_dao: UtilisateurDao):
+    def __init__(self, utilisateur_dao: UtilisateurDao) -> None:
         """Doc."""
         self.utilisateur_dao = utilisateur_dao
 
@@ -323,9 +323,6 @@ class UtilisateurService:
 
         # Récupérer la date d'inscription
         date_inscription = self.utilisateur_dao.get_date_inscription(pseudo)
-
-        if date_inscription is None:
-            raise UserNotFoundError(pseudo=pseudo)
 
         # Créer la réponse
         return DateInscriptionResponse(

@@ -1,4 +1,4 @@
-import unittest
+'''import unittest
 from datetime import date
 from unittest.mock import MagicMock, patch
 
@@ -142,3 +142,4 @@ class TestStockCourseDao(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+'''

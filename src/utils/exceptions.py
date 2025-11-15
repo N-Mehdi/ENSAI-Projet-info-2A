@@ -1,3 +1,6 @@
+"""Classe pour les exceptions."""
+
+
 class DAOError(Exception):
     """Raised for errors in the Data Access Object (DAO) layer.
 
@@ -117,7 +120,8 @@ class StockError(ServiceError):
 class IngredientNotFoundError(Exception):
     """Exception levée quand un ingrédient n'est pas trouvé."""
 
-    def __init__(self, nom_ingredient: str, suggestions: list[str] = None):
+    def __init__(self, nom_ingredient: str, suggestions: list[str]) -> None:
+        """Initialize IngredientNotFoundError."""
         self.nom_ingredient = nom_ingredient
         self.suggestions = suggestions or []
 
@@ -131,14 +135,16 @@ class IngredientNotFoundError(Exception):
 class InvalidQuantityError(StockError):
     """Exception levée quand la quantité est invalide."""
 
-    def __init__(self, quantite: float):
+    def __init__(self, quantite: float) -> None:
+        """Initialize InvalidQuantityError."""
         super().__init__(f"Quantité invalide : {quantite}. La quantité doit être > 0")
 
 
 class InsufficientQuantityError(StockError):
     """Exception levée quand la quantité à retirer est supérieure à la quantité disponible."""
 
-    def __init__(self, quantite_demandee: float, quantite_disponible: float):
+    def __init__(self, quantite_demandee: float, quantite_disponible: float) -> None:
+        """Initialize InsufficientQuantityError."""
         self.quantite_demandee = quantite_demandee
         self.quantite_disponible = quantite_disponible
         super().__init__(
@@ -154,7 +160,8 @@ class AvisError(ServiceError):
 class AvisNotFoundError(AvisError):
     """Exception levée quand un avis n'est pas trouvé."""
 
-    def __init__(self, id_utilisateur: int, nom_cocktail: str):
+    def __init__(self, id_utilisateur: int, nom_cocktail: str) -> None:
+        """Initialize AvisNotFoundError."""
         super().__init__(
             f"Aucun avis de l'utilisateur {id_utilisateur} pour le cocktail '{nom_cocktail}'",
         )
@@ -162,10 +169,6 @@ class AvisNotFoundError(AvisError):
 
 class InvalidAvisError(AvisError):
     """Exception levée quand les données d'un avis sont invalides."""
-
-
-class UserNotFoundError(Exception):
-    """Exception levée quand un utilisateur n'est pas trouvé."""
 
 
 class AccessDeniedError(Exception):

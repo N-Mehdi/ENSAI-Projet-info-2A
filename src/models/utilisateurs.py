@@ -79,6 +79,8 @@ class UserUpdatePseudo(BaseModel):
 class User(UserRead, UserCreate):
     """Schéma pour un utilisateur dans la base de données."""
 
+    date_inscription: date
+
 
 class UserDelete(BaseModel):
     """Schéma pour supprimer un utilisateur dans la base de données."""
@@ -87,11 +89,8 @@ class UserDelete(BaseModel):
     mot_de_passe: str
 
 
-from pydantic import BaseModel
-
-
 class DateInscriptionResponse(BaseModel):
     """Schéma de réponse pour la date d'inscription."""
 
     pseudo: str
-    date_inscription: date
+    date_inscription: str

@@ -1,3 +1,4 @@
+"""doc."""
 from typing import Any
 
 from dao.db_connection import DBConnection

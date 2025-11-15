@@ -1,3 +1,5 @@
+"""doc."""
+
 from src.dao.ingredient_dao import IngredientDao
 from src.dao.liste_course_dao import ListeCourseDao
 from src.dao.stock_course_dao import StockCourseDao
@@ -9,7 +11,7 @@ from src.utils.exceptions import ServiceError
 class ListeCourseService:
     """Service pour gérer la liste de course des utilisateurs."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.liste_course_dao = ListeCourseDao()
         self.stock_dao = StockCourseDao()
         self.ingredient_dao = IngredientDao()

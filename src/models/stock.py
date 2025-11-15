@@ -1,3 +1,5 @@
+"""Modèles pydantic pour le stock."""
+
 from pydantic import BaseModel, Field
 
 
@@ -25,18 +27,18 @@ class StockItemAdd(BaseModel):
     id_ingredient: int = Field(
         ...,
         description="ID de l'ingrédient (voir GET /api/ref/ingredients)",
-        example=5,
+        json_schema_extra={"example": 5},
     )
     quantite: float = Field(
         ...,
         gt=0,
         description="Quantité de l'ingrédient (doit être > 0)",
-        example=500.0,
+        json_schema_extra={"example": 500.0},
     )
     id_unite: int = Field(
         ...,
         description="ID de l'unité (voir GET /api/ref/unites)",
-        example=2,
+        json_schema_extra={"example": 2},
     )
 
 
@@ -47,18 +49,18 @@ class StockItemAddByName(BaseModel):
         ...,
         description="Nom de l'ingrédient (insensible à la casse, sera normalisé automatiquement)",
         min_length=2,
-        example="Vodka",
+        json_schema_extra={"example": "Vodka"},
     )
     quantite: float = Field(
         ...,
         gt=0,
         description="Quantité de l'ingrédient (doit être > 0)",
-        example=500.0,
+        json_schema_extra={"example": 500.0},
     )
     id_unite: int = Field(
         ...,
         description="ID de l'unité (voir GET /api/ref/unites)",
-        example=2,
+        json_schema_extra={"example": 2},
     )
 
 
@@ -69,11 +71,11 @@ class StockItemRemove(BaseModel):
         ...,
         description="Nom de l'ingrédient",
         min_length=2,
-        example="Vodka",
+        json_schema_extra={"example": "Vodka"},
     )
     quantite: float = Field(
         ...,
         gt=0,
         description="Quantité à retirer (doit être > 0 et <= quantité disponible)",
-        example=100.0,
+        json_schema_extra={"example": 100.0},
     )
