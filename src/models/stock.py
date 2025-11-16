@@ -57,10 +57,12 @@ class StockItemAddByName(BaseModel):
         description="Quantité de l'ingrédient (doit être > 0)",
         json_schema_extra={"example": 500.0},
     )
-    id_unite: int = Field(
+    unite: str = Field(
         ...,
-        description="ID de l'unité (voir GET /api/ref/unites)",
-        json_schema_extra={"example": 2},
+        description="Abréviation de l'unité (ex: 'ml', 'cl', 'l', 'g', 'kg')",
+        min_length=1,
+        max_length=10,
+        json_schema_extra={"example": "ml"},
     )
 
 

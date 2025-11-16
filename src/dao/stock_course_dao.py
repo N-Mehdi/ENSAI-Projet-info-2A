@@ -3,15 +3,16 @@ Class dao du business object Stock.
 """
 
 from dao.db_connection import DBConnection
-from src.utils.log_decorator import log
+from src.utils.exceptions import DAOError
+from src.utils.log_decorator import log, logging
 from utils.singleton import Singleton
 
 
 class StockCourseDao(metaclass=Singleton):
     """Classe contenant les méthodes agissants sur le stock d'un utilisateur."""
 
-    @log
     @staticmethod
+    @log
     def update_or_create_stock_item(
         id_utilisateur: int,
         id_ingredient: int,
@@ -59,8 +60,8 @@ class StockCourseDao(metaclass=Singleton):
             )
             return cursor.rowcount > 0
 
-    @log
     @staticmethod
+    @log
     def get_stock(id_utilisateur: int, only_available: bool = True) -> list[dict]:
         """Récupère le stock d'un utilisateur.
 
@@ -101,8 +102,8 @@ class StockCourseDao(metaclass=Singleton):
 
             return cursor.fetchall()
 
-    @log
     @staticmethod
+    @log
     def get_stock_item(
         id_utilisateur: int,
         id_ingredient: int,
@@ -144,11 +145,11 @@ class StockCourseDao(metaclass=Singleton):
                 },
             )
 
-        # Retourner le dictionnaire brut
-        return cursor.fetchone()
+            # Retourner le dictionnaire brut
+            return cursor.fetchone()
 
-    @log
     @staticmethod
+    @log
     def decrement_stock_item(
         id_utilisateur: int,
         id_ingredient: int,
@@ -246,8 +247,8 @@ class StockCourseDao(metaclass=Singleton):
                 "supprime": False,
             }
 
-    @log
     @staticmethod
+    @log
     def delete_stock_item(id_utilisateur: int, id_ingredient: int) -> bool:
         """Supprime complètement un ingrédient du stock (quelle que soit la quantité).
 
@@ -281,8 +282,8 @@ class StockCourseDao(metaclass=Singleton):
             )
             return cursor.rowcount > 0
 
-    @log
     @staticmethod
+    @log
     def get_full_stock(id_utilisateur: int) -> list[dict]:
         """Récupère tous les ingrédients avec leur quantité dans le stock.
         Les ingrédients non présents dans le stock auront quantite = 0.
@@ -318,8 +319,8 @@ class StockCourseDao(metaclass=Singleton):
             )
             return cursor.fetchall()
 
-    @log
     @staticmethod
+    @log
     def get_unite_info(id_unite: int) -> dict | None:
         """Récupère les informations d'une unité.
 
@@ -337,10 +338,94 @@ class StockCourseDao(metaclass=Singleton):
         with DBConnection().connection as connection, connection.cursor() as cursor:
             cursor.execute(
                 """
-                SELECT abbreviation, type
+                SELECT abbreviation, type_unite
                 FROM unite
                 WHERE id_unite = %(id_unite)s
                 """,
                 {"id_unite": id_unite},
             )
             return cursor.fetchone()
+
+    @staticmethod
+    @log
+    def get_unite_id_by_abbreviation(abbreviation: str) -> int | None:
+        """Récupère l'ID d'une unité par son abréviation.
+
+        Parameters
+        ----------
+        abbreviation : str
+            Abréviation de l'unité (ex: 'ml', 'cl', 'g', 'kg')
+
+        Returns
+        -------
+        int | None
+            ID de l'unité si trouvée, None sinon
+
+        Raises
+        ------
+        DAOError
+            En cas d'erreur de base de données
+
+        """
+        try:
+            with DBConnection().connection as connection, connection.cursor() as cursor:
+                cursor.execute(
+                    """
+                    SELECT id_unite
+                    FROM unite
+                    WHERE LOWER(abbreviation) = LOWER(%(abbreviation)s)
+                    """,
+                    {"abbreviation": abbreviation},
+                )
+
+                result = cursor.fetchone()
+                return result["id_unite"] if result else None
+
+        except Exception as e:
+            logging.exception("Erreur lors de la récupération de l'ID de l'unité")
+            raise DAOError(f"Impossible de récupérer l'ID de l'unité '{abbreviation}' : {e}") from e
+
+    @staticmethod
+    def set_stock_item(
+        id_utilisateur: int,
+        id_ingredient: int,
+        quantite: float,
+        id_unite: int,
+    ) -> bool:
+        """Définit (remplace) la quantité d'un ingrédient dans le stock.
+
+        Parameters
+        ----------
+        id_utilisateur : int
+            ID de l'utilisateur
+        id_ingredient : int
+            ID de l'ingrédient
+        quantite : float
+            Quantité à définir (remplace la quantité existante)
+        id_unite : int
+            ID de l'unité de mesure
+
+        Returns
+        -------
+        bool
+            True si l'opération a réussi
+
+        """
+        with DBConnection().connection as connection, connection.cursor() as cursor:
+            cursor.execute(
+                """
+                INSERT INTO stock (id_utilisateur, id_ingredient, quantite, id_unite)
+                VALUES (%(id_utilisateur)s, %(id_ingredient)s, %(quantite)s, %(id_unite)s)
+                ON CONFLICT (id_utilisateur, id_ingredient)
+                DO UPDATE SET
+                    quantite = EXCLUDED.quantite,
+                    id_unite = EXCLUDED.id_unite
+                """,
+                {
+                    "id_utilisateur": id_utilisateur,
+                    "id_ingredient": id_ingredient,
+                    "quantite": quantite,
+                    "id_unite": id_unite,
+                },
+            )
+            return cursor.rowcount > 0

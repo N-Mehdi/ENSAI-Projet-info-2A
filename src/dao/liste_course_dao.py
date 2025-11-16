@@ -1,4 +1,5 @@
 """doc."""
+
 from src.dao.db_connection import DBConnection
 from src.utils.conversion_unite import UnitConverter
 from src.utils.log_decorator import log
@@ -83,8 +84,12 @@ class ListeCourseDao(metaclass=Singleton):
                     {"id_unite": id_unite},
                 )
                 new_unite_info = cursor.fetchone()
+                code_unite_nouvelle = new_unite_info["abbreviation"] if new_unite_info else None
 
-                if id_unite == id_unite_existante:
+                code_existante_norm = UnitConverter.normalize_unit(code_unite_existante)
+                code_nouvelle_norm = UnitConverter.normalize_unit(code_unite_nouvelle)
+
+                if code_existante_norm == code_nouvelle_norm:
                     # Même unité → additionner directement
                     nouvelle_quantite = quantite_existante + quantite
 

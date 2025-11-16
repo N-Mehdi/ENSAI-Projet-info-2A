@@ -196,6 +196,27 @@ class SelfAccessError(Exception):
 class CocktailNotFoundError(Exception):
     """Exception levée quand un cocktail n'est pas trouvé."""
 
+    def __init__(self, nom_cocktail: str, suggestions: list[str] | None = None) -> None:
+        """Initialize CocktailNotFoundError."""
+        self.nom_cocktail = nom_cocktail
+        self.suggestions = suggestions or []
+
+        message = f"Cocktail '{nom_cocktail}' non trouvé."
+        if self.suggestions:
+            message += f" Vouliez-vous dire : {', '.join(self.suggestions[:3])} ?"
+
+        super().__init__(message)
+
 
 class InvalidBirthDateError(ServiceError):
     """Date de naissance invalide."""
+
+
+class UniteNotFoundError(Exception):
+    """Exception levée quand une unité n'est pas trouvée."""
+
+    def __init__(self, abbreviation: str) -> None:
+        """Initialize UniteNotFoundError."""
+        msg = f"Unité '{abbreviation}' non trouvée"
+        super().__init__(msg)
+        self.abbreviation = abbreviation

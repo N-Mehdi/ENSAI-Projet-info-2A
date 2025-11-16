@@ -4,7 +4,8 @@ Classe DAO du business object Cocktail.
 
 from src.business_object.cocktail import Cocktail
 from src.dao.db_connection import DBConnection
-from src.utils.log_decorator import log
+from src.utils.exceptions import DAOError
+from src.utils.log_decorator import log, logging
 from src.utils.singleton import Singleton
 
 
@@ -13,8 +14,8 @@ class CocktailDao(metaclass=Singleton):
     de données.
     """
 
-    @log
     @staticmethod
+    @log
     def rechercher_cocktail_par_nom(nom) -> Cocktail:
         """Doc."""
         with DBConnection().connection as connection, connection.cursor() as cursor:
@@ -37,8 +38,8 @@ class CocktailDao(metaclass=Singleton):
             )
         return cocktail
 
-    @log
     @staticmethod
+    @log
     def rechercher_cocktail_par_sequence_debut(
         sequence,
         max_resultats,
@@ -69,13 +70,13 @@ class CocktailDao(metaclass=Singleton):
                 liste_cocktails.append(cocktail)
         return liste_cocktails
 
-    @log
     @staticmethod
+    @log
     def rechercher_cocktail_aleatoire() -> Cocktail:
         """Doc."""
 
-    @log
     @staticmethod
+    @log
     def get_cocktail_id_by_name(cocktail_name: str) -> int | None:
         """Récupère l'ID d'un cocktail par son nom."""
         with DBConnection().connection as connection, connection.cursor() as cursor:
@@ -89,3 +90,40 @@ class CocktailDao(metaclass=Singleton):
             )
             result = cursor.fetchone()
             return result["id_cocktail"] if result else None
+
+    @staticmethod
+    @log
+    def get_tous_cocktails_avec_ingredients() -> list[dict]:
+        """Récupère tous les cocktails avec leurs ingrédients requis.
+
+        Returns
+        -------
+        list[dict]
+            Liste de tous les cocktails avec leurs ingrédients
+
+        """
+        try:
+            with DBConnection().connection as connection, connection.cursor() as cursor:
+                cursor.execute(
+                    """
+                    SELECT
+                        c.id_cocktail,
+                        c.nom,
+                        c.categorie,
+                        c.verre,
+                        c.alcool,
+                        c.image,
+                        ci.id_ingredient,
+                        ci.qte,
+                        ci.unite
+                    FROM cocktail c
+                    LEFT JOIN cocktail_ingredient ci ON c.id_cocktail = ci.id_cocktail
+                    ORDER BY c.id_cocktail, ci.id_ingredient
+                    """,
+                )
+
+                return cursor.fetchall()
+
+        except Exception as e:
+            logging.exception("Erreur lors de la récupération des cocktails avec ingrédients")
+            raise DAOError(f"Impossible de récupérer les cocktails : {e}") from e

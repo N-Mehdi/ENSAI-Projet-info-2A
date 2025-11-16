@@ -18,6 +18,7 @@ class UnitConverter:
         "dl": 100.0,  # Décilitre
         "tsp": 4.92892,  # Teaspoon (cuillère à café) - liquide
         "tbsp": 14.7868,  # Tablespoon (cuillère à soupe) - liquide
+        "tblsp": 14.7868,  # Tablespoon aussi
         "cup": 236.588,  # Cup américaine
         "pint": 473.176,  # Pinte américaine
         "quart": 946.353,  # Quart américain
@@ -36,6 +37,7 @@ class UnitConverter:
         "lb": 453.592,  # Livre
         "tsp": 4.2,  # Teaspoon de sucre (approximatif)
         "tbsp": 12.5,  # Tablespoon de sucre (approximatif)
+        "tblsp": 12.5,  # Tablespoon aussi
         "cup": 200.0,  # Cup de sucre (approximatif)
         "cube": 5.0,  # Cube de sucre (approximatif, ~5g)
     }
@@ -275,6 +277,16 @@ class UnitConverter:
             return "autre"
 
         return None
+
+    def normalize_unit(unit_code: str) -> str:
+        """Normalise les variantes d'unités."""
+        if unit_code:
+            unit_lower = unit_code.lower()
+            if unit_lower in ("tbsp", "tblsp"):
+                return "tbsp"
+            if unit_lower in ("tsp", "teaspoon"):
+                return "tsp"
+        return unit_code
 
 
 # Alias pour faciliter l'import

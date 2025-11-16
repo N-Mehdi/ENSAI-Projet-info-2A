@@ -3,7 +3,14 @@
 from src.dao.ingredient_dao import IngredientDao
 from src.dao.stock_course_dao import StockCourseDao
 from src.models.stock import Stock, StockItem
-from src.utils.exceptions import IngredientNotFoundError, InsufficientQuantityError, InvalidQuantityError, ServiceError
+from src.utils.exceptions import (
+    DAOError,
+    IngredientNotFoundError,
+    InsufficientQuantityError,
+    InvalidQuantityError,
+    ServiceError,
+    UniteNotFoundError,
+)
 from src.utils.text_utils import normalize_ingredient_name
 
 
@@ -49,12 +56,13 @@ class StockCourseService:
 
         return ingredient
 
+
     def add_or_update_ingredient_by_name(
         self,
         id_utilisateur: int,
         nom_ingredient: str,
         quantite: float,
-        id_unite: int,
+        abbreviation_unite: str,
     ) -> str:
         """Ajoute ou met à jour un ingrédient dans le stock en utilisant son nom.
 
@@ -66,8 +74,8 @@ class StockCourseService:
             Nom de l'ingrédient (sera normalisé automatiquement)
         quantite : float
             Quantité (doit être > 0)
-        id_unite : int
-            ID de l'unité
+        abbreviation_unite : str
+            Abréviation de l'unité (ex: 'ml', 'cl', 'g', 'kg')
 
         Returns
         -------
@@ -80,6 +88,8 @@ class StockCourseService:
             Si la quantité est <= 0
         IngredientNotFoundError
             Si l'ingrédient n'existe pas (avec suggestions)
+        UniteNotFoundError
+            Si l'unité n'existe pas
         ServiceError
             Si erreur lors de l'ajout
 
@@ -90,6 +100,16 @@ class StockCourseService:
 
         # Récupérer l'ingrédient (lève exception si non trouvé)
         ingredient = self._get_ingredient_by_name(nom_ingredient)
+
+        # Récupérer l'ID de l'unité via son abréviation
+        try:
+            id_unite = self.stock_dao.get_unite_id_by_abbreviation(abbreviation_unite)
+
+            if id_unite is None:
+                raise UniteNotFoundError(abbreviation_unite)
+
+        except DAOError as e:
+            raise ServiceError(f"Erreur lors de la récupération de l'unité : {e}") from e
 
         # Ajouter au stock en utilisant l'ID
         try:
@@ -103,12 +123,12 @@ class StockCourseService:
             if not success:
                 raise ServiceError("Impossible d'ajouter l'ingrédient au stock")
 
-            return f"Ingrédient '{ingredient['nom']}' ajouté/mis à jour avec succès"
+            return f"Ingrédient '{ingredient['nom']}' ajouté/mis à jour avec succès ({quantite} {abbreviation_unite})"
 
-        except (InvalidQuantityError, IngredientNotFoundError):
+        except (InvalidQuantityError, IngredientNotFoundError, UniteNotFoundError):
             raise
         except Exception as e:
-            raise ServiceError(f"Erreur lors de l'ajout au stock : {e}")
+            raise ServiceError(f"Erreur lors de l'ajout au stock : {e}") from e
 
     def get_user_stock(
         self,

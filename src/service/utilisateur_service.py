@@ -240,20 +240,20 @@ class UtilisateurService:
         age = (today - birth_date).days / 365.25
 
         # Âge minimum
-        if age < 13:
+        if age < 18:
             raise InvalidBirthDateError(
-                "Vous devez avoir au moins 13 ans pour créer un compte",
+                "Vous devez avoir au moins 18 ans pour créer un compte",
             )
 
-        # Âge maximum (date réaliste)
-        if age > 150:
+        # Âge maximum
+        if age > 122:
             raise InvalidBirthDateError(
                 "Date de naissance non réaliste",
             )
 
         return birth_date
 
-    def changer_pseudo(self, utilisateur, nouveau_pseudo: str) -> bool:
+    def changer_pseudo(self, ancien_pseudo, nouveau_pseudo: str) -> bool:
         """Change le pseudo d'un utilisateur après vérification qu'il n'existe pas déjà.
 
         Parameters
@@ -275,15 +275,16 @@ class UtilisateurService:
 
         """
         # Vérifier si le pseudo existe déjà
-        if self.dao.pseudo_existe(nouveau_pseudo):
+        if self.utilisateur_dao.pseudo_existe(nouveau_pseudo):
             raise ServiceError(f"Le pseudo '{nouveau_pseudo}' est déjà utilisé")
 
         # Déléguer la mise à jour à la DAO
         try:
-            succes = self.dao.update_pseudo(utilisateur.id_utilisateur, nouveau_pseudo)
+            succes = self.utilisateur_dao.update_pseudo(ancien_pseudo, nouveau_pseudo)
             if not succes:
                 raise ServiceError("Impossible de changer le pseudo")
-            return True
+            return f"Pseudo changé avec succès de '{ancien_pseudo}' vers '{nouveau_pseudo}'"
+
         except Exception as e:
             raise ServiceError("Impossible de changer le pseudo") from e
 

@@ -5,7 +5,13 @@ from fastapi import APIRouter, HTTPException, Query, status
 from src.api.deps import CurrentUser
 from src.models.stock import Stock, StockItem, StockItemAddByName, StockItemRemove
 from src.service.stock_course_service import StockCourseService
-from src.utils.exceptions import IngredientNotFoundError, InsufficientQuantityError, InvalidQuantityError, ServiceError
+from src.utils.exceptions import (
+    IngredientNotFoundError,
+    InsufficientQuantityError,
+    InvalidQuantityError,
+    ServiceError,
+    UniteNotFoundError,
+)
 
 router = APIRouter(prefix="/stock", tags=["Stock"])
 service = StockCourseService()
@@ -25,12 +31,18 @@ Ajoute ou met à jour un ingrédient dans le stock de l'utilisateur connecté.
 - "  rhum   blanc  " → "Rhum Blanc"
 - "151 proof rum" → "151 Proof Rum"
 
+**Unités acceptées :**
+- **Liquides** : ml, cl, l, dl, oz, fl oz, tsp, tbsp, cup, shot
+- **Solides** : g, kg, oz, lb, tsp, tbsp, cup, cube
+- **Spéciales** : dash, drop, pinch, piece, slice, wedge, etc.
+
 **Comportement :**
 - Si l'ingrédient n'existe pas dans le stock → il est créé
 - Si l'ingrédient existe déjà → sa quantité et son unité sont mises à jour
 
 **En cas d'erreur :**
-Si l'ingrédient n'est pas trouvé, l'API vous suggèrera des noms similaires.
+- Si l'ingrédient n'est pas trouvé, l'API vous suggèrera des noms similaires
+- Si l'unité n'est pas reconnue, une erreur 404 sera retournée
 
 **Exemples d'ingrédients valides :**
 - Apple
@@ -41,18 +53,69 @@ Si l'ingrédient n'est pas trouvé, l'API vous suggèrera des noms similaires.
 
 Pour voir la liste complète : `GET /api/ref/ingredients`
 """,
+    responses={
+        200: {
+            "description": "Ingrédient ajouté/mis à jour avec succès",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "status": "success",
+                        "message": "Ingrédient 'Vodka' ajouté/mis à jour avec succès (500.0 ml)",
+                    },
+                },
+            },
+        },
+        400: {
+            "description": "Quantité invalide",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "detail": "La quantité doit être supérieure à 0",
+                    },
+                },
+            },
+        },
+        404: {
+            "description": "Ingrédient ou unité non trouvé(e)",
+            "content": {
+                "application/json": {
+                    "examples": {
+                        "ingredient_not_found": {
+                            "summary": "Ingrédient non trouvé",
+                            "value": {
+                                "detail": {
+                                    "error": "Ingrédient 'Vdka' non trouvé.",
+                                    "ingredient_recherche": "Vdka",
+                                    "suggestions": ["Vodka", "Vodka Citron"],
+                                },
+                            },
+                        },
+                        "unite_not_found": {
+                            "summary": "Unité non trouvée",
+                            "value": {
+                                "detail": "Unité 'mml' non trouvée",
+                            },
+                        },
+                    },
+                },
+            },
+        },
+        500: {
+            "description": "Erreur serveur",
+        },
+    },
 )
 def add_to_stock(
     item: StockItemAddByName,
     current_user: CurrentUser,
 ) -> dict[str, str]:
-    """Ajoute un ingrédient au stock en utilisant son nom."""
+    """Ajoute un ingrédient au stock en utilisant son nom et l'abréviation de l'unité."""
     try:
         message = service.add_or_update_ingredient_by_name(
             id_utilisateur=current_user.id_utilisateur,
             nom_ingredient=item.nom_ingredient,
             quantite=item.quantite,
-            id_unite=item.id_unite,
+            abbreviation_unite=item.unite,
         )
         return {"status": "success", "message": message}
 
@@ -69,6 +132,11 @@ def add_to_stock(
                 "ingredient_recherche": e.nom_ingredient,
                 "suggestions": e.suggestions,
             },
+        ) from e
+    except UniteNotFoundError as e:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Unité '{e.abbreviation}' non trouvée. Unités valides : ml, cl, l, g, kg, oz, etc.",
         ) from e
     except ServiceError as e:
         raise HTTPException(

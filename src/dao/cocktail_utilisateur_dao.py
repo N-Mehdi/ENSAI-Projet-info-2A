@@ -11,8 +11,8 @@ class CocktailUtilisateurDao(metaclass=Singleton):
     de données.
     """
 
-    @log
     @staticmethod
+    @log
     def get_prive(id_utilisateur) -> list[Cocktail]:
         """Obtenir tous les cocktails privés d'un utilisateur."""
         with DBConnection().connection as connection, connection.cursor() as cursor:
@@ -48,8 +48,8 @@ class CocktailUtilisateurDao(metaclass=Singleton):
 
         return liste_cocktails_prives
 
-    @log
     @staticmethod
+    @log
     def insert_cocktail_prive(id_utilisateur, cocktail: Cocktail) -> int:
         """Ajoute un nouveau cocktail privé d'un utilisateur."""
         # Ajout du cocktail dans la base de données et récupération de son id
@@ -88,8 +88,8 @@ class CocktailUtilisateurDao(metaclass=Singleton):
             cursor.execute(sql_insert_acces, acces_params)
         return new_cocktail_id
 
-    @log
     @staticmethod
+    @log
     def get_cocktail_ingredient(id_cocktail) -> dict:
         """Récupère tous les ingrédients d'un cocktail donné."""
         with DBConnection().connection as connection, connection.cursor() as cursor:
@@ -100,8 +100,8 @@ class CocktailUtilisateurDao(metaclass=Singleton):
             # Retourne un dictionnaire {id_ingredient: quantite}
             return {row[0]: row[1] for row in cursor.fetchall()}
 
-    @log
     @staticmethod
+    @log
     def update_cocktail_prive_modif_ingredient(
         id_utilisateur,
         id_cocktail,
@@ -141,8 +141,8 @@ class CocktailUtilisateurDao(metaclass=Singleton):
                     "L'utilisateur n'es pas le propriétaire du cocktail.",
                 )
 
-    @log
     @staticmethod
+    @log
     def update_cocktail_prive_ajout_ingredient(
         id_utilisateur,
         id_cocktail,
@@ -183,8 +183,8 @@ class CocktailUtilisateurDao(metaclass=Singleton):
                     "L'utilisateur n'est pas le propriétaire du cocktail.",
                 )
 
-    @log
     @staticmethod
+    @log
     def update_cocktail_prive_supprimer_ingredient(
         id_utilisateur,
         id_cocktail,
@@ -222,8 +222,8 @@ class CocktailUtilisateurDao(metaclass=Singleton):
                     "L'utilisateur n'est pas le propriétaire du cocktail.",
                 )
 
-    @log
     @staticmethod
+    @log
     def delete_cocktail_prive(id_utilisateur, id_cocktail) -> None:
         """Supprime le cocktail privé d'un utilisateur."""
         sql_delete_acces = """
@@ -249,8 +249,8 @@ class CocktailUtilisateurDao(metaclass=Singleton):
                 cursor.execute(sql_delete_cocktail, params),
             )
 
-    @log
     @staticmethod
+    @log
     def get_favoris(id_utilisateur) -> list[Cocktail]:
         """Obtenir tous les cocktails favoris d'un utilisateur."""
         with DBConnection().connection as connection, connection.cursor() as cursor:
@@ -286,8 +286,8 @@ class CocktailUtilisateurDao(metaclass=Singleton):
 
         return liste_cocktails_favoris
 
-    @log
     @staticmethod
+    @log
     def update_cocktail_favoris(id_utilisateur, id_cocktail) -> None:
         """Ajoute un cocktail dans les favoris d'un utilisateur."""
         with DBConnection().connection as connection, connection.cursor() as cursor:
@@ -302,8 +302,8 @@ class CocktailUtilisateurDao(metaclass=Singleton):
                 },
             )
 
-    @log
     @staticmethod
+    @log
     def delete_cocktail_favoris(id_utilisateur, id_cocktail) -> None:
         """Supprime un cocktail des favoris d'un utilisateur."""
         with DBConnection().connection as connection, connection.cursor() as cursor:
@@ -318,8 +318,8 @@ class CocktailUtilisateurDao(metaclass=Singleton):
                 },
             )
 
-    @log
     @staticmethod
+    @log
     def get_teste(id_utilisateur: int) -> list[Cocktail]:
         """Obtenir tous les cocktails testés par un utilisateur."""
         with DBConnection().connection as connection, connection.cursor() as cursor:
@@ -355,8 +355,8 @@ class CocktailUtilisateurDao(metaclass=Singleton):
 
         return liste_cocktails_testes
 
-    @log
     @staticmethod
+    @log
     def get_cocktail_id_by_name(nom_cocktail: str) -> int | None:
         """Récupère l'ID d'un cocktail par son nom."""
         with DBConnection().connection as connection, connection.cursor() as cursor:

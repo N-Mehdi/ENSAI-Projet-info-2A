@@ -84,7 +84,7 @@ service = UtilisateurService(utilisateur_dao=UtilisateurDao())
 )
 def changer_pseudo(
     donnees: UserUpdatePseudo,
-    current_user: CurrentUser,
+    _current_user: CurrentUser,
 ) -> str:
     """Changer le pseudo de l'utilisateur connecté.
 
@@ -99,7 +99,7 @@ def changer_pseudo(
     - Headers : Authorization: Bearer <votre_token>
     """
     try:
-        return service.changer_pseudo(donnees, current_user.pseudo)
+        return service.changer_pseudo(donnees.ancien_pseudo, donnees.nouveau_pseudo)
     except EmptyFieldError as e:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,

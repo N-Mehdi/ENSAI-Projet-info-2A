@@ -71,6 +71,7 @@ class UserChangePassword(BaseModel):
 class UserUpdatePseudo(BaseModel):
     """Schéma pour changer le pseudo d'un utilisateur."""
 
+    ancien_pseudo: str
     nouveau_pseudo: str
 
 

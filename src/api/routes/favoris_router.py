@@ -4,11 +4,7 @@ from fastapi import APIRouter, HTTPException
 
 from src.api.deps import CurrentUser
 from src.service.avis_service import AvisService
-from src.utils.exceptions import (
-    AvisNotFoundError,
-    IngredientNotFoundError,
-    ServiceError,
-)
+from src.utils.exceptions import AvisNotFoundError, CocktailNotFoundError, ServiceError
 
 router = APIRouter(prefix="/favoris", tags=["Favoris"])
 service = AvisService()
@@ -40,12 +36,12 @@ def add_favoris(
             id_utilisateur=current_user.id_utilisateur,
             nom_cocktail=nom_cocktail,
         )
-    except IngredientNotFoundError as e:
+    except CocktailNotFoundError as e:
         raise HTTPException(
             status_code=404,
             detail={
                 "error": str(e),
-                "cocktail_recherche": e.nom_ingredient,
+                "cocktail_recherche": e.nom_cocktail,
                 "suggestions": e.suggestions,
             },
         )
@@ -111,12 +107,12 @@ def remove_favoris(
             status_code=404,
             detail=f"Le cocktail '{nom_cocktail}' n'est pas dans vos favoris",
         )
-    except IngredientNotFoundError as e:
+    except CocktailNotFoundError as e:
         raise HTTPException(
             status_code=404,
             detail={
                 "error": str(e),
-                "cocktail_recherche": e.nom_ingredient,
+                "cocktail_recherche": e.nom_cocktail,
                 "suggestions": e.suggestions,
             },
         )

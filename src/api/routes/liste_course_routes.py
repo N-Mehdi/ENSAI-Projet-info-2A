@@ -4,11 +4,7 @@ from fastapi import APIRouter, HTTPException, Query
 
 from src.api.deps import CurrentUser
 from src.service.liste_course_service import ListeCourseService
-from src.utils.exceptions import (
-    IngredientNotFoundError,
-    InvalidQuantityError,
-    ServiceError,
-)
+from src.utils.exceptions import IngredientNotFoundError, InvalidQuantityError, ServiceError, UniteNotFoundError
 
 router = APIRouter(prefix="/liste-course", tags=["Liste de Courses"])
 service = ListeCourseService()
@@ -53,16 +49,59 @@ Ajoute un ingrédient à la liste de course.
 - Si l'ingrédient existe avec une **unité différente** (même type) → convertit et additionne
 - Si les unités ne sont pas compatibles → remplace
 
+**Unités acceptées :**
+- **Liquides** : ml, cl, l, dl, oz, fl oz, tsp, tbsp, cup, shot
+- **Solides** : g, kg, oz, lb, tsp, tbsp, cup, cube
+- **Spéciales** : dash, drop, pinch, piece, slice, wedge, etc.
+
 **Exemple :**
 - J'ai déjà "2 oz" de Vodka
 - J'ajoute "30 ml" de Vodka
 - Résultat : 2 oz + 30 ml = 3.01 oz (conversion automatique)
 """,
+    responses={
+        200: {
+            "description": "Ingrédient ajouté à la liste de course",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "status": "success",
+                        "message": "Ingrédient 'Vodka' ajouté à la liste de course (500.0 ml)",
+                    },
+                },
+            },
+        },
+        404: {
+            "description": "Ingrédient ou unité non trouvé(e)",
+            "content": {
+                "application/json": {
+                    "examples": {
+                        "ingredient_not_found": {
+                            "summary": "Ingrédient non trouvé",
+                            "value": {
+                                "detail": {
+                                    "error": "Ingrédient 'Vdka' non trouvé.",
+                                    "ingredient_recherche": "Vdka",
+                                    "suggestions": ["Vodka", "Vodka Citron"],
+                                },
+                            },
+                        },
+                        "unite_not_found": {
+                            "summary": "Unité non trouvée",
+                            "value": {
+                                "detail": "Unité 'mml' non trouvée. Unités valides : ml, cl, l, g, kg, oz, etc.",
+                            },
+                        },
+                    },
+                },
+            },
+        },
+    },
 )
 def add_to_liste_course(
     nom_ingredient: Annotated[str, Query(min_length=2, description="Nom de l'ingrédient", example="Vodka")],
     quantite: Annotated[float, Query(gt=0, description="Quantité à acheter (doit être > 0)", example=500.0)],
-    id_unite: Annotated[int, Query(description="ID de l'unité (voir GET /api/ref/unites)", example=2)],
+    unite: Annotated[str, Query(min_length=1, description="Abréviation de l'unité (ex: 'ml', 'cl', 'g', 'kg')", example="ml")],
     current_user: CurrentUser,
 ):
     """Ajoute un ingrédient à la liste de course."""
@@ -71,12 +110,12 @@ def add_to_liste_course(
             id_utilisateur=current_user.id_utilisateur,
             nom_ingredient=nom_ingredient,
             quantite=quantite,
-            id_unite=id_unite,
+            abbreviation_unite=unite,
         )
         return {"status": "success", "message": message}
 
     except InvalidQuantityError as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        raise HTTPException(status_code=400, detail=str(e)) from e
     except IngredientNotFoundError as e:
         raise HTTPException(
             status_code=404,
@@ -85,9 +124,14 @@ def add_to_liste_course(
                 "ingredient_recherche": e.nom_ingredient,
                 "suggestions": e.suggestions,
             },
-        )
+        ) from e
+    except UniteNotFoundError as e:
+        raise HTTPException(
+            status_code=404,
+            detail=f"Unité '{e.abbreviation}' non trouvée. Unités valides : ml, cl, l, g, kg, oz, etc.",
+        ) from e
     except ServiceError as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        raise HTTPException(status_code=400, detail=str(e)) from e
 
 
 @router.delete(

@@ -37,7 +37,6 @@ def login_access_token(
     :return: Token object with access token and type
     """
     try:
-        # Utiliser votre connexion singleton
         user = UtilisateurService(UtilisateurDao()).authenticate(
             pseudo=form_data.username,
             mot_de_passe=form_data.password,

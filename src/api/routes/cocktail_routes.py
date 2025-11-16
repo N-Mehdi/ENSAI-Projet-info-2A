@@ -5,6 +5,7 @@ from fastapi import APIRouter, HTTPException, status
 from src.api.deps import CurrentUser
 from src.dao.cocktail_dao import CocktailDao
 from src.service.cocktail_service import CocktailService
+from src.utils.exceptions import ServiceError
 
 router = APIRouter(prefix="/cocktails", tags=["Cocktails"])
 
@@ -12,8 +13,8 @@ cocktail_service = CocktailService(cocktail_dao=CocktailDao())
 
 
 @router.get("/sequence/{sequence}")
-def rechercher_cocktail_par_sequence_debut(sequence: str, max_resultats: int):
-    """Récupère les cocktails qui commencent par une séquence donnée
+def rechercher_cocktail_par_sequence_debut(sequence: str, max_resultats: int = 10):
+    """Récupère les cocktails qui commencent par une séquence donnée.
        (dans la limite de max_resultats).
 
     Parameters
@@ -106,7 +107,7 @@ def rechercher_cocktail_par_sequence_debut(sequence: str, max_resultats: int):
 
 
 @router.get("/nom/{nom}")
-def rechercher_cocktail_par_nom(nom: str, current_user: CurrentUser):
+def rechercher_cocktail_par_nom(nom: str):
     """Récupère tous le cocktail via son nom.
 
     Parameters
@@ -153,3 +154,23 @@ def rechercher_cocktail_par_nom(nom: str, current_user: CurrentUser):
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Erreur serveur: {e!s}",
         )
+
+
+@router.get(
+    "/realisables",
+    response_model=dict,
+    status_code=status.HTTP_200_OK,
+    summary="Récupérer les cocktails réalisables",
+)
+def get_cocktails_realisables(
+    current_user: CurrentUser,
+) -> dict:
+    """Récupérer les cocktails réalisables avec le stock actuel."""
+    try:
+        service = CocktailService(CocktailDao())
+        return service.get_cocktails_realisables(current_user.id_utilisateur)
+    except ServiceError as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=str(e),
+        ) from e

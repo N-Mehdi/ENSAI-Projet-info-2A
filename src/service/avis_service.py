@@ -3,7 +3,7 @@
 from src.dao.avis_dao import AvisDao
 from src.dao.cocktail_dao import CocktailDao
 from src.models.avis import AvisResponse, AvisSummary
-from src.utils.exceptions import AvisNotFoundError, IngredientNotFoundError, InvalidAvisError, ServiceError
+from src.utils.exceptions import AvisNotFoundError, CocktailNotFoundError, IngredientNotFoundError, InvalidAvisError, ServiceError
 from src.utils.text_utils import normalize_ingredient_name
 
 
@@ -48,7 +48,7 @@ class AvisService:
             )
             suggestions = [c.nom for c in suggestions_cocktails]
 
-            raise IngredientNotFoundError(nom_normalized, suggestions)
+            raise CocktailNotFoundError(nom_normalized, suggestions)
 
         # Convertir le Cocktail en dict pour compatibilité
         return {
