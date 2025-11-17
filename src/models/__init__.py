@@ -26,4 +26,3 @@ from src.models.utilisateurs import (
 from src.models.utilisateurs import (
     UserUpdatePassword as UserUpdatePassword,
 )
-

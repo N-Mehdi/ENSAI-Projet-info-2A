@@ -1,6 +1,4 @@
-"""utilisateur_dao.py
-Classe DAO du business object Utilistauer.
-"""
+"""Classe DAO du business object Utilisateur."""
 
 import logging
 
@@ -15,7 +13,7 @@ from src.utils.log_decorator import log
 from src.utils.singleton import Singleton
 
 
-class UtilisateurDao(metaclass=Singleton):
+class UtilisateurDAO(metaclass=Singleton):
     """Classe contenant les méthodes agissant sur les utilisateurs de la base de données."""
 
     @log
@@ -68,11 +66,10 @@ class UtilisateurDao(metaclass=Singleton):
             if "mail" in error_message.lower():
                 raise MailAlreadyExistsError(utilisateur.mail) from None
             # Cas générique si on ne peut pas identifier la colonne
-            raise DAOError("Contrainte d'unicité violée") from None
+            raise DAOError from None
 
         except Exception as e:
-            logging.info(e)
-            raise DAOError("Impossible de créer le compte") from e
+            raise DAOError from e
 
         created = False
         if res:

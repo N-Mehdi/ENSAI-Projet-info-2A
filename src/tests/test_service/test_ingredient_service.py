@@ -4,7 +4,7 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from src.dao.ingredient_dao import IngredientDao
+from src.dao.ingredient_dao import IngredientDAO
 from src.service.ingredient_service import IngredientService
 
 
@@ -18,7 +18,7 @@ class TestIngredientService:
         # GIVEN
         ingredient_id = 1
 
-        dao_mock = MagicMock(spec=IngredientDao)
+        dao_mock = MagicMock(spec=IngredientDAO)
         dao_mock.is_alcoholic.return_value = True
 
         # WHEN
@@ -37,7 +37,7 @@ class TestIngredientService:
         # GIVEN
         ingredient_id = 2
 
-        dao_mock = MagicMock(spec=IngredientDao)
+        dao_mock = MagicMock(spec=IngredientDAO)
         dao_mock.is_alcoholic.return_value = False
 
         # WHEN
@@ -63,7 +63,7 @@ class TestIngredientService:
         # GIVEN
         ingredient_id = 999
 
-        dao_mock = MagicMock(spec=IngredientDao)
+        dao_mock = MagicMock(spec=IngredientDAO)
         dao_mock.is_alcoholic.return_value = None
 
         # WHEN
@@ -88,7 +88,7 @@ class TestIngredientService:
         # GIVEN
         ingredient_id = -1
 
-        dao_mock = MagicMock(spec=IngredientDao)
+        dao_mock = MagicMock(spec=IngredientDAO)
         dao_mock.is_alcoholic.return_value = None
 
         # WHEN
@@ -106,7 +106,7 @@ class TestIngredientService:
         # GIVEN
         ingredient_name = "Vodka"
 
-        dao_mock = MagicMock(spec=IngredientDao)
+        dao_mock = MagicMock(spec=IngredientDAO)
         dao_mock.is_alcoholic_by_name.return_value = True
 
         # WHEN
@@ -125,7 +125,7 @@ class TestIngredientService:
         # GIVEN
         ingredient_name = "Orange Juice"
 
-        dao_mock = MagicMock(spec=IngredientDao)
+        dao_mock = MagicMock(spec=IngredientDAO)
         dao_mock.is_alcoholic_by_name.return_value = False
 
         # WHEN
@@ -151,7 +151,7 @@ class TestIngredientService:
         # GIVEN
         ingredient_name = "IngredientInconnu"
 
-        dao_mock = MagicMock(spec=IngredientDao)
+        dao_mock = MagicMock(spec=IngredientDAO)
         dao_mock.is_alcoholic_by_name.return_value = None
 
         # WHEN
@@ -176,7 +176,7 @@ class TestIngredientService:
         # GIVEN
         ingredient_name = ""
 
-        dao_mock = MagicMock(spec=IngredientDao)
+        dao_mock = MagicMock(spec=IngredientDAO)
         dao_mock.is_alcoholic_by_name.return_value = None
 
         # WHEN
@@ -192,7 +192,7 @@ class TestIngredientService:
         # GIVEN
         ingredient_name = "vOdKa"
 
-        dao_mock = MagicMock(spec=IngredientDao)
+        dao_mock = MagicMock(spec=IngredientDAO)
         dao_mock.is_alcoholic_by_name.return_value = True
 
         # WHEN

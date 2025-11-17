@@ -5,8 +5,8 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from src.dao.avis_dao import AvisDao
-from src.dao.cocktail_dao import CocktailDao
+from src.dao.avis_dao import AvisDAO
+from src.dao.cocktail_dao import CocktailDAO
 from src.models.avis import AvisResponse, AvisSummary
 from src.models.cocktail import Cocktail
 from src.service.avis_service import AvisService
@@ -35,8 +35,8 @@ class TestAvisService:
             image="https://example.com/margarita.jpg",
         )
 
-        avis_dao_mock = MagicMock(spec=AvisDao)
-        cocktail_dao_mock = MagicMock(spec=CocktailDao)
+        avis_dao_mock = MagicMock(spec=AvisDAO)
+        cocktail_dao_mock = MagicMock(spec=CocktailDAO)
         cocktail_dao_mock.rechercher_cocktail_par_nom.return_value = cocktail_attendu
 
         # WHEN
@@ -64,8 +64,8 @@ class TestAvisService:
             ),
         ]
 
-        avis_dao_mock = MagicMock(spec=AvisDao)
-        cocktail_dao_mock = MagicMock(spec=CocktailDao)
+        avis_dao_mock = MagicMock(spec=AvisDAO)
+        cocktail_dao_mock = MagicMock(spec=CocktailDAO)
         cocktail_dao_mock.rechercher_cocktail_par_nom.return_value = None
         cocktail_dao_mock.rechercher_cocktail_par_sequence_debut.return_value = suggestions
 
@@ -98,10 +98,10 @@ class TestAvisService:
             image="https://example.com/margarita.jpg",
         )
 
-        avis_dao_mock = MagicMock(spec=AvisDao)
+        avis_dao_mock = MagicMock(spec=AvisDAO)
         avis_dao_mock.create_or_update_avis.return_value = None
 
-        cocktail_dao_mock = MagicMock(spec=CocktailDao)
+        cocktail_dao_mock = MagicMock(spec=CocktailDAO)
         cocktail_dao_mock.rechercher_cocktail_par_nom.return_value = cocktail
 
         # WHEN
@@ -136,8 +136,8 @@ class TestAvisService:
             image="https://example.com/margarita.jpg",
         )
 
-        avis_dao_mock = MagicMock(spec=AvisDao)
-        cocktail_dao_mock = MagicMock(spec=CocktailDao)
+        avis_dao_mock = MagicMock(spec=AvisDAO)
+        cocktail_dao_mock = MagicMock(spec=CocktailDAO)
         cocktail_dao_mock.rechercher_cocktail_par_nom.return_value = cocktail
 
         # WHEN
@@ -157,8 +157,8 @@ class TestAvisService:
         note = None
         commentaire = None
 
-        avis_dao_mock = MagicMock(spec=AvisDao)
-        cocktail_dao_mock = MagicMock(spec=CocktailDao)
+        avis_dao_mock = MagicMock(spec=AvisDAO)
+        cocktail_dao_mock = MagicMock(spec=CocktailDAO)
 
         # WHEN
         service = AvisService()
@@ -177,8 +177,8 @@ class TestAvisService:
         note = 8
         commentaire = "Test"
 
-        avis_dao_mock = MagicMock(spec=AvisDao)
-        cocktail_dao_mock = MagicMock(spec=CocktailDao)
+        avis_dao_mock = MagicMock(spec=AvisDAO)
+        cocktail_dao_mock = MagicMock(spec=CocktailDAO)
         cocktail_dao_mock.rechercher_cocktail_par_nom.return_value = None
         cocktail_dao_mock.rechercher_cocktail_par_sequence_debut.return_value = []
 
@@ -219,10 +219,10 @@ class TestAvisService:
             },
         ]
 
-        avis_dao_mock = MagicMock(spec=AvisDao)
+        avis_dao_mock = MagicMock(spec=AvisDAO)
         avis_dao_mock.get_avis_by_cocktail.return_value = avis_data
 
-        cocktail_dao_mock = MagicMock(spec=CocktailDao)
+        cocktail_dao_mock = MagicMock(spec=CocktailDAO)
         cocktail_dao_mock.rechercher_cocktail_par_nom.return_value = cocktail
 
         # WHEN
@@ -249,10 +249,10 @@ class TestAvisService:
             image="https://example.com/margarita.jpg",
         )
 
-        avis_dao_mock = MagicMock(spec=AvisDao)
+        avis_dao_mock = MagicMock(spec=AvisDAO)
         avis_dao_mock.get_avis_by_cocktail.return_value = []
 
-        cocktail_dao_mock = MagicMock(spec=CocktailDao)
+        cocktail_dao_mock = MagicMock(spec=CocktailDAO)
         cocktail_dao_mock.rechercher_cocktail_par_nom.return_value = cocktail
 
         # WHEN
@@ -284,10 +284,10 @@ class TestAvisService:
             },
         ]
 
-        avis_dao_mock = MagicMock(spec=AvisDao)
+        avis_dao_mock = MagicMock(spec=AvisDAO)
         avis_dao_mock.get_avis_by_user.return_value = avis_data
 
-        cocktail_dao_mock = MagicMock(spec=CocktailDao)
+        cocktail_dao_mock = MagicMock(spec=CocktailDAO)
 
         # WHEN
         service = AvisService()
@@ -305,10 +305,10 @@ class TestAvisService:
         id_utilisateur = 1
         pseudo = "alice"
 
-        avis_dao_mock = MagicMock(spec=AvisDao)
+        avis_dao_mock = MagicMock(spec=AvisDAO)
         avis_dao_mock.get_avis_by_user.return_value = []
 
-        cocktail_dao_mock = MagicMock(spec=CocktailDao)
+        cocktail_dao_mock = MagicMock(spec=CocktailDAO)
 
         # WHEN
         service = AvisService()
@@ -336,10 +336,10 @@ class TestAvisService:
             image="https://example.com/margarita.jpg",
         )
 
-        avis_dao_mock = MagicMock(spec=AvisDao)
+        avis_dao_mock = MagicMock(spec=AvisDAO)
         avis_dao_mock.delete_avis.return_value = True
 
-        cocktail_dao_mock = MagicMock(spec=CocktailDao)
+        cocktail_dao_mock = MagicMock(spec=CocktailDAO)
         cocktail_dao_mock.rechercher_cocktail_par_nom.return_value = cocktail
 
         # WHEN
@@ -366,10 +366,10 @@ class TestAvisService:
             image="https://example.com/margarita.jpg",
         )
 
-        avis_dao_mock = MagicMock(spec=AvisDao)
+        avis_dao_mock = MagicMock(spec=AvisDAO)
         avis_dao_mock.delete_avis.return_value = False
 
-        cocktail_dao_mock = MagicMock(spec=CocktailDao)
+        cocktail_dao_mock = MagicMock(spec=CocktailDAO)
         cocktail_dao_mock.rechercher_cocktail_par_nom.return_value = cocktail
 
         # WHEN
@@ -397,10 +397,10 @@ class TestAvisService:
             image="https://example.com/margarita.jpg",
         )
 
-        avis_dao_mock = MagicMock(spec=AvisDao)
+        avis_dao_mock = MagicMock(spec=AvisDAO)
         avis_dao_mock.add_favoris.return_value = {"deja_en_favoris": False}
 
-        cocktail_dao_mock = MagicMock(spec=CocktailDao)
+        cocktail_dao_mock = MagicMock(spec=CocktailDAO)
         cocktail_dao_mock.rechercher_cocktail_par_nom.return_value = cocktail
 
         # WHEN
@@ -428,10 +428,10 @@ class TestAvisService:
             image="https://example.com/margarita.jpg",
         )
 
-        avis_dao_mock = MagicMock(spec=AvisDao)
+        avis_dao_mock = MagicMock(spec=AvisDAO)
         avis_dao_mock.add_favoris.return_value = {"deja_en_favoris": True}
 
-        cocktail_dao_mock = MagicMock(spec=CocktailDao)
+        cocktail_dao_mock = MagicMock(spec=CocktailDAO)
         cocktail_dao_mock.rechercher_cocktail_par_nom.return_value = cocktail
 
         # WHEN
@@ -461,10 +461,10 @@ class TestAvisService:
             image="https://example.com/margarita.jpg",
         )
 
-        avis_dao_mock = MagicMock(spec=AvisDao)
+        avis_dao_mock = MagicMock(spec=AvisDAO)
         avis_dao_mock.remove_favoris.return_value = True
 
-        cocktail_dao_mock = MagicMock(spec=CocktailDao)
+        cocktail_dao_mock = MagicMock(spec=CocktailDAO)
         cocktail_dao_mock.rechercher_cocktail_par_nom.return_value = cocktail
 
         # WHEN
@@ -491,10 +491,10 @@ class TestAvisService:
             image="https://example.com/margarita.jpg",
         )
 
-        avis_dao_mock = MagicMock(spec=AvisDao)
+        avis_dao_mock = MagicMock(spec=AvisDAO)
         avis_dao_mock.remove_favoris.return_value = False
 
-        cocktail_dao_mock = MagicMock(spec=CocktailDao)
+        cocktail_dao_mock = MagicMock(spec=CocktailDAO)
         cocktail_dao_mock.rechercher_cocktail_par_nom.return_value = cocktail
 
         # WHEN
@@ -518,10 +518,10 @@ class TestAvisService:
             {"nom_cocktail": "Mojito"},
         ]
 
-        avis_dao_mock = MagicMock(spec=AvisDao)
+        avis_dao_mock = MagicMock(spec=AvisDAO)
         avis_dao_mock.get_favoris_by_user.return_value = favoris_data
 
-        cocktail_dao_mock = MagicMock(spec=CocktailDao)
+        cocktail_dao_mock = MagicMock(spec=CocktailDAO)
 
         # WHEN
         service = AvisService()
@@ -540,10 +540,10 @@ class TestAvisService:
         id_utilisateur = 1
         pseudo = "alice"
 
-        avis_dao_mock = MagicMock(spec=AvisDao)
+        avis_dao_mock = MagicMock(spec=AvisDAO)
         avis_dao_mock.get_favoris_by_user.return_value = []
 
-        cocktail_dao_mock = MagicMock(spec=CocktailDao)
+        cocktail_dao_mock = MagicMock(spec=CocktailDAO)
 
         # WHEN
         service = AvisService()
@@ -578,10 +578,10 @@ class TestAvisService:
             "nombre_favoris": 5,
         }
 
-        avis_dao_mock = MagicMock(spec=AvisDao)
+        avis_dao_mock = MagicMock(spec=AvisDAO)
         avis_dao_mock.get_avis_summary.return_value = summary_data
 
-        cocktail_dao_mock = MagicMock(spec=CocktailDao)
+        cocktail_dao_mock = MagicMock(spec=CocktailDAO)
         cocktail_dao_mock.rechercher_cocktail_par_nom.return_value = cocktail
 
         # WHEN
@@ -610,10 +610,10 @@ class TestAvisService:
             image="https://example.com/margarita.jpg",
         )
 
-        avis_dao_mock = MagicMock(spec=AvisDao)
+        avis_dao_mock = MagicMock(spec=AvisDAO)
         avis_dao_mock.get_avis_summary.return_value = None
 
-        cocktail_dao_mock = MagicMock(spec=CocktailDao)
+        cocktail_dao_mock = MagicMock(spec=CocktailDAO)
         cocktail_dao_mock.rechercher_cocktail_par_nom.return_value = cocktail
 
         # WHEN

@@ -3,10 +3,10 @@ Classe de test de cocktail_dao.
 """
 
 from src.business_object.cocktail import Cocktail
-from src.dao.cocktail_dao import CocktailDao
+from src.dao.cocktail_dao import CocktailDAO
 
 
-class TestCocktailDao:
+class TestCocktailDAO:
     # Tests pour rechercher_cocktail_par_nom
 
     def test_rechercher_cocktail_par_nom_succes(self):
@@ -14,7 +14,7 @@ class TestCocktailDao:
         nom = "Margarita"
 
         # WHEN
-        dao = CocktailDao()
+        dao = CocktailDAO()
         resultat = dao.rechercher_cocktail_par_nom(nom)
 
         # THEN
@@ -33,7 +33,7 @@ class TestCocktailDao:
         nom = "Margaritaa"
 
         # WHEN
-        dao = CocktailDao()
+        dao = CocktailDAO()
         resultat = dao.rechercher_cocktail_par_nom(nom)
 
         # THEN
@@ -47,7 +47,7 @@ class TestCocktailDao:
         max_resultats = 3
 
         # WHEN
-        dao = CocktailDao()
+        dao = CocktailDAO()
         resultat = dao.rechercher_cocktail_par_sequence_debut(sequence, max_resultats)
 
         # THEN
@@ -85,7 +85,7 @@ class TestCocktailDao:
         max_resultats = 1
 
         # WHEN
-        dao = CocktailDao()
+        dao = CocktailDAO()
         resultat = dao.rechercher_cocktail_par_sequence_debut(sequence, max_resultats)
 
         # THEN

@@ -5,7 +5,7 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from src.dao.utilisateur_dao import UtilisateurDao
+from src.dao.utilisateur_dao import UtilisateurDAO
 from src.models.utilisateurs import (
     DateInscriptionResponse,
     User,
@@ -38,7 +38,7 @@ class TestUtilisateurService:
             date_naissance="2000-05-15",
         )
 
-        dao_mock = MagicMock(spec=UtilisateurDao)
+        dao_mock = MagicMock(spec=UtilisateurDAO)
         dao_mock.create_compte.return_value = True
 
         # WHEN
@@ -58,7 +58,7 @@ class TestUtilisateurService:
             date_naissance="2000-05-15",
         )
 
-        dao_mock = MagicMock(spec=UtilisateurDao)
+        dao_mock = MagicMock(spec=UtilisateurDAO)
         service = UtilisateurService(dao_mock)
 
         # WHEN / THEN
@@ -75,7 +75,7 @@ class TestUtilisateurService:
             date_naissance="2000-05-15",
         )
 
-        dao_mock = MagicMock(spec=UtilisateurDao)
+        dao_mock = MagicMock(spec=UtilisateurDAO)
         service = UtilisateurService(dao_mock)
 
         # WHEN / THEN
@@ -92,7 +92,7 @@ class TestUtilisateurService:
             date_naissance="2000-05-15",
         )
 
-        dao_mock = MagicMock(spec=UtilisateurDao)
+        dao_mock = MagicMock(spec=UtilisateurDAO)
         service = UtilisateurService(dao_mock)
 
         # WHEN / THEN
@@ -110,7 +110,7 @@ class TestUtilisateurService:
             date_naissance=date_future,
         )
 
-        dao_mock = MagicMock(spec=UtilisateurDao)
+        dao_mock = MagicMock(spec=UtilisateurDAO)
         service = UtilisateurService(dao_mock)
 
         # WHEN / THEN
@@ -128,7 +128,7 @@ class TestUtilisateurService:
             date_naissance=date_trop_recente,
         )
 
-        dao_mock = MagicMock(spec=UtilisateurDao)
+        dao_mock = MagicMock(spec=UtilisateurDAO)
         service = UtilisateurService(dao_mock)
 
         # WHEN / THEN
@@ -146,7 +146,7 @@ class TestUtilisateurService:
             date_naissance=date_trop_ancienne,
         )
 
-        dao_mock = MagicMock(spec=UtilisateurDao)
+        dao_mock = MagicMock(spec=UtilisateurDAO)
         service = UtilisateurService(dao_mock)
 
         # WHEN / THEN
@@ -163,7 +163,7 @@ class TestUtilisateurService:
             date_naissance="15-05-2000",  # Format invalide
         )
 
-        dao_mock = MagicMock(spec=UtilisateurDao)
+        dao_mock = MagicMock(spec=UtilisateurDAO)
         service = UtilisateurService(dao_mock)
 
         # WHEN / THEN
@@ -180,7 +180,7 @@ class TestUtilisateurService:
             date_naissance="2000-05-15",
         )
 
-        dao_mock = MagicMock(spec=UtilisateurDao)
+        dao_mock = MagicMock(spec=UtilisateurDAO)
         dao_mock.create_compte.return_value = False
 
         # WHEN
@@ -208,7 +208,7 @@ class TestUtilisateurService:
             date_inscription=date.today().isoformat(),
         )
 
-        dao_mock = MagicMock(spec=UtilisateurDao)
+        dao_mock = MagicMock(spec=UtilisateurDAO)
         dao_mock.recuperer_par_pseudo.return_value = utilisateur_attendu
 
         # WHEN
@@ -224,7 +224,7 @@ class TestUtilisateurService:
         pseudo = "inconnu"
         mot_de_passe = "password"
 
-        dao_mock = MagicMock(spec=UtilisateurDao)
+        dao_mock = MagicMock(spec=UtilisateurDAO)
         dao_mock.recuperer_par_pseudo.return_value = None
 
         # WHEN
@@ -250,7 +250,7 @@ class TestUtilisateurService:
             date_inscription=date.today().isoformat(),
         )
 
-        dao_mock = MagicMock(spec=UtilisateurDao)
+        dao_mock = MagicMock(spec=UtilisateurDAO)
         dao_mock.recuperer_par_pseudo.return_value = utilisateur
 
         # WHEN
@@ -281,7 +281,7 @@ class TestUtilisateurService:
             date_inscription=date.today().isoformat(),
         )
 
-        dao_mock = MagicMock(spec=UtilisateurDao)
+        dao_mock = MagicMock(spec=UtilisateurDAO)
         dao_mock.recuperer_par_pseudo.return_value = utilisateur
         dao_mock.delete_compte.return_value = True
 
@@ -301,7 +301,7 @@ class TestUtilisateurService:
         )
 
         # WHEN
-        dao_mock = MagicMock(spec=UtilisateurDao)
+        dao_mock = MagicMock(spec=UtilisateurDAO)
         service = UtilisateurService(dao_mock)
 
         # THEN
@@ -315,7 +315,7 @@ class TestUtilisateurService:
             mot_de_passe="password",
         )
 
-        dao_mock = MagicMock(spec=UtilisateurDao)
+        dao_mock = MagicMock(spec=UtilisateurDAO)
         dao_mock.recuperer_par_pseudo.return_value = None
 
         # WHEN
@@ -344,7 +344,7 @@ class TestUtilisateurService:
             date_inscription=date.today().isoformat(),
         )
 
-        dao_mock = MagicMock(spec=UtilisateurDao)
+        dao_mock = MagicMock(spec=UtilisateurDAO)
         dao_mock.recuperer_par_pseudo.return_value = utilisateur
 
         # WHEN
@@ -373,7 +373,7 @@ class TestUtilisateurService:
             date_inscription=date.today().isoformat(),
         )
 
-        dao_mock = MagicMock(spec=UtilisateurDao)
+        dao_mock = MagicMock(spec=UtilisateurDAO)
         dao_mock.recuperer_par_pseudo.return_value = utilisateur
         dao_mock.delete_compte.return_value = False
 
@@ -408,7 +408,7 @@ class TestUtilisateurService:
             date_inscription=date.today().isoformat(),
         )
 
-        dao_mock = MagicMock(spec=UtilisateurDao)
+        dao_mock = MagicMock(spec=UtilisateurDAO)
         dao_mock.recuperer_par_pseudo.return_value = utilisateur
         dao_mock.update_mot_de_passe.return_value = True
 
@@ -428,7 +428,7 @@ class TestUtilisateurService:
             mot_de_passe_nouveau="NewPass",
         )
 
-        dao_mock = MagicMock(spec=UtilisateurDao)
+        dao_mock = MagicMock(spec=UtilisateurDAO)
         service = UtilisateurService(dao_mock)
 
         # WHEN / THEN
@@ -444,7 +444,7 @@ class TestUtilisateurService:
             mot_de_passe_nouveau="SamePass123!",
         )
 
-        dao_mock = MagicMock(spec=UtilisateurDao)
+        dao_mock = MagicMock(spec=UtilisateurDAO)
         service = UtilisateurService(dao_mock)
 
         # WHEN / THEN
@@ -460,7 +460,7 @@ class TestUtilisateurService:
             mot_de_passe_nouveau="NewPass",
         )
 
-        dao_mock = MagicMock(spec=UtilisateurDao)
+        dao_mock = MagicMock(spec=UtilisateurDAO)
         dao_mock.recuperer_par_pseudo.return_value = None
 
         # WHEN
@@ -490,7 +490,7 @@ class TestUtilisateurService:
             date_inscription=date.today().isoformat(),
         )
 
-        dao_mock = MagicMock(spec=UtilisateurDao)
+        dao_mock = MagicMock(spec=UtilisateurDAO)
         dao_mock.recuperer_par_pseudo.return_value = utilisateur
 
         # WHEN
@@ -514,7 +514,7 @@ class TestUtilisateurService:
             date_inscription="2025-01-01",
         )
 
-        dao_mock = MagicMock(spec=UtilisateurDao)
+        dao_mock = MagicMock(spec=UtilisateurDAO)
         dao_mock.read.return_value = utilisateur_attendu
 
         # WHEN
@@ -529,7 +529,7 @@ class TestUtilisateurService:
         # GIVEN
         id_utilisateur = 999
 
-        dao_mock = MagicMock(spec=UtilisateurDao)
+        dao_mock = MagicMock(spec=UtilisateurDAO)
         dao_mock.read.return_value = None
 
         # WHEN
@@ -546,7 +546,7 @@ class TestUtilisateurService:
         pseudo = "john_doe"
         date_inscription = "2024-01-15"
 
-        dao_mock = MagicMock(spec=UtilisateurDao)
+        dao_mock = MagicMock(spec=UtilisateurDAO)
         dao_mock.get_date_inscription.return_value = date_inscription
 
         # WHEN
@@ -563,7 +563,7 @@ class TestUtilisateurService:
         # GIVEN
         pseudo = "   "
 
-        dao_mock = MagicMock(spec=UtilisateurDao)
+        dao_mock = MagicMock(spec=UtilisateurDAO)
         service = UtilisateurService(dao_mock)
 
         # WHEN / THEN

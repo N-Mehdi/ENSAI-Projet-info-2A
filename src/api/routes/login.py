@@ -6,7 +6,7 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordRequestForm
 
-from src.dao.utilisateur_dao import UtilisateurDao
+from src.dao.utilisateur_dao import UtilisateurDAO
 from src.models import Token, UserRegister
 from src.service.utilisateur_service import UtilisateurService
 from src.utils import securite
@@ -23,7 +23,7 @@ from src.utils.settings import settings
 
 router = APIRouter(tags=["Inscription"])
 
-service = UtilisateurService(utilisateur_dao=UtilisateurDao())
+service = UtilisateurService(utilisateur_dao=UtilisateurDAO())
 
 
 @router.post("/login/access-token")
@@ -37,7 +37,7 @@ def login_access_token(
     :return: Token object with access token and type
     """
     try:
-        user = UtilisateurService(UtilisateurDao()).authenticate(
+        user = UtilisateurService(UtilisateurDAO()).authenticate(
             pseudo=form_data.username,
             mot_de_passe=form_data.password,
         )

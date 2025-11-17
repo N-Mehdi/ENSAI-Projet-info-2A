@@ -1,6 +1,4 @@
-"""utilisateur.py
-Ce module définit un utilisateur.
-"""
+"""Ce module définit un utilisateur."""
 
 
 class Utilisateur:

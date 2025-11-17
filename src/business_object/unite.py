@@ -1,4 +1,4 @@
-"""doc."""
+"""Ce module définit une unité."""
 
 
 class Unite:

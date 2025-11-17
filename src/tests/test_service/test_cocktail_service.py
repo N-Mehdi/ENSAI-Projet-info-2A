@@ -3,7 +3,7 @@
 import pytest
 
 from src.business_object.cocktail import Cocktail
-from src.dao.cocktail_dao import CocktailDao
+from src.dao.cocktail_dao import CocktailDAO
 from src.service.cocktail_service import CocktailService
 
 
@@ -16,7 +16,7 @@ class TestCocktailService:
         nom = "Margarita"
 
         # WHEN
-        dao = CocktailDao()
+        dao = CocktailDAO()
         service = CocktailService(dao)
         resultat = service.rechercher_cocktail_par_nom(nom)
 
@@ -44,7 +44,7 @@ class TestCocktailService:
         nom = "Margaritaa"
 
         # WHEN & THEN
-        dao = CocktailDao()
+        dao = CocktailDAO()
         service = CocktailService(dao)
 
         with pytest.raises(LookupError, match=f"Aucun cocktail trouvé pour le nom '{nom}'"):
@@ -63,7 +63,7 @@ class TestCocktailService:
         nom = 12345  # Le nom n'est pas une chaîne de caractères
 
         # WHEN & THEN
-        dao = CocktailDao()
+        dao = CocktailDAO()
         service = CocktailService(dao)
 
         with pytest.raises(TypeError, match="Le nom du cocktail doit être une chaîne de caractères."):
@@ -82,7 +82,7 @@ class TestCocktailService:
         nom = ""  # Le nom est une chaîne vide
 
         # WHEN & THEN
-        dao = CocktailDao()
+        dao = CocktailDAO()
         service = CocktailService(dao)
 
         with pytest.raises(ValueError, match="Le nom du cocktail doit être fourni."):
@@ -101,7 +101,7 @@ class TestCocktailService:
         nom = None  # Le nom est None
 
         # WHEN & THEN
-        dao = CocktailDao()
+        dao = CocktailDAO()
         service = CocktailService(dao)
 
         with pytest.raises(ValueError, match="Le nom du cocktail doit être fourni."):
@@ -116,7 +116,7 @@ class TestCocktailService:
         max_resultats = 3
 
         # WHEN
-        dao = CocktailDao()
+        dao = CocktailDAO()
         service = CocktailService(dao)
         resultat = service.rechercher_cocktail_par_sequence_debut(sequence, max_resultats)
 
@@ -163,7 +163,7 @@ class TestCocktailService:
         max_resultats = 1
 
         # WHEN & THEN
-        dao = CocktailDao()
+        dao = CocktailDAO()
         service = CocktailService(dao)
 
         with pytest.raises(LookupError, match=f"Aucun cocktail trouvé pour la séquence '{sequence}'"):
@@ -183,7 +183,7 @@ class TestCocktailService:
         max_resultats = 1
 
         # WHEN & THEN
-        dao = CocktailDao()
+        dao = CocktailDAO()
         service = CocktailService(dao)
 
         with pytest.raises(ValueError, match="La séquence doit être fournie."):
@@ -203,7 +203,7 @@ class TestCocktailService:
         max_resultats = 1
 
         # WHEN & THEN
-        dao = CocktailDao()
+        dao = CocktailDAO()
         service = CocktailService(dao)
 
         with pytest.raises(ValueError, match="La séquence doit être fournie."):
@@ -223,7 +223,7 @@ class TestCocktailService:
         max_resultats = 1
 
         # WHEN & THEN
-        dao = CocktailDao()
+        dao = CocktailDAO()
         service = CocktailService(dao)
 
         with pytest.raises(TypeError, match="L'argument 'sequence' doit être une chaîne de caractères."):
@@ -243,7 +243,7 @@ class TestCocktailService:
         max_resultats = "a"
 
         # WHEN & THEN
-        dao = CocktailDao()
+        dao = CocktailDAO()
         service = CocktailService(dao)
 
         with pytest.raises(TypeError, match="L'argument 'max_resultats' doit être un entier."):
@@ -263,7 +263,7 @@ class TestCocktailService:
         max_resultats = -1
 
         # WHEN & THEN
-        dao = CocktailDao()
+        dao = CocktailDAO()
         service = CocktailService(dao)
 
         with pytest.raises(ValueError, match="L'argument 'max_resultats' doit être supérieur ou égal à 1."):

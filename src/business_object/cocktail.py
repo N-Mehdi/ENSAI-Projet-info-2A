@@ -1,6 +1,4 @@
-"""cocktail.py
-Ce module définit un cocktail.
-"""
+"""Ce module définit un cocktail."""
 
 
 class Cocktail:
@@ -28,6 +26,7 @@ class Cocktail:
         nom: str,
         categorie: str,
         verre: str,
+        *,
         alcool: bool,
         image: str,
     ) -> None:

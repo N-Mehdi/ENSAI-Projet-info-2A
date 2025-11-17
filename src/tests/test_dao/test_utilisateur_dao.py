@@ -3,15 +3,15 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from src.dao.utilisateur_dao import UtilisateurDao
+from src.dao.utilisateur_dao import UtilisateurDAO
 from src.models import User, UserCreate
 from src.utils.exceptions import DAOError
 
 
-class TestUtilisateurDao:
-    """Tests pour la classe UtilisateurDao."""
+class TestUtilisateurDAO:
+    """Tests pour la classe UtilisateurDAO."""
 
-    # Tests pour la méthode create_compte de UtilisateurDao
+    # Tests pour la méthode create_compte de UtilisateurDAO
     @patch("src.dao.utilisateur_dao.DBConnection")
     def test_create_compte_success(self, mock_db_connection):
         """Test de création réussie d'un compte utilisateur."""
@@ -38,7 +38,7 @@ class TestUtilisateurDao:
             "mot_de_passe": "hashed_password_123",
         }
 
-        dao = UtilisateurDao()
+        dao = UtilisateurDAO()
 
         # WHEN - On crée le compte
         resultat = dao.create_compte(utilisateur)
@@ -69,7 +69,7 @@ class TestUtilisateurDao:
         # Simuler aucun résultat
         mock_cursor.fetchone.return_value = None
 
-        dao = UtilisateurDao()
+        dao = UtilisateurDAO()
 
         # WHEN - On tente de créer le compte
         resultat = dao.create_compte(utilisateur)
@@ -99,7 +99,7 @@ class TestUtilisateurDao:
         # Simuler une erreur lors de l'exécution
         mock_cursor.execute.side_effect = Exception("Database connection error")
 
-        dao = UtilisateurDao()
+        dao = UtilisateurDAO()
 
         # WHEN / THEN - On tente de créer et une DAOError est levée
         with pytest.raises(DAOError) as exc_info:
@@ -126,7 +126,7 @@ class TestUtilisateurDao:
         mock_connection.cursor.return_value.__enter__.return_value = mock_cursor
         mock_cursor.fetchone.return_value = {"id_utilisateur": 1}
 
-        dao = UtilisateurDao()
+        dao = UtilisateurDAO()
 
         # WHEN - On crée le compte
         dao.create_compte(utilisateur)
@@ -140,7 +140,7 @@ class TestUtilisateurDao:
         assert sql_params["date_naissance"] == "1988-03-10"
         assert sql_params["mot_de_passe_hashed"] == "super_secure_hash"
 
-    # Tests pour la méthode read de UtilisateurDao.
+    # Tests pour la méthode read de UtilisateurDAO.
 
     @patch("src.dao.utilisateur_dao.DBConnection")
     def test_read_user_success(self, mock_db_connection):
@@ -164,7 +164,7 @@ class TestUtilisateurDao:
             "mot_de_passe": "hashed_password_123",
         }
 
-        dao = UtilisateurDao()
+        dao = UtilisateurDAO()
 
         # WHEN - On lit l'utilisateur
         resultat = dao.read(id_utilisateur)
@@ -196,7 +196,7 @@ class TestUtilisateurDao:
         # Simuler aucun résultat
         mock_cursor.fetchone.return_value = None
 
-        dao = UtilisateurDao()
+        dao = UtilisateurDAO()
 
         # WHEN - On tente de lire l'utilisateur
         resultat = dao.read(id_utilisateur)
@@ -223,7 +223,7 @@ class TestUtilisateurDao:
 
         mock_cursor.execute.side_effect = DBError("Connection lost")
 
-        dao = UtilisateurDao()
+        dao = UtilisateurDAO()
 
         # WHEN / THEN - Une DAOError est levée
         with pytest.raises(DAOError):
@@ -245,7 +245,7 @@ class TestUtilisateurDao:
         mock_connection.cursor.return_value.__enter__.return_value = mock_cursor
         mock_cursor.fetchone.return_value = None
 
-        dao = UtilisateurDao()
+        dao = UtilisateurDAO()
 
         # WHEN - On lit l'utilisateur
         dao.read(id_utilisateur)
@@ -279,7 +279,7 @@ class TestUtilisateurDao:
             "mot_de_passe": "hash123",
         }
 
-        dao = UtilisateurDao()
+        dao = UtilisateurDAO()
 
         # WHEN - On lit l'utilisateur
         resultat = dao.read(id_utilisateur)
@@ -301,7 +301,7 @@ class TestUtilisateurDao:
         mock_connection.cursor.return_value.__enter__.return_value = mock_cursor
         mock_cursor.fetchone.return_value = None
 
-        dao = UtilisateurDao()
+        dao = UtilisateurDAO()
 
         # WHEN - On lit l'utilisateur
         dao.read(id_utilisateur)
@@ -313,7 +313,7 @@ class TestUtilisateurDao:
         assert "SELECT id_utilisateur, pseudo, mail, mot_de_passe, date_naissance" in sql_query
         assert "FROM utilisateur" in sql_query
 
-    # Tests pour la méthode pseudo_existe de UtilisateurDao
+    # Tests pour la méthode pseudo_existe de UtilisateurDAO
 
     @patch("src.dao.utilisateur_dao.DBConnection")
     def test_pseudo_existe_returns_true_when_pseudo_exists(self, mock_db_connection):
@@ -330,7 +330,7 @@ class TestUtilisateurDao:
         # Simuler que le pseudo existe
         mock_cursor.fetchone.return_value = {"exists": True}
 
-        dao = UtilisateurDao()
+        dao = UtilisateurDAO()
 
         # WHEN - On vérifie si le pseudo existe
         resultat = dao.pseudo_existe(pseudo)
@@ -355,7 +355,7 @@ class TestUtilisateurDao:
         # Simuler que le pseudo n'existe pas
         mock_cursor.fetchone.return_value = {"exists": False}
 
-        dao = UtilisateurDao()
+        dao = UtilisateurDAO()
 
         # WHEN - On vérifie si le pseudo existe
         resultat = dao.pseudo_existe(pseudo)
@@ -380,7 +380,7 @@ class TestUtilisateurDao:
         # Simuler aucun résultat
         mock_cursor.fetchone.return_value = None
 
-        dao = UtilisateurDao()
+        dao = UtilisateurDAO()
 
         # WHEN - On vérifie si le pseudo existe
         resultat = dao.pseudo_existe(pseudo)
@@ -405,7 +405,7 @@ class TestUtilisateurDao:
         # Simuler une erreur lors de l'exécution
         mock_cursor.execute.side_effect = Exception("Database connection error")
 
-        dao = UtilisateurDao()
+        dao = UtilisateurDAO()
 
         # WHEN / THEN - Une DAOError est levée
         with pytest.raises(DAOError):
@@ -427,7 +427,7 @@ class TestUtilisateurDao:
         mock_connection.cursor.return_value.__enter__.return_value = mock_cursor
         mock_cursor.fetchone.return_value = {"exists": False}
 
-        dao = UtilisateurDao()
+        dao = UtilisateurDAO()
 
         # WHEN - On vérifie si le pseudo existe
         dao.pseudo_existe(pseudo)
@@ -455,7 +455,7 @@ class TestUtilisateurDao:
         mock_connection.cursor.return_value.__enter__.return_value = mock_cursor
         mock_cursor.fetchone.return_value = {"exists": True}
 
-        dao = UtilisateurDao()
+        dao = UtilisateurDAO()
 
         # WHEN - On vérifie si le pseudo existe
         resultat = dao.pseudo_existe(pseudo)
@@ -479,7 +479,7 @@ class TestUtilisateurDao:
         mock_connection.cursor.return_value.__enter__.return_value = mock_cursor
         mock_cursor.fetchone.return_value = {"exists": False}
 
-        dao = UtilisateurDao()
+        dao = UtilisateurDAO()
 
         # WHEN - On vérifie si le pseudo existe
         resultat = dao.pseudo_existe(pseudo)
@@ -501,7 +501,7 @@ class TestUtilisateurDao:
         mock_connection.cursor.return_value.__enter__.return_value = mock_cursor
         mock_cursor.fetchone.return_value = {"exists": True}
 
-        dao = UtilisateurDao()
+        dao = UtilisateurDAO()
 
         # WHEN - On vérifie si le pseudo existe
         resultat = dao.pseudo_existe(pseudo_lower)
@@ -515,11 +515,11 @@ class TestUtilisateurDao:
 
 import pytest
 from unittest.mock import MagicMock, patch
-from src.dao.utilisateur_dao import UtilisateurDao
+from src.dao.utilisateur_dao import UtilisateurDAO
 from src.models import User
 
 
-    #Tests pour la méthode delete_compte de UtilisateurDao.
+    #Tests pour la méthode delete_compte de UtilisateurDAO.
 
     @patch("src.dao.utilisateur_dao.DBConnection")
     def test_delete_compte_success(self, mock_db_connection):
@@ -532,17 +532,17 @@ from src.models import User
             date_naissance="1990-01-15",
             mot_de_passe_hashed="hashed_password_123",
         )
-        
+
         # Mock de la connexion DB
         mock_connection = MagicMock()
         mock_cursor = MagicMock()
         mock_db_connection.return_value.connection.__enter__.return_value = mock_connection
         mock_connection.cursor.return_value.__enter__.return_value = mock_cursor
-        
+
         # Simuler une suppression réussie (1 ligne affectée)
         mock_cursor.rowcount = 1
 
-        dao = UtilisateurDao()
+        dao = UtilisateurDAO()
 
         # WHEN - On supprime l'utilisateur
         resultat = dao.delete_compte(utilisateur)
@@ -550,12 +550,12 @@ from src.models import User
         # THEN - La suppression est réussie
         assert resultat is True
         mock_cursor.execute.assert_called_once()
-        
+
         # Vérifier la requête SQL
         call_args = mock_cursor.execute.call_args
         sql_query = call_args[0][0]
         sql_params = call_args[0][1]
-        
+
         assert "DELETE FROM utilisateur" in sql_query
         assert "WHERE id_utilisateur=%(id_utilisateur)s" in sql_query
         assert sql_params["id_utilisateur"] == 1
@@ -571,17 +571,17 @@ from src.models import User
             date_naissance="2000-01-01",
             mot_de_passe_hashed="hash",
         )
-        
+
         # Mock de la connexion DB
         mock_connection = MagicMock()
         mock_cursor = MagicMock()
         mock_db_connection.return_value.connection.__enter__.return_value = mock_connection
         mock_connection.cursor.return_value.__enter__.return_value = mock_cursor
-        
+
         # Simuler aucune ligne affectée
         mock_cursor.rowcount = 0
 
-        dao = UtilisateurDao()
+        dao = UtilisateurDAO()
 
         # WHEN - On tente de supprimer l'utilisateur
         resultat = dao.delete_compte(utilisateur)
@@ -601,22 +601,22 @@ from src.models import User
             date_naissance="1995-05-20",
             mot_de_passe_hashed="hash123",
         )
-        
+
         # Mock de la connexion DB qui lève une exception
         mock_connection = MagicMock()
         mock_cursor = MagicMock()
         mock_db_connection.return_value.connection.__enter__.return_value = mock_connection
         mock_connection.cursor.return_value.__enter__.return_value = mock_cursor
-        
+
         # Simuler une erreur lors de l'exécution
         mock_cursor.execute.side_effect = Exception("Database connection error")
 
-        dao = UtilisateurDao()
+        dao = UtilisateurDAO()
 
         # WHEN / THEN - Une exception est levée
         with pytest.raises(Exception) as exc_info:
             dao.delete_compte(utilisateur)
-        
+
         assert "Database connection error" in str(exc_info.value)
         mock_cursor.execute.assert_called_once()
 
@@ -631,7 +631,7 @@ from src.models import User
             date_naissance="1988-03-10",
             mot_de_passe_hashed="secure_hash",
         )
-        
+
         # Mock de la connexion DB
         mock_connection = MagicMock()
         mock_cursor = MagicMock()
@@ -639,7 +639,7 @@ from src.models import User
         mock_connection.cursor.return_value.__enter__.return_value = mock_cursor
         mock_cursor.rowcount = 1
 
-        dao = UtilisateurDao()
+        dao = UtilisateurDAO()
 
         # WHEN - On supprime l'utilisateur
         dao.delete_compte(utilisateur)
@@ -660,17 +660,17 @@ from src.models import User
             date_naissance="1990-01-01",
             mot_de_passe_hashed="hash",
         )
-        
+
         # Mock de la connexion DB
         mock_connection = MagicMock()
         mock_cursor = MagicMock()
         mock_db_connection.return_value.connection.__enter__.return_value = mock_connection
         mock_connection.cursor.return_value.__enter__.return_value = mock_cursor
-        
+
         # Simuler plusieurs lignes affectées (ne devrait pas arriver normalement)
         mock_cursor.rowcount = 2
 
-        dao = UtilisateurDao()
+        dao = UtilisateurDAO()
 
         # WHEN - On supprime l'utilisateur
         resultat = dao.delete_compte(utilisateur)
@@ -689,7 +689,7 @@ from src.models import User
             date_naissance="2000-06-15",
             mot_de_passe_hashed="hash_value",
         )
-        
+
         # Mock de la connexion DB
         mock_connection = MagicMock()
         mock_cursor = MagicMock()
@@ -697,7 +697,7 @@ from src.models import User
         mock_connection.cursor.return_value.__enter__.return_value = mock_cursor
         mock_cursor.rowcount = 1
 
-        dao = UtilisateurDao()
+        dao = UtilisateurDAO()
 
         # WHEN - On supprime l'utilisateur
         resultat = dao.delete_compte(utilisateur)
@@ -717,7 +717,7 @@ from src.models import User
             date_naissance="1992-08-20",
             mot_de_passe_hashed="hash_sql",
         )
-        
+
         # Mock de la connexion DB
         mock_connection = MagicMock()
         mock_cursor = MagicMock()
@@ -725,7 +725,7 @@ from src.models import User
         mock_connection.cursor.return_value.__enter__.return_value = mock_cursor
         mock_cursor.rowcount = 1
 
-        dao = UtilisateurDao()
+        dao = UtilisateurDAO()
 
         # WHEN - On supprime l'utilisateur
         dao.delete_compte(utilisateur)
@@ -733,9 +733,10 @@ from src.models import User
         # THEN - La requête SQL est correctement formée
         call_args = mock_cursor.execute.call_args
         sql_query = call_args[0][0]
-        
+
         # Vérifier les éléments clés de la requête
         assert "DELETE FROM utilisateur" in sql_query
         assert "WHERE id_utilisateur=%(id_utilisateur)s" in sql_query
         # Vérifier qu'il n'y a pas de RETURNING ou autres clauses
-        assert "RETURNING" not in sql_query'''
+        assert "RETURNING" not in sql_query
+'''

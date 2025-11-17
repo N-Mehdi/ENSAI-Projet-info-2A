@@ -1,15 +1,17 @@
 """doc."""
 
-from fastapi import APIRouter, HTTPException, status
+from typing import Annotated
+
+from fastapi import APIRouter, HTTPException, Query, status
 
 from src.api.deps import CurrentUser
-from src.dao.cocktail_dao import CocktailDao
+from src.dao.cocktail_dao import CocktailDAO
 from src.service.cocktail_service import CocktailService
 from src.utils.exceptions import ServiceError
 
 router = APIRouter(prefix="/cocktails", tags=["Cocktails"])
 
-cocktail_service = CocktailService(cocktail_dao=CocktailDao())
+cocktail_service = CocktailService(cocktail_dao=CocktailDAO())
 
 
 @router.get("/sequence/{sequence}")
@@ -167,10 +169,103 @@ def get_cocktails_realisables(
 ) -> dict:
     """Récupérer les cocktails réalisables avec le stock actuel."""
     try:
-        service = CocktailService(CocktailDao())
+        service = CocktailService(CocktailDAO())
         return service.get_cocktails_realisables(current_user.id_utilisateur)
     except ServiceError as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=str(e),
+        ) from e
+
+
+@router.get(
+    "/quasi-realisables",
+    response_model=dict,
+    status_code=status.HTTP_200_OK,
+    summary="🔍 Cocktails presque réalisables",
+    description="""
+Retourne les cocktails que l'utilisateur peut **presque** réaliser.
+
+🔒 Authentification requise
+
+**Fonctionnalité :**
+Trouve les cocktails pour lesquels il ne manque que quelques ingrédients,
+triés par nombre d'ingrédients manquants croissant.
+
+**Cas d'usage :**
+- Découvrir de nouveaux cocktails accessibles
+- Savoir quoi acheter pour compléter son stock
+- Planifier ses courses intelligemment
+
+**Exemple de réponse :**
+```json
+{
+  "cocktails_quasi_realisables": [
+    {
+      "nom": "Mojito",
+      "ingredients_manquants": ["Menthe fraîche"],
+      "nombre_ingredients_manquants": 1,
+      "nombre_ingredients_total": 5,
+      "pourcentage_possession": 80.0
+    }
+  ],
+  "nombre_cocktails": 1,
+  "max_ingredients_manquants": 3
+}
+```
+""",
+)
+def get_cocktails_quasi_realisables(
+    current_user: CurrentUser,
+    max_ingredients_manquants: Annotated[
+        int,
+        Query(
+            ge=0,
+            le=5,
+            description="Nombre maximum d'ingrédients manquants acceptés",
+        ),
+    ] = 3,
+) -> dict:
+    """Récupérer les cocktails quasi-réalisables.
+
+    Parameters
+    ----------
+    max_ingredients_manquants : int
+        Nombre max d'ingrédients manquants (1-5, défaut: 3)
+
+    Returns
+    -------
+    dict
+        Liste des cocktails avec détails des ingrédients manquants
+
+    Raises
+    ------
+    HTTPException
+        500 si erreur serveur
+
+    """
+    if max_ingredients_manquants == 0:
+        try:
+            service = CocktailService(CocktailDAO())
+            return service.get_cocktails_realisables(current_user.id_utilisateur)
+        except ServiceError as e:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail=str(e),
+            ) from e
+    try:
+        service = CocktailService(CocktailDAO())
+        return service.get_cocktails_quasi_realisables(
+            current_user.id_utilisateur,
+            max_ingredients_manquants,
+        )
+    except ServiceError as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=str(e),
+        ) from e
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Erreur serveur : {e}",
         ) from e

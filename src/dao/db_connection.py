@@ -1,3 +1,8 @@
+"""
+Module gérant la connexion à la base de données PostgreSQL.
+Il fournit une classe singleton DBConnection pour garantir qu'une seule connexion est ouverte.
+"""
+
 import os
 import dotenv
 import psycopg2

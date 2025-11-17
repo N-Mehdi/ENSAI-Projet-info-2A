@@ -8,7 +8,7 @@ from src.utils.log_decorator import log, logging
 from utils.singleton import Singleton
 
 
-class StockCourseDao(metaclass=Singleton):
+class StockCourseDAO(metaclass=Singleton):
     """Classe contenant les méthodes agissants sur le stock d'un utilisateur."""
 
     @staticmethod
@@ -62,7 +62,7 @@ class StockCourseDao(metaclass=Singleton):
 
     @staticmethod
     @log
-    def get_stock(id_utilisateur: int, only_available: bool = True) -> list[dict]:
+    def get_stock(id_utilisateur: int, *, only_available: bool = True) -> list[dict]:
         """Récupère le stock d'un utilisateur.
 
         Parameters
@@ -310,7 +310,7 @@ class StockCourseDao(metaclass=Singleton):
                     u.abbreviation as code_unite,
                     u.nom as nom_unite_complet
                 FROM ingredient i
-                LEFT JOIN stock s ON s.id_ingredient = i.id_ingredient 
+                LEFT JOIN stock s ON s.id_ingredient = i.id_ingredient
                                   AND s.id_utilisateur = %(id_utilisateur)s
                 LEFT JOIN unite u ON s.id_unite = u.id_unite
                 ORDER BY i.nom
@@ -383,7 +383,7 @@ class StockCourseDao(metaclass=Singleton):
 
         except Exception as e:
             logging.exception("Erreur lors de la récupération de l'ID de l'unité")
-            raise DAOError(f"Impossible de récupérer l'ID de l'unité '{abbreviation}' : {e}") from e
+            raise DAOError from e
 
     @staticmethod
     def set_stock_item(

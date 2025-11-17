@@ -44,11 +44,11 @@ def search_ingredient(
 ):
     """Recherche des ingrédients par nom (insensible à la casse)."""
     try:
-        from src.dao.ingredient_dao import IngredientDao
+        from src.dao.ingredient_dao import IngredientDAO
         from src.utils.text_utils import normalize_ingredient_name
 
         normalized_query = normalize_ingredient_name(query)
-        ingredient_dao = IngredientDao()
+        ingredient_dao = IngredientDAO()
         results = ingredient_dao.search_by_name(normalized_query, limit=limit)
 
         return {

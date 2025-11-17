@@ -31,3 +31,30 @@ class Cocktail(BaseModel):
         description="URL de l'image du cocktail",
         json_schema_extra={"example": "https://example.com/margarita.jpg"},
     )
+
+
+class CocktailQuasiRealisable(BaseModel):
+    """Schéma pour un cocktail quasi-réalisable."""
+
+    id_cocktail: int
+    nom: str
+    categorie: str
+    verre: str
+    alcool: bool
+    image: str
+    ingredients_manquants: list[str]
+    nombre_ingredients_manquants: int
+    nombre_ingredients_total: int
+    pourcentage_possession: float = Field(
+        description="Pourcentage d'ingrédients possédés",
+        ge=0,
+        le=100,
+    )
+
+
+class CocktailsQuasiRealisablesResponse(BaseModel):
+    """Schéma de réponse pour les cocktails quasi-réalisables."""
+
+    cocktails_quasi_realisables: list[CocktailQuasiRealisable]
+    nombre_cocktails: int
+    max_ingredients_manquants: int

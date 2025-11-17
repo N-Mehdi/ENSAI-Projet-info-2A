@@ -1,6 +1,6 @@
 """doc."""
 
-from src.dao.ingredient_dao import IngredientDao
+from src.dao.ingredient_dao import IngredientDAO
 
 
 class IngredientService:
@@ -8,7 +8,7 @@ class IngredientService:
 
     def __init__(self) -> None:
         """Initialise un IngredientService."""
-        self.dao = IngredientDao()
+        self.dao = IngredientDAO()
 
     def check_if_alcoholic(self, ingredient_id: int) -> dict:
         """Vérifie si un ingrédient contient de l'alcool."""

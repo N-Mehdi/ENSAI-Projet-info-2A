@@ -1,4 +1,5 @@
-"""return [self.pseudo, self.mail, self.date_naissance]"""
+"""Ce module définit un ingrédient."""
+
 
 class Ingredient:
     """Classe représentant un ingrédient.
@@ -13,7 +14,7 @@ class Ingredient:
         True si l'ingrédient est alcoolisé, False sinon.
     """
 
-    def __init__(self, id_ingredient: int, nom: str | None = None, ingredient_alcool: bool = False):
+    def __init__(self, id_ingredient: int, nom: str | None = None, *, ingredient_alcool: bool = False) -> None:
         """Constructeur de la classe Ingredient."""
         self.id_ingredient = id_ingredient
         self.nom = nom

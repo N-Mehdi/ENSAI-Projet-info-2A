@@ -4,8 +4,8 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from src.dao.ingredient_dao import IngredientDao
-from src.dao.stock_course_dao import StockCourseDao
+from src.dao.ingredient_dao import IngredientDAO
+from src.dao.stock_course_dao import StockCourseDAO
 from src.models.stock import Stock, StockItem
 from src.service.stock_course_service import StockCourseService
 from src.utils.exceptions import (
@@ -29,8 +29,8 @@ class TestStockCourseService:
             "nom": "Vodka",
         }
 
-        stock_dao_mock = MagicMock(spec=StockCourseDao)
-        ingredient_dao_mock = MagicMock(spec=IngredientDao)
+        stock_dao_mock = MagicMock(spec=StockCourseDAO)
+        ingredient_dao_mock = MagicMock(spec=IngredientDAO)
         ingredient_dao_mock.get_by_name.return_value = ingredient_attendu
 
         # WHEN
@@ -51,8 +51,8 @@ class TestStockCourseService:
             {"nom": "Vodka Citron"},
         ]
 
-        stock_dao_mock = MagicMock(spec=StockCourseDao)
-        ingredient_dao_mock = MagicMock(spec=IngredientDao)
+        stock_dao_mock = MagicMock(spec=StockCourseDAO)
+        ingredient_dao_mock = MagicMock(spec=IngredientDAO)
         ingredient_dao_mock.get_by_name.return_value = None
         ingredient_dao_mock.search_by_name.return_value = suggestions_data
 
@@ -82,10 +82,10 @@ class TestStockCourseService:
             "nom": "Vodka",
         }
 
-        stock_dao_mock = MagicMock(spec=StockCourseDao)
+        stock_dao_mock = MagicMock(spec=StockCourseDAO)
         stock_dao_mock.update_or_create_stock_item.return_value = True
 
-        ingredient_dao_mock = MagicMock(spec=IngredientDao)
+        ingredient_dao_mock = MagicMock(spec=IngredientDAO)
         ingredient_dao_mock.get_by_name.return_value = ingredient
 
         # WHEN
@@ -116,8 +116,8 @@ class TestStockCourseService:
         quantite = -5.0
         id_unite = 1
 
-        stock_dao_mock = MagicMock(spec=StockCourseDao)
-        ingredient_dao_mock = MagicMock(spec=IngredientDao)
+        stock_dao_mock = MagicMock(spec=StockCourseDAO)
+        ingredient_dao_mock = MagicMock(spec=IngredientDAO)
 
         # WHEN
         service = StockCourseService()
@@ -140,8 +140,8 @@ class TestStockCourseService:
         quantite = 0.0
         id_unite = 1
 
-        stock_dao_mock = MagicMock(spec=StockCourseDao)
-        ingredient_dao_mock = MagicMock(spec=IngredientDao)
+        stock_dao_mock = MagicMock(spec=StockCourseDAO)
+        ingredient_dao_mock = MagicMock(spec=IngredientDAO)
 
         # WHEN
         service = StockCourseService()
@@ -164,8 +164,8 @@ class TestStockCourseService:
         quantite = 100.0
         id_unite = 1
 
-        stock_dao_mock = MagicMock(spec=StockCourseDao)
-        ingredient_dao_mock = MagicMock(spec=IngredientDao)
+        stock_dao_mock = MagicMock(spec=StockCourseDAO)
+        ingredient_dao_mock = MagicMock(spec=IngredientDAO)
         ingredient_dao_mock.get_by_name.return_value = None
         ingredient_dao_mock.search_by_name.return_value = []
 
@@ -195,10 +195,10 @@ class TestStockCourseService:
             "nom": "Vodka",
         }
 
-        stock_dao_mock = MagicMock(spec=StockCourseDao)
+        stock_dao_mock = MagicMock(spec=StockCourseDAO)
         stock_dao_mock.update_or_create_stock_item.return_value = False
 
-        ingredient_dao_mock = MagicMock(spec=IngredientDao)
+        ingredient_dao_mock = MagicMock(spec=IngredientDAO)
         ingredient_dao_mock.get_by_name.return_value = ingredient
 
         # WHEN
@@ -240,10 +240,10 @@ class TestStockCourseService:
             },
         ]
 
-        stock_dao_mock = MagicMock(spec=StockCourseDao)
+        stock_dao_mock = MagicMock(spec=StockCourseDAO)
         stock_dao_mock.get_stock.return_value = rows
 
-        ingredient_dao_mock = MagicMock(spec=IngredientDao)
+        ingredient_dao_mock = MagicMock(spec=IngredientDAO)
 
         # WHEN
         service = StockCourseService()
@@ -266,10 +266,10 @@ class TestStockCourseService:
         # GIVEN
         id_utilisateur = 1
 
-        stock_dao_mock = MagicMock(spec=StockCourseDao)
+        stock_dao_mock = MagicMock(spec=StockCourseDAO)
         stock_dao_mock.get_stock.return_value = []
 
-        ingredient_dao_mock = MagicMock(spec=IngredientDao)
+        ingredient_dao_mock = MagicMock(spec=IngredientDAO)
 
         # WHEN
         service = StockCourseService()
@@ -296,10 +296,10 @@ class TestStockCourseService:
             },
         ]
 
-        stock_dao_mock = MagicMock(spec=StockCourseDao)
+        stock_dao_mock = MagicMock(spec=StockCourseDAO)
         stock_dao_mock.get_stock.return_value = rows
 
-        ingredient_dao_mock = MagicMock(spec=IngredientDao)
+        ingredient_dao_mock = MagicMock(spec=IngredientDAO)
 
         # WHEN
         service = StockCourseService()
@@ -335,10 +335,10 @@ class TestStockCourseService:
             "nom_unite_complet": "millilitre",
         }
 
-        stock_dao_mock = MagicMock(spec=StockCourseDao)
+        stock_dao_mock = MagicMock(spec=StockCourseDAO)
         stock_dao_mock.get_stock_item.return_value = stock_item_data
 
-        ingredient_dao_mock = MagicMock(spec=IngredientDao)
+        ingredient_dao_mock = MagicMock(spec=IngredientDAO)
         ingredient_dao_mock.get_by_name.return_value = ingredient
 
         # WHEN
@@ -362,10 +362,10 @@ class TestStockCourseService:
             "nom": "Vodka",
         }
 
-        stock_dao_mock = MagicMock(spec=StockCourseDao)
+        stock_dao_mock = MagicMock(spec=StockCourseDAO)
         stock_dao_mock.get_stock_item.return_value = None
 
-        ingredient_dao_mock = MagicMock(spec=IngredientDao)
+        ingredient_dao_mock = MagicMock(spec=IngredientDAO)
         ingredient_dao_mock.get_by_name.return_value = ingredient
 
         # WHEN
@@ -382,8 +382,8 @@ class TestStockCourseService:
         id_utilisateur = 1
         nom_ingredient = "ingredient_inexistant"
 
-        stock_dao_mock = MagicMock(spec=StockCourseDao)
-        ingredient_dao_mock = MagicMock(spec=IngredientDao)
+        stock_dao_mock = MagicMock(spec=StockCourseDAO)
+        ingredient_dao_mock = MagicMock(spec=IngredientDAO)
         ingredient_dao_mock.get_by_name.return_value = None
         ingredient_dao_mock.search_by_name.return_value = []
 
@@ -414,10 +414,10 @@ class TestStockCourseService:
             "nouvelle_quantite": 400.0,
         }
 
-        stock_dao_mock = MagicMock(spec=StockCourseDao)
+        stock_dao_mock = MagicMock(spec=StockCourseDAO)
         stock_dao_mock.decrement_stock_item.return_value = result
 
-        ingredient_dao_mock = MagicMock(spec=IngredientDao)
+        ingredient_dao_mock = MagicMock(spec=IngredientDAO)
         ingredient_dao_mock.get_by_name.return_value = ingredient
 
         # WHEN
@@ -446,10 +446,10 @@ class TestStockCourseService:
             "nouvelle_quantite": 0.0,
         }
 
-        stock_dao_mock = MagicMock(spec=StockCourseDao)
+        stock_dao_mock = MagicMock(spec=StockCourseDAO)
         stock_dao_mock.decrement_stock_item.return_value = result
 
-        ingredient_dao_mock = MagicMock(spec=IngredientDao)
+        ingredient_dao_mock = MagicMock(spec=IngredientDAO)
         ingredient_dao_mock.get_by_name.return_value = ingredient
 
         # WHEN
@@ -467,8 +467,8 @@ class TestStockCourseService:
         nom_ingredient = "vodka"
         quantite = -10.0
 
-        stock_dao_mock = MagicMock(spec=StockCourseDao)
-        ingredient_dao_mock = MagicMock(spec=IngredientDao)
+        stock_dao_mock = MagicMock(spec=StockCourseDAO)
+        ingredient_dao_mock = MagicMock(spec=IngredientDAO)
 
         # WHEN
         service = StockCourseService()
@@ -490,12 +490,12 @@ class TestStockCourseService:
             "nom": "Vodka",
         }
 
-        stock_dao_mock = MagicMock(spec=StockCourseDao)
+        stock_dao_mock = MagicMock(spec=StockCourseDAO)
         stock_dao_mock.decrement_stock_item.side_effect = ValueError(
             "Impossible de retirer 600.0 (quantité disponible : 500.0)",
         )
 
-        ingredient_dao_mock = MagicMock(spec=IngredientDao)
+        ingredient_dao_mock = MagicMock(spec=IngredientDAO)
         ingredient_dao_mock.get_by_name.return_value = ingredient
 
         # WHEN
@@ -521,12 +521,12 @@ class TestStockCourseService:
             "nom": "Vodka",
         }
 
-        stock_dao_mock = MagicMock(spec=StockCourseDao)
+        stock_dao_mock = MagicMock(spec=StockCourseDAO)
         stock_dao_mock.decrement_stock_item.side_effect = ValueError(
             "Ingrédient non trouvé dans le stock",
         )
 
-        ingredient_dao_mock = MagicMock(spec=IngredientDao)
+        ingredient_dao_mock = MagicMock(spec=IngredientDAO)
         ingredient_dao_mock.get_by_name.return_value = ingredient
 
         # WHEN
@@ -551,10 +551,10 @@ class TestStockCourseService:
             "nom": "Vodka",
         }
 
-        stock_dao_mock = MagicMock(spec=StockCourseDao)
+        stock_dao_mock = MagicMock(spec=StockCourseDAO)
         stock_dao_mock.delete_stock_item.return_value = True
 
-        ingredient_dao_mock = MagicMock(spec=IngredientDao)
+        ingredient_dao_mock = MagicMock(spec=IngredientDAO)
         ingredient_dao_mock.get_by_name.return_value = ingredient
 
         # WHEN
@@ -580,10 +580,10 @@ class TestStockCourseService:
             "nom": "Vodka",
         }
 
-        stock_dao_mock = MagicMock(spec=StockCourseDao)
+        stock_dao_mock = MagicMock(spec=StockCourseDAO)
         stock_dao_mock.delete_stock_item.return_value = False
 
-        ingredient_dao_mock = MagicMock(spec=IngredientDao)
+        ingredient_dao_mock = MagicMock(spec=IngredientDAO)
         ingredient_dao_mock.get_by_name.return_value = ingredient
 
         # WHEN
@@ -601,8 +601,8 @@ class TestStockCourseService:
         id_utilisateur = 1
         nom_ingredient = "ingredient_inexistant"
 
-        stock_dao_mock = MagicMock(spec=StockCourseDao)
-        ingredient_dao_mock = MagicMock(spec=IngredientDao)
+        stock_dao_mock = MagicMock(spec=StockCourseDAO)
+        ingredient_dao_mock = MagicMock(spec=IngredientDAO)
         ingredient_dao_mock.get_by_name.return_value = None
         ingredient_dao_mock.search_by_name.return_value = []
 
@@ -625,10 +625,10 @@ class TestStockCourseService:
             {"id_ingredient": 2, "nom": "Gin", "quantite": 0.0},
         ]
 
-        stock_dao_mock = MagicMock(spec=StockCourseDao)
+        stock_dao_mock = MagicMock(spec=StockCourseDAO)
         stock_dao_mock.get_full_stock.return_value = full_stock
 
-        ingredient_dao_mock = MagicMock(spec=IngredientDao)
+        ingredient_dao_mock = MagicMock(spec=IngredientDAO)
 
         # WHEN
         service = StockCourseService()
@@ -645,10 +645,10 @@ class TestStockCourseService:
         # GIVEN
         id_utilisateur = 1
 
-        stock_dao_mock = MagicMock(spec=StockCourseDao)
+        stock_dao_mock = MagicMock(spec=StockCourseDAO)
         stock_dao_mock.get_full_stock.side_effect = Exception("Erreur DB")
 
-        ingredient_dao_mock = MagicMock(spec=IngredientDao)
+        ingredient_dao_mock = MagicMock(spec=IngredientDAO)
 
         # WHEN
         service = StockCourseService()

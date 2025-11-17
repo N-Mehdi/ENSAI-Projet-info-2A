@@ -2,13 +2,13 @@ import unittest
 from unittest.mock import MagicMock
 
 from src.business_object.Ingredient import Ingredient
-from src.service.ingredient_dao import IngredientDao
+from src.service.ingredient_dao import IngredientDAO
 
 
-class TestIngredientDao(unittest.TestCase):
+class TestIngredientDAO(unittest.TestCase):
     def setUp(self):
         # Crée un DAO simulé
-        self.dao = IngredientDao()
+        self.dao = IngredientDAO()
         # On "mock" la méthode rechercher_ingredient_par_nom
         self.dao.rechercher_ingredient_par_nom = MagicMock()
 

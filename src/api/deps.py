@@ -10,7 +10,7 @@ from fastapi.security import OAuth2PasswordBearer
 from jwt.exceptions import InvalidTokenError
 from pydantic import ValidationError
 
-from src.dao.utilisateur_dao import UtilisateurDao
+from src.dao.utilisateur_dao import UtilisateurDAO
 from src.models import TokenPayload, User
 from src.service.utilisateur_service import UtilisateurService
 from src.utils import securite
@@ -46,7 +46,7 @@ def get_user(token: TokenDep) -> User:
                 headers={"WWW-Authenticate": "Bearer"},
             )
 
-        user_service = UtilisateurService(UtilisateurDao())
+        user_service = UtilisateurService(UtilisateurDAO())
         return user_service.read(id_utilisateur=int(token_data.sub))
 
     except (InvalidTokenError, ValidationError):

@@ -1,4 +1,6 @@
-"""doc."""
+"""Ce module définit la classe AccesDAO, responsable des opérations CRUD
+sur la table acces dans la base de données.
+"""
 
 from typing import Any
 

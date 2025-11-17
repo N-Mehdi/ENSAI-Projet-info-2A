@@ -5,7 +5,7 @@ from unittest.mock import MagicMock
 import pytest
 
 from src.dao.acces_dao import AccesDAO
-from src.dao.cocktail_dao import CocktailDao
+from src.dao.cocktail_dao import CocktailDAO
 from src.models.acces import (
     AccessList,
     AccessResponse,
@@ -38,7 +38,7 @@ class TestAccesService:
         dao_mock.get_user_id_by_pseudo.side_effect = [owner_id, user_id]
         dao_mock.grant_access.return_value = True
 
-        dao_cocktail_mock = MagicMock(spec=CocktailDao)
+        dao_cocktail_mock = MagicMock(spec=CocktailDAO)
 
         # WHEN
         service = AccesService()
@@ -62,7 +62,7 @@ class TestAccesService:
         dao_mock = MagicMock(spec=AccesDAO)
         dao_mock.get_user_id_by_pseudo.return_value = None
 
-        dao_cocktail_mock = MagicMock(spec=CocktailDao)
+        dao_cocktail_mock = MagicMock(spec=CocktailDAO)
 
         # WHEN
         service = AccesService()
@@ -83,7 +83,7 @@ class TestAccesService:
         dao_mock = MagicMock(spec=AccesDAO)
         dao_mock.get_user_id_by_pseudo.side_effect = [owner_id, None]
 
-        dao_cocktail_mock = MagicMock(spec=CocktailDao)
+        dao_cocktail_mock = MagicMock(spec=CocktailDAO)
 
         # WHEN
         service = AccesService()
@@ -104,7 +104,7 @@ class TestAccesService:
         dao_mock = MagicMock(spec=AccesDAO)
         dao_mock.get_user_id_by_pseudo.side_effect = [owner_id, owner_id]
 
-        dao_cocktail_mock = MagicMock(spec=CocktailDao)
+        dao_cocktail_mock = MagicMock(spec=CocktailDAO)
 
         # WHEN
         service = AccesService()
@@ -127,7 +127,7 @@ class TestAccesService:
         dao_mock.get_user_id_by_pseudo.side_effect = [owner_id, user_id]
         dao_mock.grant_access.return_value = False
 
-        dao_cocktail_mock = MagicMock(spec=CocktailDao)
+        dao_cocktail_mock = MagicMock(spec=CocktailDAO)
 
         # WHEN
         service = AccesService()
@@ -152,7 +152,7 @@ class TestAccesService:
         dao_mock.get_user_id_by_pseudo.side_effect = [owner_id, user_id]
         dao_mock.revoke_access.return_value = True
 
-        dao_cocktail_mock = MagicMock(spec=CocktailDao)
+        dao_cocktail_mock = MagicMock(spec=CocktailDAO)
 
         # WHEN
         service = AccesService()
@@ -177,7 +177,7 @@ class TestAccesService:
         dao_mock.get_user_id_by_pseudo.side_effect = [owner_id, user_id]
         dao_mock.revoke_access.return_value = False
 
-        dao_cocktail_mock = MagicMock(spec=CocktailDao)
+        dao_cocktail_mock = MagicMock(spec=CocktailDAO)
 
         # WHEN
         service = AccesService()
@@ -201,7 +201,7 @@ class TestAccesService:
         dao_mock.get_user_id_by_pseudo.return_value = owner_id
         dao_mock.get_users_with_access.return_value = users
 
-        dao_cocktail_mock = MagicMock(spec=CocktailDao)
+        dao_cocktail_mock = MagicMock(spec=CocktailDAO)
 
         # WHEN
         service = AccesService()
@@ -222,7 +222,7 @@ class TestAccesService:
         dao_mock = MagicMock(spec=AccesDAO)
         dao_mock.get_user_id_by_pseudo.return_value = None
 
-        dao_cocktail_mock = MagicMock(spec=CocktailDao)
+        dao_cocktail_mock = MagicMock(spec=CocktailDAO)
 
         # WHEN
         service = AccesService()
@@ -242,7 +242,7 @@ class TestAccesService:
         dao_mock.get_user_id_by_pseudo.return_value = owner_id
         dao_mock.get_users_with_access.return_value = []
 
-        dao_cocktail_mock = MagicMock(spec=CocktailDao)
+        dao_cocktail_mock = MagicMock(spec=CocktailDAO)
 
         # WHEN
         service = AccesService()
@@ -279,7 +279,7 @@ class TestAccesService:
         dao_mock.has_access.return_value = True
         dao_mock.get_private_cocktails.return_value = cocktails_data
 
-        dao_cocktail_mock = MagicMock(spec=CocktailDao)
+        dao_cocktail_mock = MagicMock(spec=CocktailDAO)
 
         # WHEN
         service = AccesService()
@@ -305,7 +305,7 @@ class TestAccesService:
         dao_mock.get_user_id_by_pseudo.side_effect = [owner_id, viewer_id]
         dao_mock.has_access.return_value = False
 
-        dao_cocktail_mock = MagicMock(spec=CocktailDao)
+        dao_cocktail_mock = MagicMock(spec=CocktailDAO)
 
         # WHEN
         service = AccesService()
@@ -337,7 +337,7 @@ class TestAccesService:
         dao_mock.has_access.return_value = True
         dao_mock.get_private_cocktails.return_value = cocktails_data
 
-        dao_cocktail_mock = MagicMock(spec=CocktailDao)
+        dao_cocktail_mock = MagicMock(spec=CocktailDAO)
 
         # WHEN
         service = AccesService()
@@ -361,7 +361,7 @@ class TestAccesService:
         dao_mock.get_user_id_by_pseudo.return_value = owner_id
         dao_mock.add_cocktail_to_private_list.return_value = True
 
-        dao_cocktail_mock = MagicMock(spec=CocktailDao)
+        dao_cocktail_mock = MagicMock(spec=CocktailDAO)
 
         # WHEN
         service = AccesService()
@@ -384,7 +384,7 @@ class TestAccesService:
         dao_mock.get_user_id_by_pseudo.return_value = owner_id
         dao_mock.add_cocktail_to_private_list.return_value = False
 
-        dao_cocktail_mock = MagicMock(spec=CocktailDao)
+        dao_cocktail_mock = MagicMock(spec=CocktailDAO)
 
         # WHEN
         service = AccesService()
@@ -409,7 +409,7 @@ class TestAccesService:
         dao_mock.get_user_id_by_pseudo.return_value = owner_id
         dao_mock.add_cocktail_to_private_list.return_value = True
 
-        dao_cocktail_mock = MagicMock(spec=CocktailDao)
+        dao_cocktail_mock = MagicMock(spec=CocktailDAO)
         dao_cocktail_mock.get_cocktail_id_by_name.return_value = cocktail_id
 
         # WHEN
@@ -432,7 +432,7 @@ class TestAccesService:
         dao_mock = MagicMock(spec=AccesDAO)
         dao_mock.get_user_id_by_pseudo.return_value = owner_id
 
-        dao_cocktail_mock = MagicMock(spec=CocktailDao)
+        dao_cocktail_mock = MagicMock(spec=CocktailDAO)
         dao_cocktail_mock.get_cocktail_id_by_name.return_value = None
 
         # WHEN
@@ -457,7 +457,7 @@ class TestAccesService:
         dao_mock.get_user_id_by_pseudo.return_value = owner_id
         dao_mock.remove_cocktail_from_private_list.return_value = True
 
-        dao_cocktail_mock = MagicMock(spec=CocktailDao)
+        dao_cocktail_mock = MagicMock(spec=CocktailDAO)
 
         # WHEN
         service = AccesService()
@@ -480,7 +480,7 @@ class TestAccesService:
         dao_mock.get_user_id_by_pseudo.return_value = owner_id
         dao_mock.remove_cocktail_from_private_list.return_value = False
 
-        dao_cocktail_mock = MagicMock(spec=CocktailDao)
+        dao_cocktail_mock = MagicMock(spec=CocktailDAO)
 
         # WHEN
         service = AccesService()
@@ -505,7 +505,7 @@ class TestAccesService:
         dao_mock.get_user_id_by_pseudo.return_value = owner_id
         dao_mock.remove_cocktail_from_private_list.return_value = True
 
-        dao_cocktail_mock = MagicMock(spec=CocktailDao)
+        dao_cocktail_mock = MagicMock(spec=CocktailDAO)
         dao_cocktail_mock.get_cocktail_id_by_name.return_value = cocktail_id
 
         # WHEN
@@ -528,7 +528,7 @@ class TestAccesService:
         dao_mock = MagicMock(spec=AccesDAO)
         dao_mock.get_user_id_by_pseudo.return_value = owner_id
 
-        dao_cocktail_mock = MagicMock(spec=CocktailDao)
+        dao_cocktail_mock = MagicMock(spec=CocktailDAO)
         dao_cocktail_mock.get_cocktail_id_by_name.return_value = None
 
         # WHEN

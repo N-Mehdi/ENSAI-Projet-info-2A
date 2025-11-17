@@ -6,7 +6,7 @@ from src.utils.log_decorator import log
 from src.utils.singleton import Singleton
 
 
-class ListeCourseDao(metaclass=Singleton):
+class ListeCourseDAO(metaclass=Singleton):
     """DAO pour gérer la liste de course des utilisateurs."""
 
     @log

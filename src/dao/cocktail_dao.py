@@ -1,5 +1,5 @@
-"""cocktail_dao.py
-Classe DAO du business object Cocktail.
+"""Ce module définit la classe CocktailDAO, responsable des opérations CRUD
+sur la table cocktail dans la base de données.
 """
 
 from src.business_object.cocktail import Cocktail
@@ -9,7 +9,7 @@ from src.utils.log_decorator import log, logging
 from src.utils.singleton import Singleton
 
 
-class CocktailDao(metaclass=Singleton):
+class CocktailDAO(metaclass=Singleton):
     """Classe contenant les méthodes agissant sur les cocktails de la base
     de données.
     """
@@ -126,4 +126,57 @@ class CocktailDao(metaclass=Singleton):
 
         except Exception as e:
             logging.exception("Erreur lors de la récupération des cocktails avec ingrédients")
-            raise DAOError(f"Impossible de récupérer les cocktails : {e}") from e
+            raise DAOError from e
+
+    def get_cocktails_quasi_realisables(
+        self,
+        id_utilisateur: int,
+    ) -> list[dict]:
+        """Récupère tous les cocktails avec leurs ingrédients et le stock de l'utilisateur.
+
+        Retourne les données brutes sans calcul de conversion.
+
+        Parameters
+        ----------
+        id_utilisateur : int
+            ID de l'utilisateur
+
+        Returns
+        -------
+        list[dict]
+            Liste de dictionnaires avec les données brutes
+
+        """
+        try:
+            with DBConnection().connection as connection, connection.cursor() as cursor:
+                cursor.execute(
+                    """
+                    SELECT
+                        c.id_cocktail,
+                        c.nom,
+                        c.categorie,
+                        c.verre,
+                        c.alcool,
+                        c.image,
+                        ci.id_ingredient,
+                        ci.qte as quantite_requise,
+                        ci.unite as unite_requise,
+                        i.nom as nom_ingredient,
+                        s.quantite as quantite_stock,
+                        u_stock.abbreviation as unite_stock
+                    FROM cocktail c
+                    LEFT JOIN cocktail_ingredient ci ON c.id_cocktail = ci.id_cocktail
+                    LEFT JOIN ingredient i ON ci.id_ingredient = i.id_ingredient
+                    LEFT JOIN stock s ON ci.id_ingredient = s.id_ingredient
+                        AND s.id_utilisateur = %(id_utilisateur)s
+                    LEFT JOIN unite u_stock ON s.id_unite = u_stock.id_unite
+                    ORDER BY c.id_cocktail, ci.id_ingredient
+                    """,
+                    {"id_utilisateur": id_utilisateur},
+                )
+
+                return cursor.fetchall()
+
+        except Exception as e:
+            logging.exception("Erreur lors de la récupération des données pour cocktails quasi-réalisables")
+            raise DAOError from e

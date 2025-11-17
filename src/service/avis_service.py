@@ -1,9 +1,14 @@
 """doc."""
 
-from src.dao.avis_dao import AvisDao
-from src.dao.cocktail_dao import CocktailDao
+from src.dao.avis_dao import AvisDAO
+from src.dao.cocktail_dao import CocktailDAO
 from src.models.avis import AvisResponse, AvisSummary
-from src.utils.exceptions import AvisNotFoundError, CocktailNotFoundError, IngredientNotFoundError, InvalidAvisError, ServiceError
+from src.utils.exceptions import (
+    AvisNotFoundError,
+    CocktailNotFoundError,
+    InvalidAvisError,
+    ServiceError,
+)
 from src.utils.text_utils import normalize_ingredient_name
 
 
@@ -12,8 +17,8 @@ class AvisService:
 
     def __init__(self) -> None:
         """Initialise un AvisService."""
-        self.avis_dao = AvisDao()
-        self.cocktail_dao = CocktailDao()
+        self.avis_dao = AvisDAO()
+        self.cocktail_dao = CocktailDAO()
 
     def _get_cocktail_by_name(self, nom_cocktail: str) -> dict:
         """Récupère un cocktail par son nom.

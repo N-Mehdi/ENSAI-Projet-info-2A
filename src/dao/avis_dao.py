@@ -1,10 +1,13 @@
-"""doc."""
+"""Ce module définit la classe Avidao, responsable des opérations CRUD
+sur la table acces dans la base de données.
+"""
+
 from src.dao.db_connection import DBConnection
 from src.utils.log_decorator import log
 from src.utils.singleton import Singleton
 
 
-class AvisDao(metaclass=Singleton):
+class AvisDAO(metaclass=Singleton):
     """DAO pour gérer les avis sur les cocktails."""
 
     @log
@@ -44,7 +47,7 @@ class AvisDao(metaclass=Singleton):
                     note = EXCLUDED.note,
                     commentaire = EXCLUDED.commentaire,
                     date_modification = NOW()
-                RETURNING 
+                RETURNING
                     id_utilisateur,
                     id_cocktail,
                     note,
@@ -101,7 +104,7 @@ class AvisDao(metaclass=Singleton):
         with DBConnection().connection as connection, connection.cursor() as cursor:
             cursor.execute(
                 """
-                SELECT 
+                SELECT
                     a.id_utilisateur,
                     u.pseudo as pseudo_utilisateur,
                     a.id_cocktail,
@@ -164,8 +167,6 @@ class AvisDao(metaclass=Singleton):
             )
             return cursor.rowcount > 0
 
-
-
     @log
     def get_avis_summary(self, id_cocktail: int) -> dict:
         """Récupère un résumé des avis pour un cocktail."""
@@ -195,7 +196,6 @@ class AvisDao(metaclass=Singleton):
                     "nombre_favoris": int(result["nombre_favoris"]) if result["nombre_favoris"] else 0,
                 }
             return None
-
 
     @log
     def get_favoris_by_user(self, id_utilisateur: int) -> list[dict]:

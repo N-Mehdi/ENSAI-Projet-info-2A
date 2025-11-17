@@ -7,7 +7,7 @@ from src.business_object.utilisateur import Utilisateur
 from src.dao.stock_course_dao import Stock_course_dao
 
 
-class TestStockCourseDao(unittest.TestCase):
+class TestStockCourseDAO(unittest.TestCase):
     """Tests unitaires de la classe Stock_course_dao."""
 
     def _setup_mock_db(self, mock_db, fetchone_return=None):

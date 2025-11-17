@@ -1,7 +1,7 @@
 """doc."""
 
-from src.dao.ingredient_dao import IngredientDao
-from src.dao.stock_course_dao import StockCourseDao
+from src.dao.ingredient_dao import IngredientDAO
+from src.dao.stock_course_dao import StockCourseDAO
 from src.models.stock import Stock, StockItem
 from src.utils.exceptions import (
     DAOError,
@@ -19,8 +19,8 @@ class StockCourseService:
 
     def __init__(self) -> None:
         """Initialise un StockCourseService."""
-        self.stock_dao = StockCourseDao()
-        self.ingredient_dao = IngredientDao()
+        self.stock_dao = StockCourseDAO()
+        self.ingredient_dao = IngredientDAO()
 
     def _get_ingredient_by_name(self, nom_ingredient: str) -> dict:
         """Méthode privée pour récupérer un ingrédient par son nom.
@@ -55,7 +55,6 @@ class StockCourseService:
             raise IngredientNotFoundError(nom_normalized, suggestions)
 
         return ingredient
-
 
     def add_or_update_ingredient_by_name(
         self,

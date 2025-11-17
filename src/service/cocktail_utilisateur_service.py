@@ -1,7 +1,7 @@
 """doc."""
 
 from src.business_object.cocktail import Cocktail
-from src.dao.cocktail_utilisateur_dao import CocktailUtilisateurDao
+from src.dao.cocktail_utilisateur_dao import CocktailUtilisateurDAO
 from src.utils.log_decorator import log
 
 
@@ -10,7 +10,7 @@ class CocktailUtilisateurService:
 
     def __init__(self) -> None:
         """Initialise un CocktailUtilisateurService."""
-        self.dao = CocktailUtilisateurDao()
+        self.dao = CocktailUtilisateurDAO()
 
     # ----------------- cocktails testés -----------------
 

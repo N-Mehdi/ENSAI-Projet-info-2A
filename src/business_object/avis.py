@@ -1,4 +1,4 @@
-"""doc."""
+"""Ce module définit un avis."""
 
 
 class Avis:
@@ -26,6 +26,7 @@ class Avis:
         id_cocktail: int,
         note: int | None = None,
         commentaire: str | None = None,
+        *,
         favoris: bool = False,
         teste: bool = False,
     ) -> None:

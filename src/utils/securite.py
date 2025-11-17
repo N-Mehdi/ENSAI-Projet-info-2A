@@ -1,3 +1,5 @@
+"""Module contenant les fonctions sur le hachage et le token."""
+
 import hashlib
 from datetime import UTC, datetime, timedelta
 

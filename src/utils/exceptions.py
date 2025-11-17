@@ -208,6 +208,21 @@ class CocktailNotFoundError(Exception):
         super().__init__(message)
 
 
+class PermissionDeniedError(Exception):
+    """Erreur indiquant que l'utilisateur n'a pas les permissions nécessaires."""
+
+    def __init__(self, message: str | None = None) -> None:
+        """Initialize PermissionDeniedError.
+
+        :param message: Error message (optional)
+        :return: None
+        """
+        if message is None:
+            message = "L'utilisateur n'est pas le propriétaire du cocktail."
+        super().__init__(message)
+        # pour avoir une vrai Exception python avec le message personnalisé
+
+
 class InvalidBirthDateError(ServiceError):
     """Date de naissance invalide."""
 

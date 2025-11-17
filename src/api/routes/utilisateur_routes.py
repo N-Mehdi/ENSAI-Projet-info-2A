@@ -3,7 +3,7 @@
 from fastapi import APIRouter, HTTPException, status
 
 from src.api.deps import CurrentUser
-from src.dao.utilisateur_dao import UtilisateurDao
+from src.dao.utilisateur_dao import UtilisateurDAO
 from src.models.utilisateurs import DateInscriptionResponse, UserChangePassword, UserDelete, UserUpdatePseudo
 from src.service.utilisateur_service import UtilisateurService
 from src.utils.exceptions import (
@@ -17,7 +17,7 @@ from src.utils.exceptions import (
 
 router = APIRouter(prefix="/compte", tags=["Compte"])
 
-service = UtilisateurService(utilisateur_dao=UtilisateurDao())
+service = UtilisateurService(utilisateur_dao=UtilisateurDAO())
 
 
 @router.put(

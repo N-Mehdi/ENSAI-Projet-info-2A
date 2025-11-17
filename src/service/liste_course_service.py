@@ -1,8 +1,8 @@
 """doc."""
 
-from src.dao.ingredient_dao import IngredientDao
-from src.dao.liste_course_dao import ListeCourseDao
-from src.dao.stock_course_dao import StockCourseDao
+from src.dao.ingredient_dao import IngredientDAO
+from src.dao.liste_course_dao import ListeCourseDAO
+from src.dao.stock_course_dao import StockCourseDAO
 from src.models.liste_course import ListeCourse, ListeCourseItem
 from src.utils.conversion_unite import UnitConverter
 from src.utils.exceptions import ServiceError, UniteNotFoundError
@@ -13,9 +13,9 @@ class ListeCourseService:
 
     def __init__(self) -> None:
         """Initialise un ListeCourseService."""
-        self.liste_course_dao = ListeCourseDao()
-        self.stock_dao = StockCourseDao()
-        self.ingredient_dao = IngredientDao()
+        self.liste_course_dao = ListeCourseDAO()
+        self.stock_dao = StockCourseDAO()
+        self.ingredient_dao = IngredientDAO()
 
     def get_liste_course(self, id_utilisateur: int) -> ListeCourse:
         """Récupère la liste de course d'un utilisateur."""
@@ -86,7 +86,7 @@ class ListeCourseService:
 
         # Récupérer l'ID de l'unité via son abréviation
         try:
-            stock_dao = StockCourseDao()
+            stock_dao = StockCourseDAO()
             id_unite = stock_dao.get_unite_id_by_abbreviation(abbreviation_unite)
 
             if id_unite is None:

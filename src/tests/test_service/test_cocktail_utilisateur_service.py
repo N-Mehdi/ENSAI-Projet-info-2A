@@ -5,7 +5,7 @@ from unittest.mock import MagicMock
 import pytest
 
 from src.business_object.cocktail import Cocktail
-from src.dao.cocktail_utilisateur_dao import CocktailUtilisateurDao
+from src.dao.cocktail_utilisateur_dao import CocktailUtilisateurDAO
 from src.service.cocktail_utilisateur_service import CocktailUtilisateurService
 
 
@@ -37,7 +37,7 @@ class TestCocktailUtilisateurService:
             ),
         ]
 
-        dao_mock = MagicMock(spec=CocktailUtilisateurDao)
+        dao_mock = MagicMock(spec=CocktailUtilisateurDAO)
         dao_mock.get_teste.return_value = cocktails_attendus
 
         # WHEN
@@ -54,7 +54,7 @@ class TestCocktailUtilisateurService:
         # GIVEN
         id_utilisateur = 1
 
-        dao_mock = MagicMock(spec=CocktailUtilisateurDao)
+        dao_mock = MagicMock(spec=CocktailUtilisateurDAO)
         dao_mock.get_teste.return_value = []
 
         # WHEN
@@ -78,7 +78,7 @@ class TestCocktailUtilisateurService:
             "message": "Cocktail 'Margarita' ajouté aux cocktails testés",
         }
 
-        dao_mock = MagicMock(spec=CocktailUtilisateurDao)
+        dao_mock = MagicMock(spec=CocktailUtilisateurDAO)
         dao_mock.ajouter_cocktail_teste.return_value = reponse_attendue
 
         # WHEN
@@ -100,7 +100,7 @@ class TestCocktailUtilisateurService:
             "message": "Cocktail 'Margarita' est déjà dans les cocktails testés",
         }
 
-        dao_mock = MagicMock(spec=CocktailUtilisateurDao)
+        dao_mock = MagicMock(spec=CocktailUtilisateurDAO)
         dao_mock.ajouter_cocktail_teste.return_value = reponse_attendue
 
         # WHEN
@@ -125,7 +125,7 @@ class TestCocktailUtilisateurService:
         id_utilisateur = 1
         nom_cocktail = "CocktailInconnu"
 
-        dao_mock = MagicMock(spec=CocktailUtilisateurDao)
+        dao_mock = MagicMock(spec=CocktailUtilisateurDAO)
         dao_mock.ajouter_cocktail_teste.side_effect = Exception("Cocktail non trouvé")
 
         # WHEN
@@ -149,7 +149,7 @@ class TestCocktailUtilisateurService:
             "message": "Cocktail 'Margarita' retiré des cocktails testés",
         }
 
-        dao_mock = MagicMock(spec=CocktailUtilisateurDao)
+        dao_mock = MagicMock(spec=CocktailUtilisateurDAO)
         dao_mock.retirer_cocktail_teste.return_value = reponse_attendue
 
         # WHEN
@@ -171,7 +171,7 @@ class TestCocktailUtilisateurService:
             "message": "Cocktail 'Margarita' n'est pas dans les cocktails testés",
         }
 
-        dao_mock = MagicMock(spec=CocktailUtilisateurDao)
+        dao_mock = MagicMock(spec=CocktailUtilisateurDAO)
         dao_mock.retirer_cocktail_teste.return_value = reponse_attendue
 
         # WHEN
@@ -196,7 +196,7 @@ class TestCocktailUtilisateurService:
         id_utilisateur = 1
         nom_cocktail = "CocktailInconnu"
 
-        dao_mock = MagicMock(spec=CocktailUtilisateurDao)
+        dao_mock = MagicMock(spec=CocktailUtilisateurDAO)
         dao_mock.retirer_cocktail_teste.side_effect = Exception("Cocktail non trouvé")
 
         # WHEN
@@ -218,7 +218,7 @@ class TestCocktailUtilisateurService:
             "message": "Aucun cocktail testé trouvé pour cet utilisateur",
         }
 
-        dao_mock = MagicMock(spec=CocktailUtilisateurDao)
+        dao_mock = MagicMock(spec=CocktailUtilisateurDAO)
         dao_mock.retirer_cocktail_teste.return_value = reponse_attendue
 
         # WHEN

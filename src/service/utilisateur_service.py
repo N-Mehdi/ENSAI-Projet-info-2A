@@ -2,7 +2,7 @@
 
 from datetime import date
 
-from src.dao.utilisateur_dao import UtilisateurDao
+from src.dao.utilisateur_dao import UtilisateurDAO
 from src.models.utilisateurs import (
     DateInscriptionResponse,
     User,
@@ -19,7 +19,7 @@ from src.utils.securite import hacher_mot_de_passe, verifier_mot_de_passe
 class UtilisateurService:
     """doc."""
 
-    def __init__(self, utilisateur_dao: UtilisateurDao) -> None:
+    def __init__(self, utilisateur_dao: UtilisateurDAO) -> None:
         """Initialise un UtilisateurService."""
         self.utilisateur_dao = utilisateur_dao
 

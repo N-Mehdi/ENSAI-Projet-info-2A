@@ -1,7 +1,7 @@
 """doc."""
 
 from src.dao.acces_dao import AccesDAO
-from src.dao.cocktail_dao import CocktailDao
+from src.dao.cocktail_dao import CocktailDAO
 from src.models.acces import (
     AccessList,
     AccessResponse,
@@ -25,7 +25,7 @@ class AccesService:
     def __init__(self) -> None:
         """Initialise un AccesService."""
         self.dao = AccesDAO()
-        self.dao_cocktail = CocktailDao()
+        self.dao_cocktail = CocktailDAO()
 
     def grant_access_to_user(self, owner_pseudo: str, user_pseudo: str) -> AccessResponse:
         """Donne l'accès à un utilisateur pour voir les cocktails privés."""

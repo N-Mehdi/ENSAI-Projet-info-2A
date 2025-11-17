@@ -1,4 +1,5 @@
-"""doc."""
+"""Classe DAO du business object Ingredient."""
+
 
 from src.dao.db_connection import DBConnection
 from src.utils.exceptions import IngredientNotFoundError
@@ -7,7 +8,7 @@ from src.utils.singleton import Singleton
 from src.utils.text_utils import normalize_ingredient_name
 
 
-class IngredientDao(metaclass=Singleton):
+class IngredientDAO(metaclass=Singleton):
     """DAO pour gérer les ingrédients."""
 
     @log

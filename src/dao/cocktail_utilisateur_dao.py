@@ -1,12 +1,16 @@
-"""doc."""
+"""Ce module définit la classe CocktailUtilisateurDAO, responsable des opérations CRUD
+sur la table prive dans la base de données.
+"""
+
 
 from business_object.cocktail import Cocktail
 from dao.db_connection import DBConnection
+from src.utils.exceptions import PermissionDeniedError
 from utils.log_decorator import log
 from utils.singleton import Singleton
 
 
-class CocktailUtilisateurDao(metaclass=Singleton):
+class CocktailUtilisateurDAO(metaclass=Singleton):
     """Classe contenant les méthodes agissant sur les cocktails et utilisateurs de la base
     de données.
     """
@@ -137,9 +141,7 @@ class CocktailUtilisateurDao(metaclass=Singleton):
                 )
             else:
                 # Si l'utilisateur n'est pas le propriétaire
-                raise PermissionError(
-                    "L'utilisateur n'es pas le propriétaire du cocktail.",
-                )
+                raise PermissionDeniedError
 
     @staticmethod
     @log
@@ -179,9 +181,7 @@ class CocktailUtilisateurDao(metaclass=Singleton):
                 )
             else:
                 # Si l'utilisateur n'est pas le propriétaire
-                raise PermissionError(
-                    "L'utilisateur n'est pas le propriétaire du cocktail.",
-                )
+                raise PermissionDeniedError
 
     @staticmethod
     @log
@@ -218,9 +218,7 @@ class CocktailUtilisateurDao(metaclass=Singleton):
                 )
             else:
                 # Si l'utilisateur n'est pas le propriétaire
-                raise PermissionError(
-                    "L'utilisateur n'est pas le propriétaire du cocktail.",
-                )
+                raise PermissionDeniedError
 
     @staticmethod
     @log
