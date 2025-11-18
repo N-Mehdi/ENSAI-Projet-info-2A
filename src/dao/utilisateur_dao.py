@@ -1,14 +1,19 @@
 """Classe DAO du business object Utilisateur."""
 
-import logging
-
 from psycopg2 import Error as DBError
 from psycopg2.errors import UniqueViolation
 
 from src.business_object.utilisateur import Utilisateur
 from src.dao.db_connection import DBConnection
 from src.models.utilisateurs import User, UserCreate, UserUpdatePassword
-from src.utils.exceptions import DAOError, EmptyFieldError, MailAlreadyExistsError, UserAlreadyExistsError
+from src.utils.exceptions import (
+    AccountDeletionError,
+    DAOError,
+    EmptyFieldError,
+    MailAlreadyExistsError,
+    PseudoChangingError,
+    UserAlreadyExistsError,
+)
 from src.utils.log_decorator import log
 from src.utils.singleton import Singleton
 
@@ -33,13 +38,13 @@ class UtilisateurDAO(metaclass=Singleton):
         """
         # Validation des champs vides
         if not utilisateur.pseudo or not utilisateur.pseudo.strip():
-            raise EmptyFieldError("pseudo")
+            raise EmptyFieldError(field="pseudo")
         if not utilisateur.mail or not utilisateur.mail.strip():
-            raise EmptyFieldError("mail")
+            raise EmptyFieldError(field="mail")
         if not utilisateur.mot_de_passe_hashed or not utilisateur.mot_de_passe_hashed.strip():
-            raise EmptyFieldError("mot_de_passe")
+            raise EmptyFieldError(field="mot_de_passe")
         if not utilisateur.date_naissance:
-            raise EmptyFieldError("date_naissance")
+            raise EmptyFieldError(field="date_naissance")
         res = None
         try:
             with DBConnection().connection as connection, connection.cursor() as cursor:
@@ -58,14 +63,14 @@ class UtilisateurDAO(metaclass=Singleton):
                 )
                 res = cursor.fetchone()
         except UniqueViolation as e:
-            # Analyser le message d'erreur pour identifier la colonne
+            # Analyser le message d'erreur pour identifier "pseudo" ou "mail"
             error_message = str(e)
 
             if "pseudo" in error_message.lower():
                 raise UserAlreadyExistsError(utilisateur.pseudo) from None
             if "mail" in error_message.lower():
                 raise MailAlreadyExistsError(utilisateur.mail) from None
-            # Cas générique si on ne peut pas identifier la colonne
+            # Cas générique si on ne peut pas identifier
             raise DAOError from None
 
         except Exception as e:
@@ -108,7 +113,7 @@ class UtilisateurDAO(metaclass=Singleton):
                 )
                 res = cursor.fetchone()
         except Exception as e:
-            logging.info(e)
+            raise DAOError from e
 
         utilisateur = None
 
@@ -148,8 +153,7 @@ class UtilisateurDAO(metaclass=Singleton):
                 )
                 res = cursor.rowcount
         except Exception as e:
-            logging.info("Erreur lors de la suppression du compte : %s", e)
-            raise DAOError("Impossible de supprimer le compte") from e
+            raise AccountDeletionError from e
         return res > 0
 
     def read(self, id_utilisateur: int) -> User | None:
@@ -180,9 +184,9 @@ class UtilisateurDAO(metaclass=Singleton):
                     mot_de_passe_hashed=row["mot_de_passe"],
                     date_inscription=row["date_inscription"].isoformat() if row["date_inscription"] else None,  # ✅ AJOUTÉ
                 )
-            return None
         except DBError as exc:
             raise DAOError from exc
+        return None
 
     def recuperer_par_pseudo(self, pseudo: str) -> User | None:
         """Récupérer le mot de passe hashé et le pseudo d'un utilisateur par son pseudo.
@@ -214,8 +218,7 @@ class UtilisateurDAO(metaclass=Singleton):
                 )
                 res = cursor.fetchone()
         except Exception as e:
-            logging.info(e)
-            raise
+            raise DAOError from e
 
         utilisateur = None
         if res:
@@ -275,8 +278,7 @@ class UtilisateurDAO(metaclass=Singleton):
                     return result["exists"]
                 return False
         except Exception as e:
-            logging.exception("Erreur lors de la vérification de l'email")
-            raise DAOError("Erreur lors de la vérification de l'email") from e
+            raise DAOError from e
 
     @log
     def update_mot_de_passe(self, mdps: UserUpdatePassword) -> bool:
@@ -313,8 +315,7 @@ class UtilisateurDAO(metaclass=Singleton):
                 )
                 return cursor.rowcount > 0
         except Exception as e:
-            logging.exception("Erreur lors de la mise à jour du mot de passe : %s", e)
-            raise DAOError("Impossible de mettre à jour le mot de passe") from e
+            raise DAOError from e
 
     @log
     def update_pseudo(self, ancien_pseudo: str, nouveau_pseudo: str) -> bool:
@@ -356,9 +357,8 @@ class UtilisateurDAO(metaclass=Singleton):
                 return cursor.rowcount > 0
         except UniqueViolation:
             raise UserAlreadyExistsError(nouveau_pseudo) from None
-        except Exception as e:
-            logging.exception("Erreur lors de la mise à jour du pseudo : %s", e)
-            raise DAOError("Impossible de mettre à jour le pseudo") from e
+        except DBError as e:
+            raise PseudoChangingError from e
 
     @log
     def get_date_inscription(self, pseudo: str) -> str | None:
@@ -400,5 +400,4 @@ class UtilisateurDAO(metaclass=Singleton):
                     return date_obj.isoformat()  # Si c'est déjà une date
                 return None
         except Exception as e:
-            logging.exception("Erreur lors de la récupération de la date d'inscription : %s", e)
-            raise DAOError("Impossible de récupérer la date d'inscription") from e
+            raise DAOError from e

@@ -2,6 +2,8 @@
 sur la table cocktail dans la base de données.
 """
 
+from psycopg2 import Error as DBError
+
 from src.business_object.cocktail import Cocktail
 from src.dao.db_connection import DBConnection
 from src.utils.exceptions import DAOError
@@ -124,9 +126,9 @@ class CocktailDAO(metaclass=Singleton):
 
                 return cursor.fetchall()
 
-        except Exception as e:
+        except DBError as e:
             logging.exception("Erreur lors de la récupération des cocktails avec ingrédients")
-            raise DAOError from e
+            raise DAOError(message=None) from e
 
     def get_cocktails_quasi_realisables(
         self,
@@ -177,6 +179,6 @@ class CocktailDAO(metaclass=Singleton):
 
                 return cursor.fetchall()
 
-        except Exception as e:
+        except DBError as e:
             logging.exception("Erreur lors de la récupération des données pour cocktails quasi-réalisables")
-            raise DAOError from e
+            raise DAOError(message=None) from e

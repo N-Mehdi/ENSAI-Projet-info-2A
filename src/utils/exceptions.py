@@ -1,4 +1,4 @@
-"""Classe pour les exceptions."""
+"""Classe pour les exceptions personnalisées."""
 
 
 class DAOError(Exception):
@@ -31,6 +31,26 @@ class ServiceError(Exception):
         if message is None:
             message = "Something went wrong in the Service."
         super().__init__(message)
+
+
+class PseudoChangingError(Exception):
+    """doc."""
+
+    def __init__(self, ancien_pseudo: str, nouveau_pseudo: str) -> None:
+        """Doc."""
+        if ancien_pseudo is None:
+            f"Le pseudo '{nouveau_pseudo}' est déjà utilisé"
+        if ancien_pseudo and nouveau_pseudo:
+            message = f"Impossible de mettre à jour le pseudo {ancien_pseudo} en {nouveau_pseudo}."
+        super().__init__(message)
+
+
+class AccountDeletionError(Exception):
+    """doc."""
+
+    def __init__(self, pseudo: str | None = None) -> None:
+        """Itilializes an AccountDeletionError."""
+        super().__init__(f"Impossible de supprimer le compte : {pseudo}")
 
 
 class UserAlreadyExistsError(Exception):
@@ -125,19 +145,24 @@ class IngredientNotFoundError(Exception):
         self.nom_ingredient = nom_ingredient
         self.suggestions = suggestions or []
 
-        message = f"Ingrédient '{nom_ingredient}' non trouvé."
+        if not nom_ingredient and not suggestions:
+            message = "Ingrédient non trouvé dans le stock"
+        if self.nom_ingredient:
+            message = f"Ingrédient '{nom_ingredient}' non trouvé."
         if self.suggestions:
             message += f" Vouliez-vous dire : {', '.join(self.suggestions[:3])} ?"
-
         super().__init__(message)
 
 
 class InvalidQuantityError(StockError):
     """Exception levée quand la quantité est invalide."""
 
-    def __init__(self, quantite: float) -> None:
+    def __init__(self, quantite: float, quantite_actuelle: float) -> None:
         """Initialize InvalidQuantityError."""
-        super().__init__(f"Quantité invalide : {quantite}. La quantité doit être > 0")
+        if not quantite_actuelle:
+            super().__init__(f"Quantité invalide : {quantite}. La quantité doit être > 0")
+        if quantite and quantite_actuelle:
+            super().__init__(f"Impossible de retirer {quantite} (quantité disponible : {quantite_actuelle})")
 
 
 class InsufficientQuantityError(StockError):
@@ -223,8 +248,12 @@ class PermissionDeniedError(Exception):
         # pour avoir une vrai Exception python avec le message personnalisé
 
 
-class InvalidBirthDateError(ServiceError):
-    """Date de naissance invalide."""
+class InvalidBirthDateError(Exception):
+    """Erreur indiquant que la date de naissance de l'utilisateur est invalide."""
+
+    def __init__(self, message: str | None = None) -> None:
+        """Initialize InvalidBirthdayError."""
+        super().__init__(message)
 
 
 class UniteNotFoundError(Exception):
@@ -232,6 +261,15 @@ class UniteNotFoundError(Exception):
 
     def __init__(self, abbreviation: str) -> None:
         """Initialize UniteNotFoundError."""
-        msg = f"Unité '{abbreviation}' non trouvée"
-        super().__init__(msg)
+        message = f"Unité '{abbreviation}' non trouvée"
+        super().__init__(message)
         self.abbreviation = abbreviation
+
+
+class CocktailNotTestedError(Exception):
+    """Exception levée quand un cocktail n'est pas dans les cocktails testés."""
+
+    def __init__(self, nom_cocktail: str) -> None:
+        """Initialize CocktailNotTestedError."""
+        message = f"Le cocktail '{nom_cocktail}' n'est pas dans vos cocktails testés!"
+        super().__init__(message)

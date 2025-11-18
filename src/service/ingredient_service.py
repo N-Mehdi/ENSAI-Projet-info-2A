@@ -15,7 +15,7 @@ class IngredientService:
         is_alcoholic = self.dao.is_alcoholic(ingredient_id)
 
         if is_alcoholic is None:
-            raise ValueError(f"Ingrédient avec l'ID {ingredient_id} introuvable")
+            raise ValueError(message=f"Ingrédient avec l'ID {ingredient_id} introuvable")
 
         return {
             "ingredient_id": ingredient_id,
@@ -28,7 +28,7 @@ class IngredientService:
         is_alcoholic = self.dao.is_alcoholic_by_name(ingredient_name)
 
         if is_alcoholic is None:
-            raise ValueError(f"Ingrédient '{ingredient_name}' introuvable")
+            raise ValueError(message=f"Ingrédient '{ingredient_name}' introuvable")
 
         return {
             "ingredient_name": ingredient_name,

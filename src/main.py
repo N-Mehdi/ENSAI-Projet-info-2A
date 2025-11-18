@@ -1,4 +1,4 @@
-"""doc."""
+"""Point d'entrée principal pour l'application FastAPI."""
 
 import sys
 from pathlib import Path

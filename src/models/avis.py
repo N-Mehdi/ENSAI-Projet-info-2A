@@ -1,7 +1,8 @@
-"""doc."""
+"""Modèles pydantic pour l'avis."""
+
 from datetime import datetime
 
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, Field
 
 
 class AvisCreate(BaseModel):
@@ -26,19 +27,6 @@ class AvisCreate(BaseModel):
         description="Commentaire sur le cocktail (max 1000 caractères)",
         example="Excellent cocktail, très rafraîchissant !",
     )
-
-    @field_validator("commentaire")
-    @classmethod
-    def commentaire_not_empty_if_present(cls, v):
-        """Si un commentaire est fourni, il ne doit pas être vide."""
-        if v is not None and not v.strip():
-            raise ValueError("Le commentaire ne peut pas être vide")
-        return v.strip() if v else None
-
-    def model_post_init(self, __context):
-        """Validation : au moins note OU commentaire doit être fourni."""
-        if self.note is None and self.commentaire is None:
-            raise ValueError("Au moins la note ou le commentaire doit être renseigné")
 
 
 class AvisResponse(BaseModel):

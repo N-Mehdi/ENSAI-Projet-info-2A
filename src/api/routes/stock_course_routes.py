@@ -19,7 +19,7 @@ service = StockCourseService()
 
 @router.post(
     "/ajouter",
-    summary="➕  Ajouter un ingrédient à mon stock",
+    summary=" +  Ajouter un ingrédient à mon stock",
     description="""
 Ajoute ou met à jour un ingrédient dans le stock de l'utilisateur connecté.
 
@@ -117,7 +117,6 @@ def add_to_stock(
             quantite=item.quantite,
             abbreviation_unite=item.unite,
         )
-        return {"status": "success", "message": message}
 
     except InvalidQuantityError as e:
         raise HTTPException(
@@ -148,6 +147,7 @@ def add_to_stock(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Erreur interne : {e!s}",
         ) from e
+    return {"status": "success", "message": message}
 
 
 @router.get(
@@ -175,7 +175,6 @@ def get_my_stock(
             id_utilisateur=current_user.id_utilisateur,
             only_available=only_available,
         )
-        return stock
 
     except ServiceError as e:
         raise HTTPException(
@@ -187,6 +186,7 @@ def get_my_stock(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Erreur interne : {e!s}",
         ) from e
+    return stock
 
 
 @router.get(
@@ -223,8 +223,6 @@ def get_my_ingredient(
                 detail=f"L'ingrédient '{nom_ingredient}' n'est pas dans votre stock",
             )
 
-        return item
-
     except HTTPException:
         raise
     except IngredientNotFoundError as e:
@@ -246,11 +244,12 @@ def get_my_ingredient(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Erreur interne : {e!s}",
         ) from e
+    return item
 
 
 @router.delete(
     "/retirer",
-    summary="➖ Retirer une quantité d'un ingrédient",
+    summary=" - Retirer une quantité d'un ingrédient",
     description="""
 Retire une quantité spécifique d'un ingrédient du stock.
 
@@ -282,7 +281,6 @@ def remove_quantity_from_stock(
             nom_ingredient=item.nom_ingredient,
             quantite=item.quantite,
         )
-        return {"status": "success", "message": message}
 
     except InvalidQuantityError as e:
         raise HTTPException(
@@ -317,6 +315,7 @@ def remove_quantity_from_stock(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Erreur interne : {e!s}",
         ) from e
+    return {"status": "success", "message": message}
 
 
 @router.delete(
@@ -349,7 +348,6 @@ def delete_ingredient_completely(
             id_utilisateur=current_user.id_utilisateur,
             nom_ingredient=nom_ingredient,
         )
-        return {"status": "success", "message": message}
 
     except IngredientNotFoundError as e:
         raise HTTPException(
@@ -370,6 +368,8 @@ def delete_ingredient_completely(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Erreur interne : {e!s}",
         ) from e
+
+    return {"status": "success", "message": message}
 
 
 @router.get(

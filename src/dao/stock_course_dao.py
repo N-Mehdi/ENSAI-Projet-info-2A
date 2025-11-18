@@ -3,7 +3,7 @@ Class dao du business object Stock.
 """
 
 from dao.db_connection import DBConnection
-from src.utils.exceptions import DAOError
+from src.utils.exceptions import DAOError, IngredientNotFoundError, InvalidQuantityError
 from src.utils.log_decorator import log, logging
 from utils.singleton import Singleton
 
@@ -196,21 +196,20 @@ class StockCourseDAO(metaclass=Singleton):
 
             row = cursor.fetchone()
             if not row:
-                raise ValueError("Ingrédient non trouvé dans le stock")
+                raise IngredientNotFoundError
 
             # Convertir Decimal en float
             quantite_actuelle = float(row["quantite"])
 
             # Vérifier que la quantité à retirer n'est pas supérieure à la quantité actuelle
             if quantite > quantite_actuelle:
-                raise ValueError(
-                    f"Impossible de retirer {quantite} (quantité disponible : {quantite_actuelle})",
-                )
+                raise InvalidQuantityError(quantite, quantite_actuelle)
 
             nouvelle_quantite = quantite_actuelle - quantite
 
             # Si la nouvelle quantité est 0 (ou très proche de 0), supprimer la ligne
-            if nouvelle_quantite < 0.0001:  # Tolérance pour les arrondis flottants
+            presque_zero = 0.0001
+            if nouvelle_quantite < presque_zero:  # Tolérance pour les arrondis flottants
                 cursor.execute(
                     """
                     DELETE FROM stock
@@ -383,7 +382,7 @@ class StockCourseDAO(metaclass=Singleton):
 
         except Exception as e:
             logging.exception("Erreur lors de la récupération de l'ID de l'unité")
-            raise DAOError from e
+            raise DAOError(message=None) from e
 
     @staticmethod
     def set_stock_item(

@@ -15,25 +15,25 @@ cocktail_service = CocktailService(cocktail_dao=CocktailDAO())
 
 
 @router.get("/sequence/{sequence}")
-def rechercher_cocktail_par_sequence_debut(sequence: str, max_resultats: int = 10):
+def rechercher_cocktail_par_sequence_debut(sequence: str, max_resultats: int = 10) -> dict:
     """Récupère les cocktails qui commencent par une séquence donnée.
        (dans la limite de max_resultats).
 
     Parameters
     ----------
-    sequence : str \n
+    sequence : str
         Une chaîne de caractères.
-    max_resultats : int \n
+    max_resultats : int
         Le nombre maximal de cocktails à récupérer.
 
     Returns
     -------
-    dict\n
+    dict
         Dictionnaire contenant la liste des cocktails, leur nombre et la séquence en question.
 
     Raises
     ------
-    HTTPException\n
+    HTTPException
         - 400 si la séquence n'est pas valide
         (pas une chaîne de caractères, vide, ou None)
         - 400 si max_resultats n'est pas un entier supérieur ou égal à 1
@@ -72,7 +72,7 @@ def rechercher_cocktail_par_sequence_debut(sequence: str, max_resultats: int = 1
 
         if not cocktails:
             # Si aucun cocktail n'est trouvé, renvoyer une erreur 404
-            raise LookupError(f"Aucun cocktail trouvé pour la séquence '{sequence}'")
+            raise LookupError(message=f"Aucun cocktail trouvé pour la séquence '{sequence}'")
 
         # Si des cocktails sont trouvés, les formater en dictionnaire
         cocktails_dict = [
@@ -98,33 +98,33 @@ def rechercher_cocktail_par_sequence_debut(sequence: str, max_resultats: int = 1
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=str(e),
-        )
+        ) from e
 
     except Exception as e:
         # Erreurs serveur
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Erreur serveur: {e!s}",
-        )
+        ) from e
 
 
 @router.get("/nom/{nom}")
-def rechercher_cocktail_par_nom(nom: str):
+def rechercher_cocktail_par_nom(nom: str) -> dict:
     """Récupère tous le cocktail via son nom.
 
     Parameters
     ----------
-    nom : str \n
+    nom : str
         Le nom du cocktail
 
     Returns
     -------
-    Cocktail\n
+    Cocktail
         Le cocktail en question
 
     Raises
     ------
-    HTTPException\n
+    HTTPException
         - 404 si le cocktail n'est pas trouvé
         - 500 en cas d'erreur serveur.
 
@@ -141,26 +141,24 @@ def rechercher_cocktail_par_nom(nom: str):
             "image": cocktail.image,
         }
 
-        return cocktail_json
-
     except LookupError as e:
         # Cas où le cocktail n'est pas trouvé
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=str(e),
-        )
+        ) from e
 
     except Exception as e:
         # Cas pour toutes les autres erreurs
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Erreur serveur: {e!s}",
-        )
+        ) from e
+    return cocktail_json
 
 
 @router.get(
     "/realisables",
-    response_model=dict,
     status_code=status.HTTP_200_OK,
     summary="Récupérer les cocktails réalisables",
 )
@@ -180,7 +178,6 @@ def get_cocktails_realisables(
 
 @router.get(
     "/quasi-realisables",
-    response_model=dict,
     status_code=status.HTTP_200_OK,
     summary="🔍 Cocktails presque réalisables",
     description="""

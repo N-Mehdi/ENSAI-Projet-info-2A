@@ -74,7 +74,6 @@ class ListeCourseDAO(metaclass=Singleton):
             if existing:
                 # L'ingrédient existe déjà
                 quantite_existante = float(existing["quantite"])
-                id_unite_existante = existing["id_unite"]
                 type_unite_existante = existing["type_unite"]
                 code_unite_existante = existing["code_unite"]
 
@@ -194,7 +193,7 @@ class ListeCourseDAO(metaclass=Singleton):
             # Retourner l'item mis à jour
             cursor.execute(
                 """
-                SELECT 
+                SELECT
                     lc.id_ingredient,
                     i.nom as nom_ingredient,
                     lc.quantite,

@@ -13,23 +13,13 @@ router = APIRouter(prefix="/cocktails-teste", tags=["Cocktails testés"])
 service = CocktailUtilisateurService()
 
 
-from pydantic import BaseModel, Field
-
-
-class CocktailTesteRequest(BaseModel):
-    """Modèle pour marquer un cocktail comme testé."""
-
-    nom_cocktail: str = Field(..., description="Nom du cocktail", example="Margarita")
-
-
 @router.get(
     "/voir/cocktails-testes",
-    response_model=list[CocktailResponse],
     summary="Récupérer les cocktails testés",
     description="Récupère tous les cocktails testés par l'utilisateur connecté. "
     "L'utilisateur propriétaire est automatiquement récupéré depuis le token JWT.",
 )
-def get_mes_cocktails_testes(current_user: CurrentUser):
+def get_mes_cocktails_testes(current_user: CurrentUser) -> list[CocktailResponse]:
     """Récupère tous les cocktails testés par l'utilisateur connecté."""
     try:
         cocktails = service.get_cocktails_testes(current_user.id_utilisateur)
@@ -48,7 +38,7 @@ def get_mes_cocktails_testes(current_user: CurrentUser):
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Erreur lors de la récupération des cocktails testés : {e!s}",
-        )
+        ) from e
 
 
 @router.post(
@@ -61,7 +51,7 @@ def get_mes_cocktails_testes(current_user: CurrentUser):
 def ajouter_cocktail_teste(
     nom_cocktail: Annotated[str, Query(description="Le nom du cocktail à marquer comme testé")],
     current_user: CurrentUser,
-):
+) -> dict:
     """Ajoute un cocktail aux cocktails testés pour l'utilisateur connecté."""
     try:
         result = service.ajouter_cocktail_teste(
@@ -85,12 +75,12 @@ def ajouter_cocktail_teste(
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=str(e),
-        )
+        ) from e
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Erreur lors de l'ajout : {e!s}",
-        )
+        ) from e
 
 
 @router.delete(
@@ -103,7 +93,7 @@ def ajouter_cocktail_teste(
 def retirer_cocktail_teste(
     nom_cocktail: Annotated[str, Query(description="Le nom du cocktail dont retirer le statut testé")],
     current_user: CurrentUser,
-):
+) -> dict:
     """Retire un cocktail des cocktails testés pour l'utilisateur connecté."""
     try:
         result = service.retirer_cocktail_teste(
@@ -120,9 +110,9 @@ def retirer_cocktail_teste(
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=str(e),
-        )
+        ) from e
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Erreur lors du retrait : {e!s}",
-        )
+        ) from e

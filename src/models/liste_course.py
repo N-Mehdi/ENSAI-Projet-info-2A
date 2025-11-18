@@ -1,4 +1,4 @@
-"""doc."""
+"""Modèles Pydantic pour la liste de course."""
 
 from pydantic import BaseModel, Field
 

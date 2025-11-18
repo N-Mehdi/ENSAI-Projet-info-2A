@@ -1,4 +1,4 @@
-"""doc."""
+"""Module qui gère la conversion des unités de la base de données."""
 
 from typing import ClassVar, Literal
 

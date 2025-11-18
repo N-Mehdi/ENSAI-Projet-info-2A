@@ -1,4 +1,4 @@
-"""Module contenant les fonctions sur le hachage et le token."""
+"""Module contenant pour le hachage du mot de passe et la création de token JWT."""
 
 import hashlib
 from datetime import UTC, datetime, timedelta

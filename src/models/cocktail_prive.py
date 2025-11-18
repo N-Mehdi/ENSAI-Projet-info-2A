@@ -1,4 +1,4 @@
-"""doc."""
+"""Modèles pydantic pour les cocktails privés."""
 
 from pydantic import BaseModel, Field
 

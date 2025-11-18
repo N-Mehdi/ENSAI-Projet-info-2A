@@ -12,7 +12,7 @@ service = AvisService()
 
 @router.post(
     "/favoris/{nom_cocktail}",
-    summary="➕ Ajouter aux favoris",
+    summary=" + Ajouter aux favoris",
     description="""
 Ajoute un cocktail aux favoris.
 
@@ -29,7 +29,7 @@ Vous pourrez ajouter note/commentaire plus tard avec POST /add.
 def add_favoris(
     nom_cocktail: str,
     current_user: CurrentUser,
-):
+) -> dict:
     """Ajoute un cocktail aux favoris."""
     try:
         return service.add_favoris(
@@ -44,9 +44,9 @@ def add_favoris(
                 "cocktail_recherche": e.nom_cocktail,
                 "suggestions": e.suggestions,
             },
-        )
+        ) from e
     except ServiceError as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        raise HTTPException(status_code=400, detail=str(e)) from e
 
 
 @router.get(
@@ -66,7 +66,7 @@ Récupère la liste de mes cocktails favoris (format simplifié).
 ```
 """,
 )
-def get_mes_favoris(current_user: CurrentUser):
+def get_mes_favoris(current_user: CurrentUser) -> dict:
     """Récupère les cocktails favoris (format simplifié)."""
     try:
         return service.get_mes_favoris_simple(
@@ -74,7 +74,7 @@ def get_mes_favoris(current_user: CurrentUser):
             pseudo=current_user.pseudo,
         )
     except ServiceError as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        raise HTTPException(status_code=400, detail=str(e)) from e
 
 
 @router.delete(
@@ -93,20 +93,19 @@ Retire un cocktail des favoris.
 def remove_favoris(
     nom_cocktail: str,
     current_user: CurrentUser,
-):
+) -> dict:
     """Retire un cocktail des favoris."""
     try:
         message = service.remove_favoris(
             id_utilisateur=current_user.id_utilisateur,
             nom_cocktail=nom_cocktail,
         )
-        return {"status": "success", "message": message}
 
-    except AvisNotFoundError:
+    except AvisNotFoundError as e:
         raise HTTPException(
             status_code=404,
             detail=f"Le cocktail '{nom_cocktail}' n'est pas dans vos favoris",
-        )
+        ) from e
     except CocktailNotFoundError as e:
         raise HTTPException(
             status_code=404,
@@ -115,6 +114,7 @@ def remove_favoris(
                 "cocktail_recherche": e.nom_cocktail,
                 "suggestions": e.suggestions,
             },
-        )
+        ) from e
     except ServiceError as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        raise HTTPException(status_code=400, detail=str(e)) from e
+    return {"status": "success", "message": message}

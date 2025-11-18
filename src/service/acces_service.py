@@ -29,25 +29,22 @@ class AccesService:
 
     def grant_access_to_user(self, owner_pseudo: str, user_pseudo: str) -> AccessResponse:
         """Donne l'accès à un utilisateur pour voir les cocktails privés."""
-        # Vérifier que les deux utilisateurs existent
         owner_id = self.dao.get_user_id_by_pseudo(owner_pseudo)
         if owner_id is None:
-            raise UserNotFoundError(f"Utilisateur propriétaire '{owner_pseudo}' introuvable")
+            raise UserNotFoundError(message=f"Utilisateur propriétaire '{owner_pseudo}' introuvable")
 
         user_id = self.dao.get_user_id_by_pseudo(user_pseudo)
         if user_id is None:
-            raise UserNotFoundError(f"Utilisateur '{user_pseudo}' introuvable")
+            raise UserNotFoundError(message=f"Utilisateur '{user_pseudo}' introuvable")
 
-        # Vérifier qu'on ne se donne pas accès à soi-même
         if owner_id == user_id:
-            raise SelfAccessError("Vous ne pouvez pas vous donner accès à vous-même")
+            raise SelfAccessError(message="Vous ne pouvez pas vous donner accès à vous-même")
 
-        # Donner l'accès
         created = self.dao.grant_access(owner_id, user_id)
 
         if not created:
             raise AccessAlreadyExistsError(
-                f"L'utilisateur '{user_pseudo}' a déjà accès aux cocktails de '{owner_pseudo}'",
+                message=f"L'utilisateur '{user_pseudo}' a déjà accès aux cocktails de '{owner_pseudo}'",
             )
 
         return AccessResponse(
@@ -59,21 +56,19 @@ class AccesService:
 
     def revoke_access_from_user(self, owner_pseudo: str, user_pseudo: str) -> AccessResponse:
         """Retire l'accès d'un utilisateur."""
-        # Vérifier que les deux utilisateurs existent
         owner_id = self.dao.get_user_id_by_pseudo(owner_pseudo)
         if owner_id is None:
-            raise UserNotFoundError(f"Utilisateur propriétaire '{owner_pseudo}' introuvable")
+            raise UserNotFoundError(message=f"Utilisateur propriétaire '{owner_pseudo}' introuvable")
 
         user_id = self.dao.get_user_id_by_pseudo(user_pseudo)
         if user_id is None:
-            raise UserNotFoundError(f"Utilisateur '{user_pseudo}' introuvable")
+            raise UserNotFoundError(message=f"Utilisateur '{user_pseudo}' introuvable")
 
-        # Retirer l'accès
         removed = self.dao.revoke_access(owner_id, user_id)
 
         if not removed:
             raise AccessNotFoundError(
-                f"L'utilisateur '{user_pseudo}' n'a pas d'accès aux cocktails de '{owner_pseudo}'",
+                message=f"L'utilisateur '{user_pseudo}' n'a pas d'accès aux cocktails de '{owner_pseudo}'",
             )
 
         return AccessResponse(
@@ -87,7 +82,7 @@ class AccesService:
         """Récupère la liste des utilisateurs ayant accès aux cocktails privés."""
         owner_id = self.dao.get_user_id_by_pseudo(owner_pseudo)
         if owner_id is None:
-            raise UserNotFoundError(f"Utilisateur '{owner_pseudo}' introuvable")
+            raise UserNotFoundError(message=f"Utilisateur '{owner_pseudo}' introuvable")
 
         users = self.dao.get_users_with_access(owner_id)
 
@@ -99,25 +94,21 @@ class AccesService:
 
     def view_private_cocktails(self, owner_pseudo: str, viewer_pseudo: str) -> PrivateCocktailsList:
         """Permet à un utilisateur de voir les cocktails privés d'un autre utilisateur."""
-        # Vérifier que les deux utilisateurs existent
         owner_id = self.dao.get_user_id_by_pseudo(owner_pseudo)
         if owner_id is None:
-            raise UserNotFoundError(f"Utilisateur '{owner_pseudo}' introuvable")
+            raise UserNotFoundError(message=f"Utilisateur '{owner_pseudo}' introuvable")
 
         viewer_id = self.dao.get_user_id_by_pseudo(viewer_pseudo)
         if viewer_id is None:
-            raise UserNotFoundError(f"Utilisateur '{viewer_pseudo}' introuvable")
+            raise UserNotFoundError(message=f"Utilisateur '{viewer_pseudo}' introuvable")
 
-        # Vérifier l'accès
         if not self.dao.has_access(owner_id, viewer_id):
             raise AccessDeniedError(
-                f"Vous n'avez pas accès aux cocktails privés de '{owner_pseudo}'",
+                message=f"Vous n'avez pas accès aux cocktails privés de '{owner_pseudo}'",
             )
 
-        # Récupérer les cocktails
         cocktails_data = self.dao.get_private_cocktails(owner_id)
 
-        # Convertir en modèles Pydantic
         cocktails = [
             PrivateCocktailDetail(
                 id_cocktail=c["id_cocktail"],
@@ -141,17 +132,13 @@ class AccesService:
         """Ajoute un cocktail à la liste privée."""
         owner_id = self.dao.get_user_id_by_pseudo(owner_pseudo)
         if owner_id is None:
-            raise UserNotFoundError(f"Utilisateur '{owner_pseudo}' introuvable")
-
-        # Vérifier que le cocktail existe
-        # On pourrait faire une requête pour vérifier, mais add_cocktail_to_private_list
-        # gérera l'erreur de clé étrangère si le cocktail n'existe pas
+            raise UserNotFoundError(message=f"Utilisateur '{owner_pseudo}' introuvable")
 
         added = self.dao.add_cocktail_to_private_list(owner_id, cocktail_id)
 
         if not added:
             raise AccessAlreadyExistsError(
-                f"Le cocktail (ID: {cocktail_id}) est déjà dans votre liste privée",
+                message=f"Le cocktail (ID: {cocktail_id}) est déjà dans votre liste privée",
             )
 
         return AccessResponse(
@@ -164,17 +151,17 @@ class AccesService:
         """Ajoute un cocktail à la liste privée en utilisant son nom."""
         owner_id = self.dao.get_user_id_by_pseudo(owner_pseudo)
         if owner_id is None:
-            raise UserNotFoundError(f"Utilisateur '{owner_pseudo}' introuvable")
+            raise UserNotFoundError(message=f"Utilisateur '{owner_pseudo}' introuvable")
 
         cocktail_id = self.dao_cocktail.get_cocktail_id_by_name(cocktail_name)
         if cocktail_id is None:
-            raise CocktailNotFoundError(f"Cocktail '{cocktail_name}' introuvable")
+            raise CocktailNotFoundError(message=f"Cocktail '{cocktail_name}' introuvable")
 
         added = self.dao.add_cocktail_to_private_list(owner_id, cocktail_id)
 
         if not added:
             raise AccessAlreadyExistsError(
-                f"Le cocktail '{cocktail_name}' est déjà dans votre liste privée",
+                message=f"Le cocktail '{cocktail_name}' est déjà dans votre liste privée",
             )
 
         return AccessResponse(
@@ -187,13 +174,13 @@ class AccesService:
         """Retire un cocktail de la liste privée."""
         owner_id = self.dao.get_user_id_by_pseudo(owner_pseudo)
         if owner_id is None:
-            raise UserNotFoundError(f"Utilisateur '{owner_pseudo}' introuvable")
+            raise UserNotFoundError(message=f"Utilisateur '{owner_pseudo}' introuvable")
 
         removed = self.dao.remove_cocktail_from_private_list(owner_id, cocktail_id)
 
         if not removed:
             raise AccessNotFoundError(
-                f"Le cocktail (ID: {cocktail_id}) n'est pas dans votre liste privée",
+                message=f"Le cocktail (ID: {cocktail_id}) n'est pas dans votre liste privée",
             )
 
         return AccessResponse(
@@ -206,17 +193,17 @@ class AccesService:
         """Retire un cocktail de la liste privée en utilisant son nom."""
         owner_id = self.dao.get_user_id_by_pseudo(owner_pseudo)
         if owner_id is None:
-            raise UserNotFoundError(f"Utilisateur '{owner_pseudo}' introuvable")
+            raise UserNotFoundError(message=f"Utilisateur '{owner_pseudo}' introuvable")
 
         cocktail_id = self.dao_cocktail.get_cocktail_id_by_name(cocktail_name)
         if cocktail_id is None:
-            raise CocktailNotFoundError(f"Cocktail '{cocktail_name}' introuvable")
+            raise CocktailNotFoundError(message=f"Cocktail '{cocktail_name}' introuvable")
 
         removed = self.dao.remove_cocktail_from_private_list(owner_id, cocktail_id)
 
         if not removed:
             raise AccessNotFoundError(
-                f"Le cocktail '{cocktail_name}' n'est pas dans votre liste privée",
+                message=f"Le cocktail '{cocktail_name}' n'est pas dans votre liste privée",
             )
 
         return AccessResponse(

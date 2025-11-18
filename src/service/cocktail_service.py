@@ -1,9 +1,10 @@
 """doc."""
 
+from src.business_object.cocktail import Cocktail
 from src.dao.cocktail_dao import CocktailDAO
 from src.dao.stock_course_dao import StockCourseDAO
 from src.utils.conversion_unite import UnitConverter
-from src.utils.exceptions import DAOError, ServiceError
+from src.utils.exceptions import DAOError, EmptyFieldError, ServiceError
 
 
 class CocktailService:
@@ -14,7 +15,7 @@ class CocktailService:
         self.cocktail_dao = cocktail_dao
         self.stock_dao = StockCourseDAO()
 
-    def rechercher_cocktail_par_nom(self, nom: str):
+    def rechercher_cocktail_par_nom(self, nom: str) -> Cocktail:
         """Recherche un cocktail par son nom.
 
         Parameters
@@ -38,15 +39,15 @@ class CocktailService:
 
         """
         if not nom:
-            raise ValueError("Le nom du cocktail doit être fourni.")
+            raise EmptyFieldError(nom)
 
         if not isinstance(nom, str):
-            raise TypeError("Le nom du cocktail doit être une chaîne de caractères.")
+            raise TypeError(message="Le nom du cocktail doit être une chaîne de caractères.")
 
         cocktail = self.cocktail_dao.rechercher_cocktail_par_nom(nom)
 
         if cocktail is None:
-            raise LookupError(f"Aucun cocktail trouvé pour le nom '{nom}'")
+            raise LookupError(message=f"Aucun cocktail trouvé pour le nom '{nom}'")
 
         return cocktail
 
@@ -82,16 +83,16 @@ class CocktailService:
 
         """
         if not sequence:
-            raise ValueError("La séquence doit être fournie.")
+            raise EmptyFieldError(sequence)
 
         if not isinstance(sequence, str):
-            raise TypeError("L'argument 'sequence' doit être une chaîne de caractères.")
+            raise TypeError(message="L'argument 'sequence' doit être une chaîne de caractères.")
 
         if not isinstance(max_resultats, int):
-            raise TypeError("L'argument 'max_resultats' doit être un entier.")
+            raise TypeError(message="L'argument 'max_resultats' doit être un entier.")
 
         if max_resultats < 1:
-            raise ValueError("L'argument 'max_resultats' doit être supérieur ou égal à 1.")
+            raise ValueError(message="L'argument 'max_resultats' doit être supérieur ou égal à 1.")
 
         cocktails = self.cocktail_dao.rechercher_cocktail_par_sequence_debut(
             sequence,
@@ -100,7 +101,7 @@ class CocktailService:
 
         if not cocktails:
             raise LookupError(
-                f"Aucun cocktail trouvé pour la séquence '{sequence}'",
+                message=f"Aucun cocktail trouvé pour la séquence '{sequence}'",
             )
 
         return cocktails
@@ -131,12 +132,8 @@ class CocktailService:
 
         """
         try:
-            from src.dao.stock_course_dao import StockCourseDAO
-
-            stock_dao = StockCourseDAO()
-
-            # Étape 1 : Récupérer le stock de l'utilisateur (seulement disponibles)
-            stock_rows = stock_dao.get_stock(id_utilisateur, only_available=True)
+            # Étape 1 : Récupérer le stock de l'utilisateur
+            stock_rows = self.stock_dao.get_stock(id_utilisateur, only_available=True)
 
             # Étape 2 : Normaliser le stock (conversion en ml ou g)
             stock_normalise = {}
@@ -206,10 +203,9 @@ class CocktailService:
                     if id_ingredient not in stock_normalise:
                         # Ingrédient manquant dans le stock
                         cocktails_dict[id_cocktail]["realisable"] = False
-                    elif qte_requise_normalisee is not None:
                         # Vérifier la quantité
-                        if stock_normalise[id_ingredient] < qte_requise_normalisee:
-                            cocktails_dict[id_cocktail]["realisable"] = False
+                    if stock_normalise[id_ingredient] < qte_requise_normalisee and qte_requise_normalisee is not None:
+                        cocktails_dict[id_cocktail]["realisable"] = False
 
             # Étape 5 : Filtrer et formater les cocktails réalisables
             cocktails_realisables = [data["info"] for data in cocktails_dict.values() if data["realisable"]]
@@ -220,9 +216,9 @@ class CocktailService:
             }
 
         except DAOError as e:
-            raise ServiceError(f"Erreur lors de la récupération des cocktails réalisables : {e}") from e
+            raise ServiceError(message=f"Erreur lors de la récupération des cocktails réalisables : {e}") from e
         except Exception as e:
-            raise ServiceError(f"Erreur inattendue : {e}") from e
+            raise ServiceError(message=f"Erreur inattendue : {e}") from e
 
     def get_cocktails_quasi_realisables(
         self,
@@ -256,107 +252,11 @@ class CocktailService:
 
         """
         try:
-            # Récupérer les données brutes
             rows = self.cocktail_dao.get_cocktails_quasi_realisables(id_utilisateur)
-
-            # Grouper par cocktail
-            cocktails_dict = {}
-
-            for row in rows:
-                id_cocktail = row["id_cocktail"]
-
-                # Initialiser le cocktail s'il n'existe pas
-                if id_cocktail not in cocktails_dict:
-                    cocktails_dict[id_cocktail] = {
-                        "info": {
-                            "id_cocktail": id_cocktail,
-                            "nom": row["nom"],
-                            "categorie": row["categorie"],
-                            "verre": row["verre"],
-                            "alcool": row["alcool"],
-                            "image": row["image"],
-                        },
-                        "ingredients_requis": [],
-                        "ingredients_manquants": [],
-                        "total_ingredients": 0,
-                    }
-
-                # Si le cocktail a des ingrédients
-                if row["id_ingredient"]:
-                    cocktails_dict[id_cocktail]["total_ingredients"] += 1
-
-                    id_ingredient = row["id_ingredient"]
-                    nom_ingredient = row["nom_ingredient"]
-                    quantite_requise = float(row["quantite_requise"]) if row["quantite_requise"] else 0
-                    unite_requise = row["unite_requise"]
-                    quantite_stock = float(row["quantite_stock"]) if row["quantite_stock"] else None
-                    unite_stock = row["unite_stock"]
-
-                    # Vérifier la disponibilité avec UnitConverter
-                    ingredient_disponible = False
-
-                    if quantite_stock is not None:
-                        # L'ingrédient est dans le stock
-                        if unite_requise and unite_stock:
-                            # Normaliser les unités
-                            unite_requise_norm = UnitConverter.normalize_unit(unite_requise)
-                            unite_stock_norm = UnitConverter.normalize_unit(unite_stock)
-
-                            if unite_requise_norm == unite_stock_norm:
-                                # Même unité → comparer directement
-                                ingredient_disponible = quantite_stock >= quantite_requise
-                            # Unités différentes → convertir
-                            elif UnitConverter.is_liquid_unit(unite_requise) and UnitConverter.is_liquid_unit(unite_stock):
-                                # Liquides → convertir en ml
-                                ml_requis = UnitConverter.convert_to_ml(quantite_requise, unite_requise)
-                                ml_stock = UnitConverter.convert_to_ml(quantite_stock, unite_stock)
-
-                                if ml_requis is not None and ml_stock is not None:
-                                    ingredient_disponible = ml_stock >= ml_requis
-
-                            elif UnitConverter.is_solid_unit(unite_requise) and UnitConverter.is_solid_unit(unite_stock):
-                                # Solides → convertir en g
-                                g_requis = UnitConverter.convert_to_g(quantite_requise, unite_requise)
-                                g_stock = UnitConverter.convert_to_g(quantite_stock, unite_stock)
-
-                                if g_requis is not None and g_stock is not None:
-                                    ingredient_disponible = g_stock >= g_requis
-                        else:
-                            # Pas d'unité → comparer les quantités brutes
-                            ingredient_disponible = quantite_stock >= quantite_requise
-
-                    # Si l'ingrédient manque ou quantité insuffisante
-                    if not ingredient_disponible:
-                        cocktails_dict[id_cocktail]["ingredients_manquants"].append(nom_ingredient)
-
-            # Filtrer et formater les résultats
-            cocktails_quasi_realisables = []
-
-            for data in cocktails_dict.values():
-                nb_manquants = len(data["ingredients_manquants"])
-                nb_total = data["total_ingredients"]
-
-                # Filtrer selon le nombre d'ingrédients manquants
-                if 0 < nb_manquants <= max_ingredients_manquants and nb_total > 0:
-                    pourcentage = round(100.0 * (nb_total - nb_manquants) / nb_total, 2)
-
-                    cocktails_quasi_realisables.append(
-                        {
-                            **data["info"],
-                            "ingredients_manquants": data["ingredients_manquants"],
-                            "nombre_ingredients_manquants": nb_manquants,
-                            "nombre_ingredients_total": nb_total,
-                            "pourcentage_possession": pourcentage,
-                        },
-                    )
-
-            # Trier : d'abord par nb manquants, puis par pourcentage, puis par nom
-            cocktails_quasi_realisables.sort(
-                key=lambda x: (
-                    x["nombre_ingredients_manquants"],
-                    -x["pourcentage_possession"],
-                    x["nom"],
-                ),
+            cocktails_dict = self._build_cocktails_dict(rows)
+            cocktails_quasi_realisables = self._filter_and_format_cocktails(
+                cocktails_dict,
+                max_ingredients_manquants,
             )
 
             return {
@@ -366,6 +266,140 @@ class CocktailService:
             }
 
         except DAOError as e:
-            raise ServiceError(f"Erreur lors de la récupération des cocktails quasi-réalisables : {e}") from e
+            raise ServiceError(message=f"Erreur lors de la récupération des cocktails quasi-réalisables : {e}") from e
         except Exception as e:
-            raise ServiceError(f"Erreur inattendue : {e}") from e
+            raise ServiceError(message=f"Erreur inattendue : {e}") from e
+
+    def _build_cocktails_dict(self, rows: list[dict]) -> dict:
+        """Construit le dictionnaire des cocktails avec leurs ingrédients."""
+        cocktails_dict = {}
+
+        for row in rows:
+            id_cocktail = row["id_cocktail"]
+
+            # Initialiser le cocktail
+            if id_cocktail not in cocktails_dict:
+                cocktails_dict[id_cocktail] = {
+                    "info": {
+                        "id_cocktail": id_cocktail,
+                        "nom": row["nom"],
+                        "categorie": row["categorie"],
+                        "verre": row["verre"],
+                        "alcool": row["alcool"],
+                        "image": row["image"],
+                    },
+                    "ingredients_manquants": [],
+                    "total_ingredients": 0,
+                }
+
+            # Traiter l'ingrédient
+            if row["id_ingredient"]:
+                cocktails_dict[id_cocktail]["total_ingredients"] += 1
+
+                if not self._is_ingredient_available(row):
+                    cocktails_dict[id_cocktail]["ingredients_manquants"].append(row["nom_ingredient"])
+
+        return cocktails_dict
+
+    def _is_ingredient_available(self, row: dict) -> bool:
+        """Vérifie si un ingrédient est disponible en quantité suffisante."""
+        quantite_requise = float(row["quantite_requise"]) if row["quantite_requise"] else 0
+        unite_requise = row["unite_requise"]
+        quantite_stock = float(row["quantite_stock"]) if row["quantite_stock"] else None
+        unite_stock = row["unite_stock"]
+
+        # Pas de stock
+        if quantite_stock is None:
+            return False
+
+        # Pas d'unité définie
+        if not unite_requise or not unite_stock:
+            return quantite_stock >= quantite_requise
+
+        # Normaliser les unités
+        unite_requise_norm = UnitConverter.normalize_unit(unite_requise)
+        unite_stock_norm = UnitConverter.normalize_unit(unite_stock)
+
+        # Même unité
+        if unite_requise_norm == unite_stock_norm:
+            return quantite_stock >= quantite_requise
+
+        # Unités liquides
+        if UnitConverter.is_liquid_unit(unite_requise) and UnitConverter.is_liquid_unit(unite_stock):
+            return self._compare_liquid_quantities(quantite_requise, unite_requise, quantite_stock, unite_stock)
+
+        # Unités solides
+        if UnitConverter.is_solid_unit(unite_requise) and UnitConverter.is_solid_unit(unite_stock):
+            return self._compare_solid_quantities(quantite_requise, unite_requise, quantite_stock, unite_stock)
+
+        # Types incompatibles
+        return False
+
+    def _compare_liquid_quantities(
+        self,
+        quantite_requise: float,
+        unite_requise: str,
+        quantite_stock: float,
+        unite_stock: str,
+    ) -> bool:
+        """Compare deux quantités de liquides en les convertissant en ml."""
+        ml_requis = UnitConverter.convert_to_ml(quantite_requise, unite_requise)
+        ml_stock = UnitConverter.convert_to_ml(quantite_stock, unite_stock)
+
+        if ml_requis is not None and ml_stock is not None:
+            return ml_stock >= ml_requis
+
+        return False
+
+    def _compare_solid_quantities(
+        self,
+        quantite_requise: float,
+        unite_requise: str,
+        quantite_stock: float,
+        unite_stock: str,
+    ) -> bool:
+        """Compare deux quantités de solides en les convertissant en g."""
+        g_requis = UnitConverter.convert_to_g(quantite_requise, unite_requise)
+        g_stock = UnitConverter.convert_to_g(quantite_stock, unite_stock)
+
+        if g_requis is not None and g_stock is not None:
+            return g_stock >= g_requis
+
+        return False
+
+    def _filter_and_format_cocktails(
+        self,
+        cocktails_dict: dict,
+        max_ingredients_manquants: int,
+    ) -> list[dict]:
+        """Filtre et formate les cocktails selon le nombre d'ingrédients manquants."""
+        cocktails_quasi_realisables = []
+
+        for data in cocktails_dict.values():
+            nb_manquants = len(data["ingredients_manquants"])
+            nb_total = data["total_ingredients"]
+
+            # Filtrer selon le nombre d'ingrédients manquants
+            if 0 < nb_manquants <= max_ingredients_manquants and nb_total > 0:
+                pourcentage = round(100.0 * (nb_total - nb_manquants) / nb_total, 2)
+
+                cocktails_quasi_realisables.append(
+                    {
+                        **data["info"],
+                        "ingredients_manquants": data["ingredients_manquants"],
+                        "nombre_ingredients_manquants": nb_manquants,
+                        "nombre_ingredients_total": nb_total,
+                        "pourcentage_possession": pourcentage,
+                    },
+                )
+
+        # Trier
+        cocktails_quasi_realisables.sort(
+            key=lambda x: (
+                x["nombre_ingredients_manquants"],
+                -x["pourcentage_possession"],
+                x["nom"],
+            ),
+        )
+
+        return cocktails_quasi_realisables

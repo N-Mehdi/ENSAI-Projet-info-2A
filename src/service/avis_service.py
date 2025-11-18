@@ -39,10 +39,9 @@ class AvisService:
             Si le cocktail n'existe pas (avec suggestions)
 
         """
-        # Normaliser le nom (Title Case comme dans votre DAO)
+        # Normaliser le nom
         nom_normalized = normalize_ingredient_name(nom_cocktail)
 
-        # Utiliser votre méthode existante
         cocktail = self.cocktail_dao.rechercher_cocktail_par_nom(nom_normalized)
 
         if not cocktail:
@@ -55,7 +54,6 @@ class AvisService:
 
             raise CocktailNotFoundError(nom_normalized, suggestions)
 
-        # Convertir le Cocktail en dict pour compatibilité
         return {
             "id_cocktail": cocktail.id_cocktail,
             "nom": cocktail.nom,
@@ -95,7 +93,6 @@ class AvisService:
         if note is None and commentaire is None:
             raise InvalidAvisError
 
-        # Récupérer le cocktail
         cocktail = self._get_cocktail_by_name(nom_cocktail)
 
         try:
@@ -134,7 +131,7 @@ class AvisService:
                 for row in rows
             ]
         except Exception as e:
-            raise ServiceError(f"Erreur lors de la récupération des avis : {e}")
+            raise ServiceError(message=f"Erreur lors de la récupération des avis : {e}") from e
 
     def get_mes_avis_simple(self, id_utilisateur: int, pseudo: str) -> dict:
         """Récupère tous les avis d'un utilisateur (format simplifié).
@@ -154,8 +151,9 @@ class AvisService:
         """
         try:
             rows = self.avis_dao.get_avis_by_user(id_utilisateur)
+        except Exception as e:
+            raise ServiceError(message=f"Erreur lors de la récupération des avis : {e}") from e
 
-            # Simplifier les données
             avis = [
                 {
                     "nom_cocktail": row["nom_cocktail"],
@@ -169,8 +167,6 @@ class AvisService:
                 "pseudo_utilisateur": pseudo,
                 "avis": avis,
             }
-        except Exception as e:
-            raise ServiceError(f"Erreur lors de la récupération des avis : {e}")
 
     def delete_avis(self, id_utilisateur: int, nom_cocktail: str) -> str:
         """Supprime un avis."""
@@ -182,15 +178,12 @@ class AvisService:
                 id_cocktail=cocktail["id_cocktail"],
             )
 
-            if not success:
-                raise AvisNotFoundError(id_utilisateur, cocktail["nom"])
-
-            return f"Avis supprimé avec succès pour '{cocktail['nom']}'"
-
-        except AvisNotFoundError:
-            raise
         except Exception as e:
-            raise ServiceError(f"Erreur lors de la suppression de l'avis : {e}")
+            raise AvisNotFoundError(id_utilisateur=id_utilisateur, nom_cocktail=nom_cocktail) from e
+        if not success:
+            raise AvisNotFoundError(id_utilisateur, cocktail["nom"])
+
+        return f"Avis supprimé avec succès pour '{cocktail['nom']}'"
 
     def add_favoris(self, id_utilisateur: int, nom_cocktail: str) -> dict:
         """Ajoute un cocktail aux favoris.
@@ -228,7 +221,7 @@ class AvisService:
             }
 
         except Exception as e:
-            raise ServiceError(f"Erreur lors de l'ajout aux favoris : {e}")
+            raise ServiceError(message=f"Erreur lors de l'ajout aux favoris : {e}") from e
 
     def remove_favoris(self, id_utilisateur: int, nom_cocktail: str) -> str:
         """Retire un cocktail des favoris."""
@@ -240,15 +233,14 @@ class AvisService:
                 id_cocktail=cocktail["id_cocktail"],
             )
 
-            if not success:
-                raise AvisNotFoundError(id_utilisateur, cocktail["nom"])
-
-            return f"Cocktail '{cocktail['nom']}' retiré des favoris"
-
         except AvisNotFoundError:
             raise
         except Exception as e:
-            raise ServiceError(f"Erreur lors du retrait des favoris : {e}")
+            raise ServiceError(message=f"Erreur lors du retrait des favoris : {e}") from e
+        if not success:
+            raise AvisNotFoundError(id_utilisateur, cocktail["nom"])
+
+        return f"Cocktail '{cocktail['nom']}' retiré des favoris"
 
     def get_mes_favoris_simple(self, id_utilisateur: int, pseudo: str) -> dict:
         """Récupère les cocktails favoris d'un utilisateur (format simplifié).
@@ -272,12 +264,12 @@ class AvisService:
             # Extraire uniquement les noms des cocktails
             cocktails_favoris = [row["nom_cocktail"] for row in rows]
 
-            return {
-                "pseudo_utilisateur": pseudo,
-                "cocktails_favoris": cocktails_favoris,
-            }
         except Exception as e:
-            raise ServiceError(f"Erreur lors de la récupération des favoris : {e}")
+            raise ServiceError(message=f"Erreur lors de la récupération des favoris : {e}") from e
+        return {
+            "pseudo_utilisateur": pseudo,
+            "cocktails_favoris": cocktails_favoris,
+        }
 
     def get_avis_summary(self, nom_cocktail: str) -> AvisSummary:
         """Récupère un résumé des avis pour un cocktail."""
@@ -286,10 +278,9 @@ class AvisService:
         try:
             result = self.avis_dao.get_avis_summary(cocktail["id_cocktail"])
 
-            if not result:
-                raise ServiceError(f"Impossible de récupérer le résumé pour '{cocktail['nom']}'")
-
-            return AvisSummary(**result)
-
         except Exception as e:
-            raise ServiceError(f"Erreur lors de la récupération du résumé : {e}")
+            raise ServiceError(message=f"Erreur lors de la récupération du résumé : {e}") from e
+        if not result:
+            raise ServiceError(message=f"Impossible de récupérer le résumé pour '{cocktail['nom']}'")
+
+        return AvisSummary(**result)

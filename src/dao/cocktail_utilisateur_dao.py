@@ -2,10 +2,9 @@
 sur la table prive dans la base de données.
 """
 
-
 from business_object.cocktail import Cocktail
 from dao.db_connection import DBConnection
-from src.utils.exceptions import PermissionDeniedError
+from src.utils.exceptions import CocktailNotFoundError, CocktailNotTestedError, PermissionDeniedError
 from utils.log_decorator import log
 from utils.singleton import Singleton
 
@@ -189,7 +188,6 @@ class CocktailUtilisateurDAO(metaclass=Singleton):
         id_utilisateur,
         id_cocktail,
         id_ingredient,
-        quantite,
     ) -> None:
         """Supprimer un ingrédient de la recette privée d'un utilisateur."""
         with DBConnection().connection as connection, connection.cursor() as cursor:
@@ -374,7 +372,7 @@ class CocktailUtilisateurDAO(metaclass=Singleton):
         id_cocktail = self.get_cocktail_id_by_name(nom_cocktail)
 
         if not id_cocktail:
-            raise ValueError(f"Cocktail '{nom_cocktail}' introuvable")
+            raise CocktailNotFoundError(nom_cocktail)
 
         with DBConnection().connection as connection, connection.cursor() as cursor:
             # Vérifier si déjà testé
@@ -431,7 +429,7 @@ class CocktailUtilisateurDAO(metaclass=Singleton):
         id_cocktail = self.get_cocktail_id_by_name(nom_cocktail)
 
         if not id_cocktail:
-            raise ValueError(f"Cocktail '{nom_cocktail}' introuvable")
+            raise CocktailNotFoundError(nom_cocktail)
 
         with DBConnection().connection as connection, connection.cursor() as cursor:
             # Vérifier si le cocktail est testé
@@ -450,9 +448,7 @@ class CocktailUtilisateurDAO(metaclass=Singleton):
             result = cursor.fetchone()
 
             if not result or not result["teste"]:
-                raise ValueError(
-                    f"Le cocktail '{nom_cocktail}' n'est pas dans vos cocktails testés",
-                )
+                raise CocktailNotTestedError
 
             # Retirer des testés
             cursor.execute(

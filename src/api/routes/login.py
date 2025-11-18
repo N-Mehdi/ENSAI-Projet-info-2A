@@ -130,7 +130,7 @@ def creer_compte(donnees: UserRegister) -> str:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=str(e),
-        )
+        ) from e
     except InvalidBirthDateError as e:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,

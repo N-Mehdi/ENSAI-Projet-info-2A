@@ -3,7 +3,7 @@
 from fastapi import APIRouter, HTTPException
 
 from src.api.deps import CurrentUser
-from src.models.avis import AvisCreate
+from src.models.avis import AvisCreate, AvisSummary
 from src.service.avis_service import AvisService
 from src.utils.exceptions import (
     AvisNotFoundError,
@@ -18,7 +18,7 @@ service = AvisService()
 
 @router.post(
     "/ajouter",
-    summary="➕ Ajouter ou modifier un avis",
+    summary=" + Ajouter ou modifier un avis",
     description="""
 Ajoute ou modifie un avis sur un cocktail.
 
@@ -38,7 +38,7 @@ Ajoute ou modifie un avis sur un cocktail.
 def add_avis(
     avis: AvisCreate,
     current_user: CurrentUser,
-):
+) -> dict:
     """Ajoute ou modifie un avis."""
     try:
         message = service.create_or_update_avis(
@@ -47,10 +47,9 @@ def add_avis(
             note=avis.note,
             commentaire=avis.commentaire,
         )
-        return {"status": "success", "message": message}
 
     except InvalidAvisError as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        raise HTTPException(status_code=400, detail=str(e)) from e
     except IngredientNotFoundError as e:
         raise HTTPException(
             status_code=404,
@@ -59,9 +58,11 @@ def add_avis(
                 "cocktail_recherche": e.nom_ingredient,
                 "suggestions": e.suggestions,
             },
-        )
+        ) from e
     except ServiceError as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        raise HTTPException(status_code=400, detail=str(e)) from e
+
+    return {"status": "success", "message": message}
 
 
 @router.delete(
@@ -76,17 +77,16 @@ Supprime mon avis sur un cocktail.
 def delete_avis(
     nom_cocktail: str,
     current_user: CurrentUser,
-):
+) -> dict:
     """Supprime un avis."""
     try:
         message = service.delete_avis(
             id_utilisateur=current_user.id_utilisateur,
             nom_cocktail=nom_cocktail,
         )
-        return {"status": "success", "message": message}
 
     except AvisNotFoundError as e:
-        raise HTTPException(status_code=404, detail=str(e))
+        raise HTTPException(status_code=404, detail=str(e)) from e
     except IngredientNotFoundError as e:
         raise HTTPException(
             status_code=404,
@@ -95,9 +95,10 @@ def delete_avis(
                 "cocktail_recherche": e.nom_ingredient,
                 "suggestions": e.suggestions,
             },
-        )
+        ) from e
     except ServiceError as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        raise HTTPException(status_code=400, detail=str(e)) from e
+    return {"status": "success", "message": message}
 
 
 @router.get(
@@ -128,7 +129,7 @@ Récupère tous mes avis (format simplifié).
 ```
 """,
 )
-def get_mes_avis(current_user: CurrentUser):
+def get_mes_avis(current_user: CurrentUser) -> dict:
     """Récupère tous les avis de l'utilisateur connecté (format simplifié)."""
     try:
         return service.get_mes_avis_simple(
@@ -136,7 +137,7 @@ def get_mes_avis(current_user: CurrentUser):
             pseudo=current_user.pseudo,
         )
     except ServiceError as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        raise HTTPException(status_code=400, detail=str(e)) from e
 
 
 @router.get(
@@ -155,7 +156,7 @@ Récupère tous les avis d'un cocktail.
 - Date de modification
 """,
 )
-def get_avis_cocktail(nom_cocktail: str, current_user: CurrentUser):
+def get_avis_cocktail(nom_cocktail: str, _current_user: CurrentUser) -> list:
     """Récupère tous les avis d'un cocktail."""
     try:
         return service.get_avis_cocktail(nom_cocktail)
@@ -167,9 +168,9 @@ def get_avis_cocktail(nom_cocktail: str, current_user: CurrentUser):
                 "cocktail_recherche": e.nom_ingredient,
                 "suggestions": e.suggestions,
             },
-        )
+        ) from e
     except ServiceError as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        raise HTTPException(status_code=400, detail=str(e)) from e
 
 
 @router.get(
@@ -184,7 +185,7 @@ Récupère un résumé statistique des avis d'un cocktail.
 - Nombre de favoris
 """,
 )
-def get_avis_summary(nom_cocktail: str, current_user: CurrentUser):
+def get_avis_summary(nom_cocktail: str, _current_user: CurrentUser) -> AvisSummary:
     """Récupère un résumé des avis."""
     try:
         return service.get_avis_summary(nom_cocktail)
@@ -196,6 +197,6 @@ def get_avis_summary(nom_cocktail: str, current_user: CurrentUser):
                 "cocktail_recherche": e.nom_ingredient,
                 "suggestions": e.suggestions,
             },
-        )
+        ) from e
     except ServiceError as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        raise HTTPException(status_code=400, detail=str(e)) from e

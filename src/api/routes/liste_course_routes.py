@@ -1,8 +1,11 @@
 """doc."""
 
+from typing import Annotated
+
 from fastapi import APIRouter, HTTPException, Query
 
 from src.api.deps import CurrentUser
+from src.models.liste_course import ListeCourse
 from src.service.liste_course_service import ListeCourseService
 from src.utils.exceptions import IngredientNotFoundError, InvalidQuantityError, ServiceError, UniteNotFoundError
 
@@ -25,20 +28,17 @@ Récupère ma liste de course complète.
 - Nombre d'items cochés
 """,
 )
-def get_my_liste_course(current_user: CurrentUser):
+def get_my_liste_course(current_user: CurrentUser) -> ListeCourse:
     """Récupère la liste de course."""
     try:
         return service.get_liste_course(current_user.id_utilisateur)
     except ServiceError as e:
-        raise HTTPException(status_code=400, detail=str(e))
-
-
-from typing import Annotated
+        raise HTTPException(status_code=400, detail=str(e)) from e
 
 
 @router.post(
     "/ajouter",
-    summary="➕ Ajouter à la liste de course",
+    summary=" + Ajouter à la liste de course",
     description="""
 Ajoute un ingrédient à la liste de course.
 
@@ -103,7 +103,7 @@ def add_to_liste_course(
     quantite: Annotated[float, Query(gt=0, description="Quantité à acheter (doit être > 0)", example=500.0)],
     unite: Annotated[str, Query(min_length=1, description="Abréviation de l'unité (ex: 'ml', 'cl', 'g', 'kg')", example="ml")],
     current_user: CurrentUser,
-):
+) -> dict:
     """Ajoute un ingrédient à la liste de course."""
     try:
         message = service.add_to_liste_course(
@@ -112,7 +112,6 @@ def add_to_liste_course(
             quantite=quantite,
             abbreviation_unite=unite,
         )
-        return {"status": "success", "message": message}
 
     except InvalidQuantityError as e:
         raise HTTPException(status_code=400, detail=str(e)) from e
@@ -132,6 +131,7 @@ def add_to_liste_course(
         ) from e
     except ServiceError as e:
         raise HTTPException(status_code=400, detail=str(e)) from e
+    return {"status": "success", "message": message}
 
 
 @router.delete(
@@ -154,14 +154,13 @@ la conversion se fait automatiquement si les unités sont compatibles.
 def mark_as_bought(
     nom_ingredient: str,
     current_user: CurrentUser,
-):
+) -> dict:
     """Retire de la liste et ajoute au stock."""
     try:
         message = service.remove_from_liste_course_and_add_to_stock(
             id_utilisateur=current_user.id_utilisateur,
             nom_ingredient=nom_ingredient,
         )
-        return {"status": "success", "message": message}
 
     except IngredientNotFoundError as e:
         raise HTTPException(
@@ -171,9 +170,10 @@ def mark_as_bought(
                 "ingredient_recherche": e.nom_ingredient,
                 "suggestions": e.suggestions,
             },
-        )
+        ) from e
     except ServiceError as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        raise HTTPException(status_code=400, detail=str(e)) from e
+    return {"status": "success", "message": message}
 
 
 @router.delete(
@@ -192,14 +192,13 @@ Retire un ingrédient de la liste de course SANS l'ajouter au stock.
 def remove_from_liste_course(
     nom_ingredient: str,
     current_user: CurrentUser,
-):
+) -> dict:
     """Retire de la liste sans ajouter au stock."""
     try:
         message = service.remove_from_liste_course(
             id_utilisateur=current_user.id_utilisateur,
             nom_ingredient=nom_ingredient,
         )
-        return {"status": "success", "message": message}
 
     except IngredientNotFoundError as e:
         raise HTTPException(
@@ -209,9 +208,10 @@ def remove_from_liste_course(
                 "ingredient_recherche": e.nom_ingredient,
                 "suggestions": e.suggestions,
             },
-        )
+        ) from e
     except ServiceError as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        raise HTTPException(status_code=400, detail=str(e)) from e
+    return {"status": "success", "message": message}
 
 
 @router.delete(
@@ -226,14 +226,15 @@ Vide complètement la liste de course.
 Les ingrédients ne sont PAS ajoutés au stock.
 """,
 )
-def clear_liste_course(current_user: CurrentUser):
+def clear_liste_course(current_user: CurrentUser) -> dict:
     """Vide la liste de course."""
     try:
         message = service.clear_liste_course(current_user.id_utilisateur)
-        return {"status": "success", "message": message}
 
     except ServiceError as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        raise HTTPException(status_code=400, detail=str(e)) from e
+
+    return {"status": "success", "message": message}
 
 
 @router.put(
@@ -255,7 +256,7 @@ Pour retirer et ajouter au stock, utilisez `/achete/{nom}`.
 def toggle_effectue(
     nom_ingredient: str,
     current_user: CurrentUser,
-):
+) -> dict:
     """Toggle le statut effectué."""
     try:
         return service.toggle_effectue(
@@ -271,6 +272,6 @@ def toggle_effectue(
                 "ingredient_recherche": e.nom_ingredient,
                 "suggestions": e.suggestions,
             },
-        )
+        ) from e
     except ServiceError as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        raise HTTPException(status_code=400, detail=str(e)) from e
