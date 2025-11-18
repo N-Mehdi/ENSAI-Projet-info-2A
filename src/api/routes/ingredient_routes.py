@@ -1,5 +1,7 @@
 """doc."""
 
+from typing import Annotated
+
 from fastapi import APIRouter, HTTPException, Query, status
 
 from src.api.deps import CurrentUser
@@ -31,28 +33,34 @@ Utile pour :
 """,
 )
 def search_ingredient(
-    query: str = Query(
-        ...,
-        min_length=2,
-        description="Terme de recherche (minimum 2 caractères)",
-        example="vodka",
-    ),
-    limit: int = Query(
-        10,
-        ge=1,
-        le=50,
-        description="Nombre maximum de résultats",
-    ),
+    nom_ingredient: Annotated[
+        str,  # Type de donnée
+        Query(
+            ...,
+            min_length=2,
+            description="Terme de recherche (minimum 2 caractères)",
+            example="vodka",
+        ),  # Objet de dépendance/paramètre
+    ],
+    limit: Annotated[
+        int,
+        Query(
+            10,
+            ge=1,
+            le=50,
+            description="Nombre maximum de résultats",
+        ),
+    ],
 ) -> dict:
     """Recherche des ingrédients par nom (insensible à la casse)."""
     try:
-        normalized_query = normalize_ingredient_name(query)
+        normalized_nom_ingredient = normalize_ingredient_name(nom_ingredient)
         ingredient_dao = IngredientDAO()
-        results = ingredient_dao.search_by_name(normalized_query, limit=limit)
+        results = ingredient_dao.search_by_name(normalized_nom_ingredient, limit=limit)
 
         return {
-            "query_originale": query,
-            "query_normalisee": normalized_query,
+            "query_originale": nom_ingredient,
+            "query_normalisee": normalized_nom_ingredient,
             "nombre_resultats": len(results),
             "resultats": results,
         }
@@ -67,7 +75,15 @@ def search_ingredient(
 @router.get("/vérifier-alcool", summary="Vérifier si un ingrédient contient de l'alcool (par nom)")
 def check_ingredient_alcohol_by_name(
     _current_user: CurrentUser,
-    name: str = Query(..., description="Le nom de l'ingrédient", min_length=1),
+    name: Annotated[
+        str,  # Type de donnée
+        Query(
+            ...,
+            description="Le nom de l'ingrédient",
+            min_length=1,
+        ),  # Objet de paramètre de requête
+    ],
+    # Les autres paramètres iraient ici...
 ) -> dict:
     """Doc."""
     try:

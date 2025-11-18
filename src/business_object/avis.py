@@ -30,7 +30,7 @@ class Avis:
         favoris: bool = False,
         teste: bool = False,
     ) -> None:
-        """Constructeur."""
+        """Constructeur de la classe Avis."""
         self.id_utilisateur = id_utilisateur
         self.id_cocktail = id_cocktail
         self.note = note

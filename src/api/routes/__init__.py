@@ -1,1 +1,1 @@
-"""Package contenant les routes de l'application."""
+"""Package contenant toutes les routes de l'application."""

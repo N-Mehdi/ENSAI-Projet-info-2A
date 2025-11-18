@@ -232,7 +232,6 @@ def changer_mot_de_passe(donnees: UserChangePassword, _current_user: CurrentUser
     status_code=status.HTTP_200_OK,
     summary="Obtenir la date d'inscription",
     response_description="Date d'inscription récupérée avec succès",
-    response_model=DateInscriptionResponse,
     responses={
         200: {
             "description": "Date d'inscription récupérée avec succès",
@@ -375,7 +374,7 @@ def supprimer_compte(donnees: UserDelete, _current_user: CurrentUser) -> str:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=str(e),
-        )
+        ) from e
     except UserNotFoundError:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,

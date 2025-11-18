@@ -17,7 +17,7 @@ class Unite:
     """
 
     def __init__(self, id_unite, nom, abbreviation, type_unite) -> None:
-        """Constructeur."""
+        """Constructeur de la classe Unite."""
         self.id_unite = id_unite
         self.nom = nom
         self.abbreviation = abbreviation

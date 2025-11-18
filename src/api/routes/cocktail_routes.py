@@ -227,6 +227,8 @@ def get_cocktails_quasi_realisables(
 
     Parameters
     ----------
+    current_user : CurrentUser
+        Dépendance de l'utilisateur connecté
     max_ingredients_manquants : int
         Nombre max d'ingrédients manquants (1-5, défaut: 3)
 

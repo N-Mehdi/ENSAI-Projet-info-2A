@@ -1,4 +1,4 @@
-"""doc."""
+"""Route principale qui réunit toutes les autres routes."""
 
 from fastapi import APIRouter
 

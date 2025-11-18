@@ -1,4 +1,4 @@
-"""doc."""
+"""Couche service pour les opérations de stock."""
 
 import re
 

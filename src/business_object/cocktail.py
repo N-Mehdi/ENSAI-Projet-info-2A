@@ -30,7 +30,7 @@ class Cocktail:
         alcool: bool,
         image: str,
     ) -> None:
-        """Constructeur."""
+        """Constructeur de la classe Cocktail."""
         self.id_cocktail = id_cocktail
         self.nom = nom
         self.categorie = categorie

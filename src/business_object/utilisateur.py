@@ -26,7 +26,7 @@ class Utilisateur:
         mot_de_passe: str | None = None,
         id_utilisateur: int | None = None,
     ) -> None:
-        """Constructeur."""
+        """Constructeur de la classe Utilisateur."""
         self.id_utilisateur = id_utilisateur
         self.pseudo = pseudo
         self.mail = mail

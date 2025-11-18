@@ -1,4 +1,4 @@
-"""doc."""
+"""Couche service pour les opérations d'accès aux cocktails privés."""
 
 from src.dao.acces_dao import AccesDAO
 from src.dao.cocktail_dao import CocktailDAO

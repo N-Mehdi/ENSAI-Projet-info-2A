@@ -291,13 +291,15 @@ class UtilisateurService:
         age = (today - birth_date).days / 365.25
 
         # Âge minimum
-        if age < 18:
+        majeur = 18
+        if age < majeur:
             raise InvalidBirthDateError(
                 message="Vous devez avoir au moins 18 ans pour créer un compte",
             )
 
         # Âge maximum
-        if age > 122:
+        age_max = 122
+        if age > age_max:
             raise InvalidBirthDateError(
                 message="Date de naissance non réaliste",
             )

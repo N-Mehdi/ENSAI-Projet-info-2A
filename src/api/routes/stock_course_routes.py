@@ -170,6 +170,7 @@ def get_my_stock(
         description="Si True, retourne seulement les ingrédients disponibles",
     ),
 ) -> Stock:
+    """Doc."""
     try:
         stock = service.get_user_stock(
             id_utilisateur=current_user.id_utilisateur,
