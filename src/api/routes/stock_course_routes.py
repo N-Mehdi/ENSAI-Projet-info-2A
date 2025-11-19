@@ -1,5 +1,7 @@
 """doc."""
 
+from typing import Annotated
+
 from fastapi import APIRouter, HTTPException, Query, status
 
 from src.api.deps import CurrentUser
@@ -109,7 +111,39 @@ def add_to_stock(
     item: StockItemAddByName,
     current_user: CurrentUser,
 ) -> dict[str, str]:
-    """Ajoute un ingrédient au stock en utilisant son nom et l'abréviation de l'unité."""
+    """Ajoute ou met à jour un ingrédient dans le stock de l'utilisateur connecté.
+
+    Normalise automatiquement le nom de l'ingrédient.
+    Si l'ingrédient existe déjà, met à jour sa quantité et son unité.
+
+    L'utilisateur est automatiquement récupéré depuis le token JWT.
+
+    Parameters
+    ----------
+    item : StockItemAddByName
+        Objet contenant nom_ingredient, quantite, unite (abréviation)
+    current_user : CurrentUser
+        L'utilisateur authentifié (injecté automatiquement)
+
+    Returns
+    -------
+    dict[str, str]
+        Dictionnaire contenant :
+        - status : str ("success")
+        - message : str (confirmation avec quantité et unité)
+
+    Raises
+    ------
+    HTTPException(400)
+        Si la quantité est invalide (≤ 0)
+    HTTPException(404)
+        Si l'ingrédient ou l'unité n'existe pas (avec suggestions pour l'ingrédient)
+    HTTPException(500)
+        En cas d'erreur serveur
+    HTTPException(401/403)
+        Si non authentifié ou token invalide
+
+    """
     try:
         message = service.add_or_update_ingredient_by_name(
             id_utilisateur=current_user.id_utilisateur,
@@ -165,12 +199,42 @@ Récupère le stock de l'utilisateur connecté.
 )
 def get_my_stock(
     current_user: CurrentUser,
-    only_available: bool = Query(
-        True,
-        description="Si True, retourne seulement les ingrédients disponibles",
-    ),
+    *,
+    only_available: Annotated[
+        bool,
+        Query(description="Si True, retourne seulement les ingrédients disponibles"),
+    ] = True,
 ) -> Stock:
-    """Doc."""
+    """Récupère le stock de l'utilisateur connecté.
+
+    L'utilisateur est automatiquement récupéré depuis le token JWT.
+
+    Parameters
+    ----------
+    current_user : CurrentUser
+        L'utilisateur authentifié (injecté automatiquement)
+    only_available : bool, optional
+        Si True, retourne uniquement les ingrédients avec quantité > 0 (défaut: True)
+        Si False, retourne tous les ingrédients du stock
+
+    Returns
+    -------
+    Stock
+        Objet contenant :
+        - id_utilisateur : int
+        - items : list[StockItem]
+        - nombre_items : int
+
+    Raises
+    ------
+    HTTPException(400)
+        En cas d'erreur lors de la récupération
+    HTTPException(500)
+        En cas d'erreur serveur
+    HTTPException(401/403)
+        Si non authentifié ou token invalide
+
+    """
     try:
         stock = service.get_user_stock(
             id_utilisateur=current_user.id_utilisateur,
@@ -211,18 +275,42 @@ def get_my_ingredient(
     nom_ingredient: str,
     current_user: CurrentUser,
 ) -> StockItem:
-    """Récupère un ingrédient spécifique de mon stock par son nom."""
+    """Récupère un ingrédient spécifique du stock par son nom.
+
+    Le nom est normalisé automatiquement.
+
+    L'utilisateur est automatiquement récupéré depuis le token JWT.
+
+    Parameters
+    ----------
+    nom_ingredient : str
+        Le nom de l'ingrédient à récupérer
+    current_user : CurrentUser
+        L'utilisateur authentifié (injecté automatiquement)
+
+    Returns
+    -------
+    StockItem
+        Objet contenant id_ingredient, nom_ingredient, quantite,
+        id_unite, code_unite, nom_unite_complet
+
+    Raises
+    ------
+    HTTPException(404)
+        Si l'ingrédient n'existe pas ou n'est pas dans le stock (avec suggestions)
+    HTTPException(400)
+        En cas d'erreur lors de la récupération
+    HTTPException(500)
+        En cas d'erreur serveur
+    HTTPException(401/403)
+        Si non authentifié ou token invalide
+
+    """
     try:
         item = service.get_ingredient_from_stock_by_name(
             id_utilisateur=current_user.id_utilisateur,
             nom_ingredient=nom_ingredient,
         )
-
-        if item is None:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"L'ingrédient '{nom_ingredient}' n'est pas dans votre stock",
-            )
 
     except HTTPException:
         raise
@@ -245,6 +333,11 @@ def get_my_ingredient(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Erreur interne : {e!s}",
         ) from e
+    if item is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"L'ingrédient '{nom_ingredient}' n'est pas dans votre stock",
+        )
     return item
 
 
@@ -275,7 +368,40 @@ def remove_quantity_from_stock(
     item: StockItemRemove,
     current_user: CurrentUser,
 ) -> dict[str, str]:
-    """Retire une quantité d'un ingrédient du stock."""
+    """Retire une quantité spécifique d'un ingrédient du stock.
+
+    Si quantité retirée = quantité disponible → supprime l'ingrédient
+    Si quantité retirée < quantité disponible → décrémente la quantité
+    Si quantité retirée > quantité disponible → erreur
+
+    L'utilisateur est automatiquement récupéré depuis le token JWT.
+
+    Parameters
+    ----------
+    item : StockItemRemove
+        Objet contenant nom_ingredient et quantite à retirer
+    current_user : CurrentUser
+        L'utilisateur authentifié (injecté automatiquement)
+
+    Returns
+    -------
+    dict[str, str]
+        Dictionnaire contenant :
+        - status : str ("success")
+        - message : str (confirmation)
+
+    Raises
+    ------
+    HTTPException(400)
+        Si la quantité est invalide ou insuffisante (avec quantités demandée/disponible)
+    HTTPException(404)
+        Si l'ingrédient n'existe pas (avec suggestions)
+    HTTPException(500)
+        En cas d'erreur serveur
+    HTTPException(401/403)
+        Si non authentifié ou token invalide
+
+    """
     try:
         message = service.remove_ingredient_by_name(
             id_utilisateur=current_user.id_utilisateur,
@@ -343,7 +469,41 @@ def delete_ingredient_completely(
     nom_ingredient: str,
     current_user: CurrentUser,
 ) -> dict[str, str]:
-    """Supprime complètement un ingrédient du stock."""
+    """Supprime complètement un ingrédient du stock.
+
+    Suppression totale quelle que soit la quantité, contrairement à
+    DELETE /retirer qui retire une quantité spécifique.
+
+    Le nom est normalisé automatiquement.
+
+    L'utilisateur est automatiquement récupéré depuis le token JWT.
+
+    Parameters
+    ----------
+    nom_ingredient : str
+        Le nom de l'ingrédient à supprimer complètement
+    current_user : CurrentUser
+        L'utilisateur authentifié (injecté automatiquement)
+
+    Returns
+    -------
+    dict[str, str]
+        Dictionnaire contenant :
+        - status : str ("success")
+        - message : str (confirmation)
+
+    Raises
+    ------
+    HTTPException(404)
+        Si l'ingrédient n'existe pas (avec suggestions)
+    HTTPException(400)
+        En cas d'erreur lors de la suppression
+    HTTPException(500)
+        En cas d'erreur serveur
+    HTTPException(401/403)
+        Si non authentifié ou token invalide
+
+    """
     try:
         message = service.delete_ingredient_by_name(
             id_utilisateur=current_user.id_utilisateur,
@@ -390,7 +550,34 @@ avec indication de ce que vous possédez.
 def get_full_stock(
     current_user: CurrentUser,
 ) -> list[dict]:
-    """Récupère tous les ingrédients avec indication de quantité dans mon stock."""
+    """Récupère TOUS les ingrédients existants avec leur quantité dans le stock.
+
+    Les ingrédients non présents dans le stock ont quantité = 0.
+    Utile pour afficher une liste complète avec indication des possessions.
+
+    L'utilisateur est automatiquement récupéré depuis le token JWT.
+
+    Parameters
+    ----------
+    current_user : CurrentUser
+        L'utilisateur authentifié (injecté automatiquement)
+
+    Returns
+    -------
+    list[dict]
+        Liste de tous les ingrédients avec leurs informations et
+        la quantité possédée (0 si non en stock)
+
+    Raises
+    ------
+    HTTPException(400)
+        En cas d'erreur lors de la récupération
+    HTTPException(500)
+        En cas d'erreur serveur
+    HTTPException(401/403)
+        Si non authentifié ou token invalide
+
+    """
     try:
         return service.get_full_stock_list(current_user.id_utilisateur)
 

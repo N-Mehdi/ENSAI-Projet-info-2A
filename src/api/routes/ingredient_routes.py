@@ -2,7 +2,7 @@
 
 from typing import Annotated
 
-from fastapi import APIRouter, HTTPException, Query, status
+from fastapi import APIRouter, HTTPException, Path, Query, status
 
 from src.api.deps import CurrentUser
 from src.dao.ingredient_dao import IngredientDAO
@@ -34,25 +34,50 @@ Utile pour :
 )
 def search_ingredient(
     nom_ingredient: Annotated[
-        str,  # Type de donnée
-        Query(
+        str,
+        Path(
             ...,
             min_length=2,
             description="Terme de recherche (minimum 2 caractères)",
             example="vodka",
-        ),  # Objet de dépendance/paramètre
+        ),
     ],
     limit: Annotated[
         int,
         Query(
-            10,
             ge=1,
             le=50,
             description="Nombre maximum de résultats",
         ),
-    ],
+    ] = 10,
 ) -> dict:
-    """Recherche des ingrédients par nom (insensible à la casse)."""
+    """Recherche des ingrédients par nom (insensible à la casse, endpoint public).
+
+    La recherche normalise le terme de recherche et trouve tous les ingrédients
+    dont le nom contient la chaîne donnée.
+
+    Parameters
+    ----------
+    nom_ingredient : str
+        Terme de recherche (minimum 2 caractères)
+    limit : int, optional
+        Nombre maximum de résultats (entre 1 et 50, défaut: 10)
+
+    Returns
+    -------
+    dict
+        Dictionnaire contenant :
+        - query_originale : str (terme de recherche original)
+        - query_normalisee : str (terme normalisé utilisé)
+        - nombre_resultats : int
+        - resultats : list[dict] (liste des ingrédients trouvés)
+
+    Raises
+    ------
+    HTTPException(500)
+        En cas d'erreur lors de la recherche
+
+    """
     try:
         normalized_nom_ingredient = normalize_ingredient_name(nom_ingredient)
         ingredient_dao = IngredientDAO()
@@ -76,16 +101,41 @@ def search_ingredient(
 def check_ingredient_alcohol_by_name(
     _current_user: CurrentUser,
     name: Annotated[
-        str,  # Type de donnée
+        str,
         Query(
             ...,
             description="Le nom de l'ingrédient",
             min_length=1,
-        ),  # Objet de paramètre de requête
+        ),
     ],
-    # Les autres paramètres iraient ici...
 ) -> dict:
-    """Doc."""
+    """Vérifie si un ingrédient contient de l'alcool par son nom.
+
+    Parameters
+    ----------
+    _current_user : CurrentUser
+        L'utilisateur authentifié (injecté automatiquement)
+    name : str
+        Le nom de l'ingrédient à vérifier
+
+    Returns
+    -------
+    dict
+        Dictionnaire contenant :
+        - ingredient_name : str
+        - is_alcoholic : bool
+        - message : str (message descriptif)
+
+    Raises
+    ------
+    HTTPException(404)
+        Si l'ingrédient n'existe pas
+    HTTPException(500)
+        En cas d'erreur serveur
+    HTTPException(401/403)
+        Si non authentifié ou token invalide
+
+    """
     try:
         result = service.check_if_alcoholic_by_name(name)
 

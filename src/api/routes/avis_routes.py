@@ -39,7 +39,37 @@ def add_avis(
     avis: AvisCreate,
     current_user: CurrentUser,
 ) -> dict:
-    """Ajoute ou modifie un avis."""
+    """Ajoute ou modifie un avis sur un cocktail.
+
+    Utilise le comportement UPSERT : crée l'avis s'il n'existe pas,
+    sinon met à jour l'avis existant.
+
+    L'utilisateur est automatiquement récupéré depuis le token JWT.
+
+    Parameters
+    ----------
+    avis : AvisCreate
+        Objet contenant nom_cocktail, note (optionnel), commentaire (optionnel)
+    current_user : CurrentUser
+        L'utilisateur authentifié (injecté automatiquement)
+
+    Returns
+    -------
+    dict
+        Dictionnaire contenant :
+        - status : str ("success")
+        - message : str (message de confirmation)
+
+    Raises
+    ------
+    HTTPException(400)
+        Si l'avis est invalide (ni note ni commentaire renseigné)
+    HTTPException(404)
+        Si le cocktail n'existe pas (avec suggestions)
+    HTTPException(401/403)
+        Si non authentifié ou token invalide
+
+    """
     try:
         message = service.create_or_update_avis(
             id_utilisateur=current_user.id_utilisateur,
@@ -78,7 +108,34 @@ def delete_avis(
     nom_cocktail: str,
     current_user: CurrentUser,
 ) -> dict:
-    """Supprime un avis."""
+    """Supprime l'avis de l'utilisateur connecté sur un cocktail.
+
+    L'utilisateur est automatiquement récupéré depuis le token JWT.
+
+    Parameters
+    ----------
+    nom_cocktail : str
+        Le nom du cocktail dont supprimer l'avis
+    current_user : CurrentUser
+        L'utilisateur authentifié (injecté automatiquement)
+
+    Returns
+    -------
+    dict
+        Dictionnaire contenant :
+        - status : str ("success")
+        - message : str (message de confirmation)
+
+    Raises
+    ------
+    HTTPException(404)
+        Si l'avis ou le cocktail n'existe pas (avec suggestions)
+    HTTPException(400)
+        En cas d'erreur lors de la suppression
+    HTTPException(401/403)
+        Si non authentifié ou token invalide
+
+    """
     try:
         message = service.delete_avis(
             id_utilisateur=current_user.id_utilisateur,
@@ -130,7 +187,30 @@ Récupère tous mes avis (format simplifié).
 """,
 )
 def get_mes_avis(current_user: CurrentUser) -> dict:
-    """Récupère tous les avis de l'utilisateur connecté (format simplifié)."""
+    """Récupère tous les avis de l'utilisateur connecté au format simplifié.
+
+    L'utilisateur est automatiquement récupéré depuis le token JWT.
+
+    Parameters
+    ----------
+    current_user : CurrentUser
+        L'utilisateur authentifié (injecté automatiquement)
+
+    Returns
+    -------
+    dict
+        Dictionnaire contenant :
+        - pseudo_utilisateur : str
+        - avis : list[dict] avec nom_cocktail, note, commentaire
+
+    Raises
+    ------
+    HTTPException(400)
+        En cas d'erreur lors de la récupération
+    HTTPException(401/403)
+        Si non authentifié ou token invalide
+
+    """
     try:
         return service.get_mes_avis_simple(
             id_utilisateur=current_user.id_utilisateur,
@@ -157,7 +237,29 @@ Récupère tous les avis d'un cocktail.
 """,
 )
 def get_avis_cocktail(nom_cocktail: str, _current_user: CurrentUser) -> list:
-    """Récupère tous les avis d'un cocktail."""
+    """Récupère tous les avis d'un cocktail (endpoint public).
+
+    Parameters
+    ----------
+    nom_cocktail : str
+        Le nom du cocktail
+    _current_user : CurrentUser
+        L'utilisateur authentifié (non utilisé, endpoint public)
+
+    Returns
+    -------
+    list
+        Liste des avis du cocktail avec pseudo_utilisateur, note,
+        commentaire, date_creation, date_modification
+
+    Raises
+    ------
+    HTTPException(404)
+        Si le cocktail n'existe pas (avec suggestions)
+    HTTPException(400)
+        En cas d'erreur lors de la récupération
+
+    """
     try:
         return service.get_avis_cocktail(nom_cocktail)
     except IngredientNotFoundError as e:
@@ -186,7 +288,29 @@ Récupère un résumé statistique des avis d'un cocktail.
 """,
 )
 def get_avis_summary(nom_cocktail: str, _current_user: CurrentUser) -> AvisSummary:
-    """Récupère un résumé des avis."""
+    """Récupère un résumé statistique des avis d'un cocktail.
+
+    Parameters
+    ----------
+    nom_cocktail : str
+        Le nom du cocktail
+    _current_user : CurrentUser
+        L'utilisateur authentifié (non utilisé, endpoint public)
+
+    Returns
+    -------
+    AvisSummary
+        Objet contenant id_cocktail, nom_cocktail, nombre_avis,
+        note_moyenne, nombre_favoris
+
+    Raises
+    ------
+    HTTPException(404)
+        Si le cocktail n'existe pas (avec suggestions)
+    HTTPException(400)
+        En cas d'erreur lors de la récupération
+
+    """
     try:
         return service.get_avis_summary(nom_cocktail)
     except IngredientNotFoundError as e:

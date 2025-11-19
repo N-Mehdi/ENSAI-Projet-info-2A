@@ -37,16 +37,29 @@ def add_cocktail_to_private_list_by_name(
 
     L'utilisateur est automatiquement récupéré depuis le token JWT.
 
-    **Paramètres:**
-    - **cocktail_name**: Le nom du cocktail à ajouter (insensible à la casse)
+    Parameters
+    ----------
+    current_user : CurrentUser
+        L'utilisateur authentifié (injecté automatiquement)
+    cocktail_name : str
+        Le nom du cocktail à ajouter (insensible à la casse)
 
-    **Retourne:**
-    - Message de confirmation avec le nom du cocktail
+    Returns
+    -------
+    AccessResponse
+        Objet contenant le succès de l'opération et un message de confirmation
 
-    **Erreurs possibles:**
-    - 401/403: Non authentifié ou token invalide
-    - 404: L'utilisateur ou le cocktail n'existe pas
-    - 409: Le cocktail est déjà dans la liste privée
+    Raises
+    ------
+    HTTPException(404)
+        Si l'utilisateur ou le cocktail n'existe pas
+    HTTPException(409)
+        Si le cocktail est déjà dans la liste privée
+    HTTPException(401/403)
+        Si non authentifié ou token invalide
+    HTTPException(500)
+        En cas d'erreur serveur
+
     """
     try:
         result = acces_service.add_cocktail_to_private_list_by_name(current_user.pseudo, cocktail_name)
@@ -74,15 +87,27 @@ def remove_cocktail_from_private_list_by_name(
 
     L'utilisateur est automatiquement récupéré depuis le token JWT.
 
-    **Paramètres:**
-    - **cocktail_name**: Le nom du cocktail à retirer (insensible à la casse)
+    Parameters
+    ----------
+    current_user : CurrentUser
+        L'utilisateur authentifié (injecté automatiquement)
+    cocktail_name : str
+        Le nom du cocktail à retirer (insensible à la casse)
 
-    **Retourne:**
-    - Message de confirmation avec le nom du cocktail
+    Returns
+    -------
+    AccessResponse
+        Objet contenant le succès de l'opération et un message de confirmation
 
-    **Erreurs possibles:**
-    - 401/403: Non authentifié ou token invalide
-    - 404: L'utilisateur, le cocktail n'existe pas ou le cocktail n'est pas dans la liste privée
+    Raises
+    ------
+    HTTPException(404)
+        Si l'utilisateur, le cocktail n'existe pas ou le cocktail n'est pas dans la liste privée
+    HTTPException(401/403)
+        Si non authentifié ou token invalide
+    HTTPException(500)
+        En cas d'erreur serveur
+
     """
     try:
         result = acces_service.remove_cocktail_from_private_list_by_name(current_user.pseudo, cocktail_name)
@@ -113,18 +138,32 @@ def grant_access(
 
     L'utilisateur propriétaire est automatiquement récupéré depuis le token JWT.
 
-    **Paramètres:**
-    - **user_pseudo**: Le pseudo de l'utilisateur qui recevra l'accès
+    Parameters
+    ----------
+    current_user : CurrentUser
+        L'utilisateur authentifié (injecté automatiquement)
+    user_pseudo : str
+        Le pseudo de l'utilisateur qui recevra l'accès
 
-    **Retourne:**
-    - Message de confirmation
-    - Informations sur l'accès créé
+    Returns
+    -------
+    AccessResponse
+        Objet contenant le succès de l'opération, un message de confirmation
+        et les informations sur l'accès créé
 
-    **Erreurs possibles:**
-    - 401/403: Non authentifié ou token invalide
-    - 404: Un des utilisateurs n'existe pas
-    - 400: Vous essayez de vous donner accès à vous-même
-    - 409: L'accès existe déjà
+    Raises
+    ------
+    HTTPException(404)
+        Si un des utilisateurs n'existe pas
+    HTTPException(400)
+        Si vous essayez de vous donner accès à vous-même
+    HTTPException(409)
+        Si l'accès existe déjà
+    HTTPException(401/403)
+        Si non authentifié ou token invalide
+    HTTPException(500)
+        En cas d'erreur serveur
+
     """
     try:
         result = acces_service.grant_access_to_user(current_user.pseudo, user_pseudo)
@@ -152,15 +191,27 @@ def revoke_access(
 
     L'utilisateur propriétaire est automatiquement récupéré depuis le token JWT.
 
-    **Paramètres:**
-    - **user_pseudo**: Le pseudo de l'utilisateur dont retirer l'accès
+    Parameters
+    ----------
+    current_user : CurrentUser
+        L'utilisateur authentifié (injecté automatiquement)
+    user_pseudo : str
+        Le pseudo de l'utilisateur dont retirer l'accès
 
-    **Retourne:**
-    - Message de confirmation
+    Returns
+    -------
+    AccessResponse
+        Objet contenant le succès de l'opération et un message de confirmation
 
-    **Erreurs possibles:**
-    - 401/403: Non authentifié ou token invalide
-    - 404: Un des utilisateurs n'existe pas ou l'accès n'existe pas
+    Raises
+    ------
+    HTTPException(404)
+        Si un des utilisateurs n'existe pas ou l'accès n'existe pas
+    HTTPException(401/403)
+        Si non authentifié ou token invalide
+    HTTPException(500)
+        En cas d'erreur serveur
+
     """
     try:
         result = acces_service.revoke_access_from_user(current_user.pseudo, user_pseudo)
@@ -185,13 +236,26 @@ def get_access_list(
 
     L'utilisateur est automatiquement récupéré depuis le token JWT.
 
-    **Retourne:**
-    - Liste des pseudos des utilisateurs ayant accès
-    - Nombre total d'utilisateurs
+    Parameters
+    ----------
+    current_user : CurrentUser
+        L'utilisateur authentifié (injecté automatiquement)
 
-    **Erreurs possibles:**
-    - 401/403: Non authentifié ou token invalide
-    - 404: L'utilisateur n'existe pas
+    Returns
+    -------
+    AccessList
+        Objet contenant la liste des pseudos des utilisateurs ayant accès
+        et le nombre total d'utilisateurs
+
+    Raises
+    ------
+    HTTPException(404)
+        Si l'utilisateur n'existe pas
+    HTTPException(401/403)
+        Si non authentifié ou token invalide
+    HTTPException(500)
+        En cas d'erreur serveur
+
     """
     try:
         result = acces_service.get_users_with_access(current_user.pseudo)
@@ -218,18 +282,31 @@ def view_private_cocktails(
 
     L'utilisateur qui consulte est automatiquement récupéré depuis le token JWT.
 
-    **Paramètres:**
-    - **owner_pseudo**: Le pseudo du propriétaire des cocktails à consulter
+    Parameters
+    ----------
+    current_user : CurrentUser
+        L'utilisateur authentifié (injecté automatiquement)
+    owner_pseudo : str
+        Le pseudo du propriétaire des cocktails à consulter
 
-    **Retourne:**
-    - Liste des cocktails privés avec leurs ingrédients
-    - Nom de chaque cocktail
-    - Composition détaillée (nom ingrédient, quantité, unité)
+    Returns
+    -------
+    PrivateCocktailsList
+        Objet contenant la liste des cocktails privés avec leurs ingrédients,
+        le nom de chaque cocktail et la composition détaillée
+        (nom ingrédient, quantité, unité)
 
-    **Erreurs possibles:**
-    - 401/403: Non authentifié ou token invalide
-    - 404: Un des utilisateurs n'existe pas
-    - 403: Vous n'avez pas l'accès aux cocktails de cet utilisateur
+    Raises
+    ------
+    HTTPException(404)
+        Si un des utilisateurs n'existe pas
+    HTTPException(403)
+        Si vous n'avez pas l'accès aux cocktails de cet utilisateur
+    HTTPException(401/403)
+        Si non authentifié ou token invalide
+    HTTPException(500)
+        En cas d'erreur serveur
+
     """
     try:
         result = acces_service.view_private_cocktails(owner_pseudo, current_user.pseudo)
@@ -254,14 +331,27 @@ def get_my_private_cocktails(
 
     L'utilisateur est automatiquement récupéré depuis le token JWT.
 
-    **Retourne:**
-    - Liste de vos cocktails privés avec leurs ingrédients
-    - Nom de chaque cocktail
-    - Composition détaillée (nom ingrédient, quantité, unité)
+    Parameters
+    ----------
+    current_user : CurrentUser
+        L'utilisateur authentifié (injecté automatiquement)
 
-    **Erreurs possibles:**
-    - 401/403: Non authentifié ou token invalide
-    - 404: L'utilisateur n'existe pas
+    Returns
+    -------
+    PrivateCocktailsList
+        Objet contenant la liste de vos cocktails privés avec leurs ingrédients,
+        le nom de chaque cocktail et la composition détaillée
+        (nom ingrédient, quantité, unité)
+
+    Raises
+    ------
+    HTTPException(404)
+        Si l'utilisateur n'existe pas
+    HTTPException(401/403)
+        Si non authentifié ou token invalide
+    HTTPException(500)
+        En cas d'erreur serveur
+
     """
     try:
         result = acces_service.get_my_private_cocktails(current_user.pseudo)

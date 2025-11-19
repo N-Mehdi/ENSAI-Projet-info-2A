@@ -165,7 +165,33 @@ def rechercher_cocktail_par_nom(nom: str) -> dict:
 def get_cocktails_realisables(
     current_user: CurrentUser,
 ) -> dict:
-    """Récupérer les cocktails réalisables avec le stock actuel."""
+    """Récupère les cocktails réalisables avec le stock actuel de l'utilisateur.
+
+    Analyse le stock de l'utilisateur et identifie tous les cocktails
+    qui peuvent être préparés avec les ingrédients disponibles en
+    quantité suffisante.
+
+    L'utilisateur est automatiquement récupéré depuis le token JWT.
+
+    Parameters
+    ----------
+    current_user : CurrentUser
+        L'utilisateur authentifié (injecté automatiquement)
+
+    Returns
+    -------
+    dict
+        Dictionnaire contenant la liste des cocktails réalisables
+        avec leurs informations
+
+    Raises
+    ------
+    HTTPException(500)
+        En cas d'erreur lors de la récupération des cocktails réalisables
+    HTTPException(401/403)
+        Si non authentifié ou token invalide
+
+    """
     try:
         service = CocktailService(CocktailDAO())
         return service.get_cocktails_realisables(current_user.id_utilisateur)

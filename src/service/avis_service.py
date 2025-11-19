@@ -1,4 +1,4 @@
-"""doc."""
+"""Couche service pour les opérations sur les avis."""
 
 from src.dao.avis_dao import AvisDAO
 from src.dao.cocktail_dao import CocktailDAO
@@ -110,7 +110,26 @@ class AvisService:
             raise ServiceError from e
 
     def get_avis_cocktail(self, nom_cocktail: str) -> list[AvisResponse]:
-        """Récupère tous les avis d'un cocktail."""
+        """Récupère tous les avis d'un cocktail par son nom.
+
+        Parameters
+        ----------
+        nom_cocktail : str
+            Le nom du cocktail
+
+        Returns
+        -------
+        list[AvisResponse]
+            Liste des avis du cocktail, triés par date de création décroissante
+
+        Raises
+        ------
+        CocktailNotFoundError
+            Si le cocktail n'existe pas
+        ServiceError
+            En cas d'erreur lors de la récupération des avis
+
+        """
         cocktail = self._get_cocktail_by_name(nom_cocktail)
 
         try:
@@ -169,7 +188,28 @@ class AvisService:
             }
 
     def delete_avis(self, id_utilisateur: int, nom_cocktail: str) -> str:
-        """Supprime un avis."""
+        """Supprime l'avis d'un utilisateur sur un cocktail.
+
+        Parameters
+        ----------
+        id_utilisateur : int
+            L'identifiant de l'utilisateur
+        nom_cocktail : str
+            Le nom du cocktail
+
+        Returns
+        -------
+        str
+            Message de confirmation de la suppression
+
+        Raises
+        ------
+        CocktailNotFoundError
+            Si le cocktail n'existe pas
+        AvisNotFoundError
+            Si l'avis n'existe pas
+
+        """
         cocktail = self._get_cocktail_by_name(nom_cocktail)
 
         try:
@@ -224,7 +264,30 @@ class AvisService:
             raise ServiceError(message=f"Erreur lors de l'ajout aux favoris : {e}") from e
 
     def remove_favoris(self, id_utilisateur: int, nom_cocktail: str) -> str:
-        """Retire un cocktail des favoris."""
+        """Retire un cocktail des favoris d'un utilisateur.
+
+        Parameters
+        ----------
+        id_utilisateur : int
+            L'identifiant de l'utilisateur
+        nom_cocktail : str
+            Le nom du cocktail
+
+        Returns
+        -------
+        str
+            Message de confirmation du retrait des favoris
+
+        Raises
+        ------
+        CocktailNotFoundError
+            Si le cocktail n'existe pas
+        AvisNotFoundError
+            Si le cocktail n'était pas en favoris
+        ServiceError
+            En cas d'erreur lors du retrait des favoris
+
+        """
         cocktail = self._get_cocktail_by_name(nom_cocktail)
 
         try:
@@ -272,7 +335,27 @@ class AvisService:
         }
 
     def get_avis_summary(self, nom_cocktail: str) -> AvisSummary:
-        """Récupère un résumé des avis pour un cocktail."""
+        """Récupère un résumé statistique des avis pour un cocktail.
+
+        Parameters
+        ----------
+        nom_cocktail : str
+            Le nom du cocktail
+
+        Returns
+        -------
+        AvisSummary
+            Objet contenant les statistiques : id_cocktail, nom_cocktail,
+            nombre_avis, note_moyenne, nombre_favoris
+
+        Raises
+        ------
+        CocktailNotFoundError
+            Si le cocktail n'existe pas
+        ServiceError
+            En cas d'erreur lors de la récupération du résumé
+
+        """
         cocktail = self._get_cocktail_by_name(nom_cocktail)
 
         try:

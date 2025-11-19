@@ -1,6 +1,4 @@
-"""stock_course_dao.py
-Class dao du business object Stock.
-"""
+"""Class dao manipulant les stocks."""
 
 from dao.db_connection import DBConnection
 from src.utils.exceptions import DAOError, IngredientNotFoundError, InvalidQuantityError
@@ -250,9 +248,6 @@ class StockCourseDAO(metaclass=Singleton):
     @log
     def delete_stock_item(id_utilisateur: int, id_ingredient: int) -> bool:
         """Supprime complètement un ingrédient du stock (quelle que soit la quantité).
-
-        Cette méthode supprime la ligne entière, utilisez decrement_stock_item()
-        pour retirer une quantité spécifique.
 
         Parameters
         ----------

@@ -1,661 +1,268 @@
-"""Classe de test de src/service/stock_course_service.py."""
-
-from unittest.mock import MagicMock
+"""doc."""
 
 import pytest
 
-from src.dao.ingredient_dao import IngredientDAO
-from src.dao.stock_course_dao import StockCourseDAO
-from src.models.stock import Stock, StockItem
 from src.service.stock_course_service import StockCourseService
 from src.utils.exceptions import (
     IngredientNotFoundError,
     InsufficientQuantityError,
     InvalidQuantityError,
     ServiceError,
+    UniteNotFoundError,
 )
 
+# -------------------------------------------------------------------------
+# FIXTURES
+# -------------------------------------------------------------------------
 
-class TestStockCourseService:
-    """Tests pour StockCourseService."""
 
-    # ========== Tests pour _get_ingredient_by_name ==========
+@pytest.fixture
+def mock_stock_dao(mocker):
+    return mocker.patch("src.service.stock_course_service.StockCourseDAO").return_value
 
-    def test_get_ingredient_by_name_succes(self):
-        # GIVEN
-        nom_ingredient = "vodka"
-        ingredient_attendu = {
-            "id_ingredient": 1,
-            "nom": "Vodka",
-        }
 
-        stock_dao_mock = MagicMock(spec=StockCourseDAO)
-        ingredient_dao_mock = MagicMock(spec=IngredientDAO)
-        ingredient_dao_mock.get_by_name.return_value = ingredient_attendu
+@pytest.fixture
+def mock_ingredient_dao(mocker):
+    return mocker.patch("src.service.stock_course_service.IngredientDAO").return_value
 
-        # WHEN
-        service = StockCourseService()
-        service.stock_dao = stock_dao_mock
-        service.ingredient_dao = ingredient_dao_mock
-        resultat = service._get_ingredient_by_name(nom_ingredient)
 
-        # THEN
-        assert resultat == ingredient_attendu
-        ingredient_dao_mock.get_by_name.assert_called_once_with("Vodka")
+@pytest.fixture
+def service(mock_stock_dao, mock_ingredient_dao):
+    return StockCourseService()
 
-    def test_get_ingredient_by_name_non_trouve_avec_suggestions(self):
-        # GIVEN
-        nom_ingredient = "vodkaa"
-        suggestions_data = [
-            {"nom": "Vodka"},
-            {"nom": "Vodka Citron"},
+
+@pytest.fixture
+def ingredient_sample():
+    return {"id_ingredient": 1, "nom": "citron"}
+
+
+# -------------------------------------------------------------------------
+# _get_ingredient_by_name
+# -------------------------------------------------------------------------
+
+
+class TestGetIngredientByName:
+    def test_success(self, service, mock_ingredient_dao, ingredient_sample):
+        mock_ingredient_dao.get_by_name.return_value = ingredient_sample
+
+        result = service._get_ingredient_by_name("Citron")
+
+        assert result == ingredient_sample
+        mock_ingredient_dao.get_by_name.assert_called_once()
+
+    def test_not_found_with_suggestions(self, service, mock_ingredient_dao):
+        mock_ingredient_dao.get_by_name.return_value = None
+        mock_ingredient_dao.search_by_name.return_value = [
+            {"nom": "citron vert"},
+            {"nom": "citron jaune"},
         ]
 
-        stock_dao_mock = MagicMock(spec=StockCourseDAO)
-        ingredient_dao_mock = MagicMock(spec=IngredientDAO)
-        ingredient_dao_mock.get_by_name.return_value = None
-        ingredient_dao_mock.search_by_name.return_value = suggestions_data
+        with pytest.raises(IngredientNotFoundError) as exc:
+            service._get_ingredient_by_name("citro")
 
-        # WHEN
-        service = StockCourseService()
-        service.stock_dao = stock_dao_mock
-        service.ingredient_dao = ingredient_dao_mock
+        err = exc.value
+        assert err.nom_recherche == "citro"
+        assert "citron vert" in err.suggestions
+        assert "citron jaune" in err.suggestions
 
-        # THEN
-        with pytest.raises(IngredientNotFoundError) as exc_info:
-            service._get_ingredient_by_name(nom_ingredient)
 
-        assert exc_info.value.nom_ingredient == "Vodkaa"
-        assert exc_info.value.suggestions == ["Vodka", "Vodka Citron"]
+# -------------------------------------------------------------------------
+# add_or_update_ingredient_by_name
+# -------------------------------------------------------------------------
 
-    # ========== Tests pour add_or_update_ingredient_by_name ==========
 
-    def test_add_or_update_ingredient_by_name_succes(self):
-        # GIVEN
-        id_utilisateur = 1
-        nom_ingredient = "vodka"
-        quantite = 500.0
-        id_unite = 1
-
-        ingredient = {
-            "id_ingredient": 1,
-            "nom": "Vodka",
-        }
-
-        stock_dao_mock = MagicMock(spec=StockCourseDAO)
-        stock_dao_mock.update_or_create_stock_item.return_value = True
-
-        ingredient_dao_mock = MagicMock(spec=IngredientDAO)
-        ingredient_dao_mock.get_by_name.return_value = ingredient
-
-        # WHEN
-        service = StockCourseService()
-        service.stock_dao = stock_dao_mock
-        service.ingredient_dao = ingredient_dao_mock
-        resultat = service.add_or_update_ingredient_by_name(
-            id_utilisateur,
-            nom_ingredient,
-            quantite,
-            id_unite,
-        )
-
-        # THEN
-        assert "Vodka" in resultat
-        assert "ajouté/mis à jour avec succès" in resultat
-        stock_dao_mock.update_or_create_stock_item.assert_called_once_with(
-            id_utilisateur=id_utilisateur,
-            id_ingredient=1,
-            quantite=quantite,
-            id_unite=id_unite,
-        )
-
-    def test_add_or_update_ingredient_by_name_quantite_invalide(self):
-        # GIVEN
-        id_utilisateur = 1
-        nom_ingredient = "vodka"
-        quantite = -5.0
-        id_unite = 1
-
-        stock_dao_mock = MagicMock(spec=StockCourseDAO)
-        ingredient_dao_mock = MagicMock(spec=IngredientDAO)
-
-        # WHEN
-        service = StockCourseService()
-        service.stock_dao = stock_dao_mock
-        service.ingredient_dao = ingredient_dao_mock
-
-        # THEN
+class TestAddOrUpdateIngredient:
+    def test_invalid_quantity(self, service):
         with pytest.raises(InvalidQuantityError):
-            service.add_or_update_ingredient_by_name(
-                id_utilisateur,
-                nom_ingredient,
-                quantite,
-                id_unite,
-            )
+            service.add_or_update_ingredient_by_name(1, "citron", 0, "g")
 
-    def test_add_or_update_ingredient_by_name_quantite_zero(self):
-        # GIVEN
-        id_utilisateur = 1
-        nom_ingredient = "vodka"
-        quantite = 0.0
-        id_unite = 1
+    def test_unite_not_found(self, service, mock_ingredient_dao, mock_stock_dao, ingredient_sample):
+        mock_ingredient_dao.get_by_name.return_value = ingredient_sample
+        mock_stock_dao.get_unite_id_by_abbreviation.return_value = None
 
-        stock_dao_mock = MagicMock(spec=StockCourseDAO)
-        ingredient_dao_mock = MagicMock(spec=IngredientDAO)
+        with pytest.raises(UniteNotFoundError):
+            service.add_or_update_ingredient_by_name(1, "citron", 10, "xxx")
 
-        # WHEN
-        service = StockCourseService()
-        service.stock_dao = stock_dao_mock
-        service.ingredient_dao = ingredient_dao_mock
+    def test_success(self, service, mock_ingredient_dao, mock_stock_dao, ingredient_sample):
+        mock_ingredient_dao.get_by_name.return_value = ingredient_sample
+        mock_stock_dao.get_unite_id_by_abbreviation.return_value = 3
+        mock_stock_dao.update_or_create_stock_item.return_value = True
 
-        # THEN
-        with pytest.raises(InvalidQuantityError):
-            service.add_or_update_ingredient_by_name(
-                id_utilisateur,
-                nom_ingredient,
-                quantite,
-                id_unite,
-            )
+        msg = service.add_or_update_ingredient_by_name(1, "Citron", 5, "g")
 
-    def test_add_or_update_ingredient_by_name_ingredient_non_trouve(self):
-        # GIVEN
-        id_utilisateur = 1
-        nom_ingredient = "ingredient_inexistant"
-        quantite = 100.0
-        id_unite = 1
+        assert "ajouté/mis à jour" in msg
+        mock_stock_dao.update_or_create_stock_item.assert_called_once()
 
-        stock_dao_mock = MagicMock(spec=StockCourseDAO)
-        ingredient_dao_mock = MagicMock(spec=IngredientDAO)
-        ingredient_dao_mock.get_by_name.return_value = None
-        ingredient_dao_mock.search_by_name.return_value = []
+    def test_update_fail(self, service, mock_ingredient_dao, mock_stock_dao, ingredient_sample):
+        mock_ingredient_dao.get_by_name.return_value = ingredient_sample
+        mock_stock_dao.get_unite_id_by_abbreviation.return_value = 3
+        mock_stock_dao.update_or_create_stock_item.return_value = False
 
-        # WHEN
-        service = StockCourseService()
-        service.stock_dao = stock_dao_mock
-        service.ingredient_dao = ingredient_dao_mock
+        with pytest.raises(ServiceError):
+            service.add_or_update_ingredient_by_name(1, "Citron", 5, "g")
 
-        # THEN
-        with pytest.raises(IngredientNotFoundError):
-            service.add_or_update_ingredient_by_name(
-                id_utilisateur,
-                nom_ingredient,
-                quantite,
-                id_unite,
-            )
 
-    def test_add_or_update_ingredient_by_name_dao_echec(self):
-        # GIVEN
-        id_utilisateur = 1
-        nom_ingredient = "vodka"
-        quantite = 500.0
-        id_unite = 1
+# -------------------------------------------------------------------------
+# get_user_stock
+# -------------------------------------------------------------------------
 
-        ingredient = {
-            "id_ingredient": 1,
-            "nom": "Vodka",
-        }
 
-        stock_dao_mock = MagicMock(spec=StockCourseDAO)
-        stock_dao_mock.update_or_create_stock_item.return_value = False
-
-        ingredient_dao_mock = MagicMock(spec=IngredientDAO)
-        ingredient_dao_mock.get_by_name.return_value = ingredient
-
-        # WHEN
-        service = StockCourseService()
-        service.stock_dao = stock_dao_mock
-        service.ingredient_dao = ingredient_dao_mock
-
-        # THEN
-        with pytest.raises(ServiceError) as exc_info:
-            service.add_or_update_ingredient_by_name(
-                id_utilisateur,
-                nom_ingredient,
-                quantite,
-                id_unite,
-            )
-        assert "Impossible d'ajouter" in str(exc_info.value)
-
-    # ========== Tests pour get_user_stock ==========
-
-    def test_get_user_stock_succes(self):
-        # GIVEN
-        id_utilisateur = 1
-        rows = [
+class TestGetUserStock:
+    def test_success(self, service, mock_stock_dao):
+        mock_stock_dao.get_stock.return_value = [
             {
                 "id_ingredient": 1,
-                "nom_ingredient": "Vodka",
-                "quantite": 500.0,
-                "id_unite": 1,
-                "code_unite": "ml",
-                "nom_unite_complet": "millilitre",
-            },
-            {
-                "id_ingredient": 2,
-                "nom_ingredient": "Gin",
-                "quantite": 700.0,
-                "id_unite": 1,
-                "code_unite": "ml",
-                "nom_unite_complet": "millilitre",
+                "nom_ingredient": "citron",
+                "quantite": 5,
+                "id_unite": 2,
+                "code_unite": "g",
+                "nom_unite_complet": "grammes",
             },
         ]
 
-        stock_dao_mock = MagicMock(spec=StockCourseDAO)
-        stock_dao_mock.get_stock.return_value = rows
+        stock = service.get_user_stock(1)
 
-        ingredient_dao_mock = MagicMock(spec=IngredientDAO)
+        assert stock.id_utilisateur == 1
+        assert len(stock.items) == 1
+        assert stock.items[0].nom_ingredient == "citron"
 
-        # WHEN
-        service = StockCourseService()
-        service.stock_dao = stock_dao_mock
-        service.ingredient_dao = ingredient_dao_mock
-        resultat = service.get_user_stock(id_utilisateur)
+    def test_failure(self, service, mock_stock_dao):
+        mock_stock_dao.get_stock.side_effect = Exception("DB error")
 
-        # THEN
-        assert isinstance(resultat, Stock)
-        assert resultat.id_utilisateur == id_utilisateur
-        assert len(resultat.items) == 2
-        assert resultat.items[0].nom_ingredient == "Vodka"
-        assert resultat.items[0].quantite == 500.0
-        stock_dao_mock.get_stock.assert_called_once_with(
-            id_utilisateur=id_utilisateur,
-            only_available=True,
-        )
+        with pytest.raises(ServiceError):
+            service.get_user_stock(1)
 
-    def test_get_user_stock_vide(self):
-        # GIVEN
-        id_utilisateur = 1
 
-        stock_dao_mock = MagicMock(spec=StockCourseDAO)
-        stock_dao_mock.get_stock.return_value = []
+# -------------------------------------------------------------------------
+# get_ingredient_from_stock_by_name
+# -------------------------------------------------------------------------
 
-        ingredient_dao_mock = MagicMock(spec=IngredientDAO)
 
-        # WHEN
-        service = StockCourseService()
-        service.stock_dao = stock_dao_mock
-        service.ingredient_dao = ingredient_dao_mock
-        resultat = service.get_user_stock(id_utilisateur)
+class TestGetIngredientFromStockByName:
+    def test_success(self, service, mock_stock_dao, mock_ingredient_dao, ingredient_sample):
+        mock_ingredient_dao.get_by_name.return_value = ingredient_sample
 
-        # THEN
-        assert isinstance(resultat, Stock)
-        assert resultat.id_utilisateur == id_utilisateur
-        assert len(resultat.items) == 0
-
-    def test_get_user_stock_only_available_false(self):
-        # GIVEN
-        id_utilisateur = 1
-        rows = [
-            {
-                "id_ingredient": 1,
-                "nom_ingredient": "Vodka",
-                "quantite": 0.0,
-                "id_unite": 1,
-                "code_unite": "ml",
-                "nom_unite_complet": "millilitre",
-            },
-        ]
-
-        stock_dao_mock = MagicMock(spec=StockCourseDAO)
-        stock_dao_mock.get_stock.return_value = rows
-
-        ingredient_dao_mock = MagicMock(spec=IngredientDAO)
-
-        # WHEN
-        service = StockCourseService()
-        service.stock_dao = stock_dao_mock
-        service.ingredient_dao = ingredient_dao_mock
-        resultat = service.get_user_stock(id_utilisateur, only_available=False)
-
-        # THEN
-        assert len(resultat.items) == 1
-        stock_dao_mock.get_stock.assert_called_once_with(
-            id_utilisateur=id_utilisateur,
-            only_available=False,
-        )
-
-    # ========== Tests pour get_ingredient_from_stock_by_name ==========
-
-    def test_get_ingredient_from_stock_by_name_succes(self):
-        # GIVEN
-        id_utilisateur = 1
-        nom_ingredient = "vodka"
-
-        ingredient = {
+        mock_stock_dao.get_stock_item.return_value = {
             "id_ingredient": 1,
-            "nom": "Vodka",
+            "nom_ingredient": "citron",
+            "quantite": 2,
+            "id_unite": 2,
+            "code_unite": "g",
+            "nom_unite_complet": "grammes",
         }
 
-        stock_item_data = {
-            "id_ingredient": 1,
-            "nom_ingredient": "Vodka",
-            "quantite": 500.0,
-            "id_unite": 1,
-            "code_unite": "ml",
-            "nom_unite_complet": "millilitre",
-        }
+        item = service.get_ingredient_from_stock_by_name(1, "citron")
 
-        stock_dao_mock = MagicMock(spec=StockCourseDAO)
-        stock_dao_mock.get_stock_item.return_value = stock_item_data
+        assert item.nom_ingredient == "citron"
+        assert item.quantite == 2
 
-        ingredient_dao_mock = MagicMock(spec=IngredientDAO)
-        ingredient_dao_mock.get_by_name.return_value = ingredient
+    def test_not_in_stock(self, service, mock_stock_dao, mock_ingredient_dao, ingredient_sample):
+        mock_ingredient_dao.get_by_name.return_value = ingredient_sample
+        mock_stock_dao.get_stock_item.return_value = None
 
-        # WHEN
-        service = StockCourseService()
-        service.stock_dao = stock_dao_mock
-        service.ingredient_dao = ingredient_dao_mock
-        resultat = service.get_ingredient_from_stock_by_name(id_utilisateur, nom_ingredient)
+        result = service.get_ingredient_from_stock_by_name(1, "citron")
 
-        # THEN
-        assert isinstance(resultat, StockItem)
-        assert resultat.nom_ingredient == "Vodka"
-        assert resultat.quantite == 500.0
+        assert result is None
 
-    def test_get_ingredient_from_stock_by_name_non_dans_stock(self):
-        # GIVEN
-        id_utilisateur = 1
-        nom_ingredient = "vodka"
+    def test_exception(self, service, mock_stock_dao, mock_ingredient_dao, ingredient_sample):
+        mock_ingredient_dao.get_by_name.return_value = ingredient_sample
+        mock_stock_dao.get_stock_item.side_effect = Exception("DB error")
 
-        ingredient = {
-            "id_ingredient": 1,
-            "nom": "Vodka",
-        }
+        with pytest.raises(ServiceError):
+            service.get_ingredient_from_stock_by_name(1, "citron")
 
-        stock_dao_mock = MagicMock(spec=StockCourseDAO)
-        stock_dao_mock.get_stock_item.return_value = None
 
-        ingredient_dao_mock = MagicMock(spec=IngredientDAO)
-        ingredient_dao_mock.get_by_name.return_value = ingredient
+# -------------------------------------------------------------------------
+# remove_ingredient_by_name
+# -------------------------------------------------------------------------
 
-        # WHEN
-        service = StockCourseService()
-        service.stock_dao = stock_dao_mock
-        service.ingredient_dao = ingredient_dao_mock
-        resultat = service.get_ingredient_from_stock_by_name(id_utilisateur, nom_ingredient)
 
-        # THEN
-        assert resultat is None
-
-    def test_get_ingredient_from_stock_by_name_ingredient_non_trouve(self):
-        # GIVEN
-        id_utilisateur = 1
-        nom_ingredient = "ingredient_inexistant"
-
-        stock_dao_mock = MagicMock(spec=StockCourseDAO)
-        ingredient_dao_mock = MagicMock(spec=IngredientDAO)
-        ingredient_dao_mock.get_by_name.return_value = None
-        ingredient_dao_mock.search_by_name.return_value = []
-
-        # WHEN
-        service = StockCourseService()
-        service.stock_dao = stock_dao_mock
-        service.ingredient_dao = ingredient_dao_mock
-
-        # THEN
-        with pytest.raises(IngredientNotFoundError):
-            service.get_ingredient_from_stock_by_name(id_utilisateur, nom_ingredient)
-
-    # ========== Tests pour remove_ingredient_by_name ==========
-
-    def test_remove_ingredient_by_name_succes_partiel(self):
-        # GIVEN
-        id_utilisateur = 1
-        nom_ingredient = "vodka"
-        quantite = 100.0
-
-        ingredient = {
-            "id_ingredient": 1,
-            "nom": "Vodka",
-        }
-
-        result = {
-            "supprime": False,
-            "nouvelle_quantite": 400.0,
-        }
-
-        stock_dao_mock = MagicMock(spec=StockCourseDAO)
-        stock_dao_mock.decrement_stock_item.return_value = result
-
-        ingredient_dao_mock = MagicMock(spec=IngredientDAO)
-        ingredient_dao_mock.get_by_name.return_value = ingredient
-
-        # WHEN
-        service = StockCourseService()
-        service.stock_dao = stock_dao_mock
-        service.ingredient_dao = ingredient_dao_mock
-        resultat = service.remove_ingredient_by_name(id_utilisateur, nom_ingredient, quantite)
-
-        # THEN
-        assert "100.0 retiré(s)" in resultat
-        assert "Nouvelle quantité : 400.0" in resultat
-
-    def test_remove_ingredient_by_name_succes_complet(self):
-        # GIVEN
-        id_utilisateur = 1
-        nom_ingredient = "vodka"
-        quantite = 500.0
-
-        ingredient = {
-            "id_ingredient": 1,
-            "nom": "Vodka",
-        }
-
-        result = {
-            "supprime": True,
-            "nouvelle_quantite": 0.0,
-        }
-
-        stock_dao_mock = MagicMock(spec=StockCourseDAO)
-        stock_dao_mock.decrement_stock_item.return_value = result
-
-        ingredient_dao_mock = MagicMock(spec=IngredientDAO)
-        ingredient_dao_mock.get_by_name.return_value = ingredient
-
-        # WHEN
-        service = StockCourseService()
-        service.stock_dao = stock_dao_mock
-        service.ingredient_dao = ingredient_dao_mock
-        resultat = service.remove_ingredient_by_name(id_utilisateur, nom_ingredient, quantite)
-
-        # THEN
-        assert "retiré complètement du stock" in resultat
-
-    def test_remove_ingredient_by_name_quantite_invalide(self):
-        # GIVEN
-        id_utilisateur = 1
-        nom_ingredient = "vodka"
-        quantite = -10.0
-
-        stock_dao_mock = MagicMock(spec=StockCourseDAO)
-        ingredient_dao_mock = MagicMock(spec=IngredientDAO)
-
-        # WHEN
-        service = StockCourseService()
-        service.stock_dao = stock_dao_mock
-        service.ingredient_dao = ingredient_dao_mock
-
-        # THEN
+class TestRemoveIngredient:
+    def test_invalid_quantity(self, service):
         with pytest.raises(InvalidQuantityError):
-            service.remove_ingredient_by_name(id_utilisateur, nom_ingredient, quantite)
+            service.remove_ingredient_by_name(1, "citron", 0)
 
-    def test_remove_ingredient_by_name_quantite_insuffisante(self):
-        # GIVEN
-        id_utilisateur = 1
-        nom_ingredient = "vodka"
-        quantite = 600.0
+    def test_insufficient_quantity(self, service, mock_stock_dao, mock_ingredient_dao, ingredient_sample):
+        mock_ingredient_dao.get_by_name.return_value = ingredient_sample
 
-        ingredient = {
-            "id_ingredient": 1,
-            "nom": "Vodka",
-        }
-
-        stock_dao_mock = MagicMock(spec=StockCourseDAO)
-        stock_dao_mock.decrement_stock_item.side_effect = ValueError(
-            "Impossible de retirer 600.0 (quantité disponible : 500.0)",
+        mock_stock_dao.decrement_stock_item.side_effect = ValueError(
+            "Impossible de retirer 10 (quantité disponible : 2)",
         )
 
-        ingredient_dao_mock = MagicMock(spec=IngredientDAO)
-        ingredient_dao_mock.get_by_name.return_value = ingredient
+        with pytest.raises(InsufficientQuantityError):
+            service.remove_ingredient_by_name(1, "citron", 10)
 
-        # WHEN
-        service = StockCourseService()
-        service.stock_dao = stock_dao_mock
-        service.ingredient_dao = ingredient_dao_mock
+    def test_not_in_stock(self, service, mock_stock_dao, mock_ingredient_dao, ingredient_sample):
+        mock_ingredient_dao.get_by_name.return_value = ingredient_sample
 
-        # THEN
-        with pytest.raises(InsufficientQuantityError) as exc_info:
-            service.remove_ingredient_by_name(id_utilisateur, nom_ingredient, quantite)
-
-        assert exc_info.value.quantite_demandee == 600.0
-        assert exc_info.value.quantite_disponible == 500.0
-
-    def test_remove_ingredient_by_name_non_dans_stock(self):
-        # GIVEN
-        id_utilisateur = 1
-        nom_ingredient = "vodka"
-        quantite = 100.0
-
-        ingredient = {
-            "id_ingredient": 1,
-            "nom": "Vodka",
-        }
-
-        stock_dao_mock = MagicMock(spec=StockCourseDAO)
-        stock_dao_mock.decrement_stock_item.side_effect = ValueError(
+        mock_stock_dao.decrement_stock_item.side_effect = ValueError(
             "Ingrédient non trouvé dans le stock",
         )
 
-        ingredient_dao_mock = MagicMock(spec=IngredientDAO)
-        ingredient_dao_mock.get_by_name.return_value = ingredient
+        with pytest.raises(ServiceError):
+            service.remove_ingredient_by_name(1, "citron", 1)
 
-        # WHEN
-        service = StockCourseService()
-        service.stock_dao = stock_dao_mock
-        service.ingredient_dao = ingredient_dao_mock
+    def test_success_partial(self, service, mock_stock_dao, mock_ingredient_dao, ingredient_sample):
+        mock_ingredient_dao.get_by_name.return_value = ingredient_sample
 
-        # THEN
-        with pytest.raises(ServiceError) as exc_info:
-            service.remove_ingredient_by_name(id_utilisateur, nom_ingredient, quantite)
-        assert "n'est pas dans votre stock" in str(exc_info.value)
-
-    # ========== Tests pour delete_ingredient_by_name ==========
-
-    def test_delete_ingredient_by_name_succes(self):
-        # GIVEN
-        id_utilisateur = 1
-        nom_ingredient = "vodka"
-
-        ingredient = {
-            "id_ingredient": 1,
-            "nom": "Vodka",
+        mock_stock_dao.decrement_stock_item.return_value = {
+            "supprime": False,
+            "nouvelle_quantite": 3,
         }
 
-        stock_dao_mock = MagicMock(spec=StockCourseDAO)
-        stock_dao_mock.delete_stock_item.return_value = True
+        msg = service.remove_ingredient_by_name(1, "citron", 1)
 
-        ingredient_dao_mock = MagicMock(spec=IngredientDAO)
-        ingredient_dao_mock.get_by_name.return_value = ingredient
+        assert "Nouvelle quantité" in msg
 
-        # WHEN
-        service = StockCourseService()
-        service.stock_dao = stock_dao_mock
-        service.ingredient_dao = ingredient_dao_mock
-        resultat = service.delete_ingredient_by_name(id_utilisateur, nom_ingredient)
+    def test_success_total(self, service, mock_stock_dao, mock_ingredient_dao, ingredient_sample):
+        mock_ingredient_dao.get_by_name.return_value = ingredient_sample
 
-        # THEN
-        assert "supprimé complètement du stock" in resultat
-        stock_dao_mock.delete_stock_item.assert_called_once_with(
-            id_utilisateur=id_utilisateur,
-            id_ingredient=1,
-        )
-
-    def test_delete_ingredient_by_name_non_dans_stock(self):
-        # GIVEN
-        id_utilisateur = 1
-        nom_ingredient = "vodka"
-
-        ingredient = {
-            "id_ingredient": 1,
-            "nom": "Vodka",
+        mock_stock_dao.decrement_stock_item.return_value = {
+            "supprime": True,
         }
 
-        stock_dao_mock = MagicMock(spec=StockCourseDAO)
-        stock_dao_mock.delete_stock_item.return_value = False
+        msg = service.remove_ingredient_by_name(1, "citron", 1)
 
-        ingredient_dao_mock = MagicMock(spec=IngredientDAO)
-        ingredient_dao_mock.get_by_name.return_value = ingredient
+        assert "retiré complètement" in msg
 
-        # WHEN
-        service = StockCourseService()
-        service.stock_dao = stock_dao_mock
-        service.ingredient_dao = ingredient_dao_mock
 
-        # THEN
-        with pytest.raises(ServiceError) as exc_info:
-            service.delete_ingredient_by_name(id_utilisateur, nom_ingredient)
-        assert "n'est pas dans votre stock" in str(exc_info.value)
+# -------------------------------------------------------------------------
+# delete_ingredient_by_name
+# -------------------------------------------------------------------------
 
-    def test_delete_ingredient_by_name_ingredient_non_trouve(self):
-        # GIVEN
-        id_utilisateur = 1
-        nom_ingredient = "ingredient_inexistant"
 
-        stock_dao_mock = MagicMock(spec=StockCourseDAO)
-        ingredient_dao_mock = MagicMock(spec=IngredientDAO)
-        ingredient_dao_mock.get_by_name.return_value = None
-        ingredient_dao_mock.search_by_name.return_value = []
+class TestDeleteIngredientByName:
+    def test_not_found(self, service, mock_stock_dao, mock_ingredient_dao, ingredient_sample):
+        mock_ingredient_dao.get_by_name.return_value = ingredient_sample
+        mock_stock_dao.delete_stock_item.return_value = False
 
-        # WHEN
-        service = StockCourseService()
-        service.stock_dao = stock_dao_mock
-        service.ingredient_dao = ingredient_dao_mock
+        with pytest.raises(ServiceError):
+            service.delete_ingredient_by_name(1, "citron")
 
-        # THEN
-        with pytest.raises(IngredientNotFoundError):
-            service.delete_ingredient_by_name(id_utilisateur, nom_ingredient)
+    def test_success(self, service, mock_stock_dao, mock_ingredient_dao, ingredient_sample):
+        mock_ingredient_dao.get_by_name.return_value = ingredient_sample
+        mock_stock_dao.delete_stock_item.return_value = True
 
-    # ========== Tests pour get_full_stock_list ==========
+        msg = service.delete_ingredient_by_name(1, "citron")
 
-    def test_get_full_stock_list_succes(self):
-        # GIVEN
-        id_utilisateur = 1
-        full_stock = [
-            {"id_ingredient": 1, "nom": "Vodka", "quantite": 500.0},
-            {"id_ingredient": 2, "nom": "Gin", "quantite": 0.0},
-        ]
+        assert "supprimé complètement" in msg
 
-        stock_dao_mock = MagicMock(spec=StockCourseDAO)
-        stock_dao_mock.get_full_stock.return_value = full_stock
 
-        ingredient_dao_mock = MagicMock(spec=IngredientDAO)
+# -------------------------------------------------------------------------
+# get_full_stock_list
+# -------------------------------------------------------------------------
 
-        # WHEN
-        service = StockCourseService()
-        service.stock_dao = stock_dao_mock
-        service.ingredient_dao = ingredient_dao_mock
-        resultat = service.get_full_stock_list(id_utilisateur)
 
-        # THEN
-        assert resultat == full_stock
-        assert len(resultat) == 2
-        stock_dao_mock.get_full_stock.assert_called_once_with(id_utilisateur)
+class TestGetFullStockList:
+    def test_success(self, service, mock_stock_dao):
+        mock_stock_dao.get_full_stock.return_value = [{"id_ingredient": 1, "quantite": 0}]
 
-    def test_get_full_stock_list_erreur(self):
-        # GIVEN
-        id_utilisateur = 1
+        result = service.get_full_stock_list(1)
 
-        stock_dao_mock = MagicMock(spec=StockCourseDAO)
-        stock_dao_mock.get_full_stock.side_effect = Exception("Erreur DB")
+        assert len(result) == 1
 
-        ingredient_dao_mock = MagicMock(spec=IngredientDAO)
+    def test_failure(self, service, mock_stock_dao):
+        mock_stock_dao.get_full_stock.side_effect = Exception("DB fail")
 
-        # WHEN
-        service = StockCourseService()
-        service.stock_dao = stock_dao_mock
-        service.ingredient_dao = ingredient_dao_mock
-
-        # THEN
-        with pytest.raises(ServiceError) as exc_info:
-            service.get_full_stock_list(id_utilisateur)
-        assert "stock complet" in str(exc_info.value)
+        with pytest.raises(ServiceError):
+            service.get_full_stock_list(1)

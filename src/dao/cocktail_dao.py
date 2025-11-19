@@ -19,7 +19,26 @@ class CocktailDAO(metaclass=Singleton):
     @staticmethod
     @log
     def rechercher_cocktail_par_nom(nom) -> Cocktail:
-        """Doc."""
+        """Recherche un cocktail par son nom exact.
+
+        La recherche est effectuée sur le nom formaté en title case.
+
+        Parameters
+        ----------
+        nom : str
+            Le nom du cocktail à rechercher
+
+        Returns
+        -------
+        Cocktail | None
+            L'objet Cocktail si trouvé, None sinon
+
+        Raises
+        ------
+        DAOError
+            En cas d'erreur de base de données
+
+        """
         with DBConnection().connection as connection, connection.cursor() as cursor:
             cursor.execute(
                 """SELECT *
@@ -46,7 +65,29 @@ class CocktailDAO(metaclass=Singleton):
         sequence,
         max_resultats,
     ) -> list[Cocktail]:
-        """Doc."""
+        """Recherche des cocktails dont le nom commence par une séquence donnée.
+
+        La recherche est insensible à la casse et retourne les résultats
+        par ordre alphabétique.
+
+        Parameters
+        ----------
+        sequence : str
+            La séquence de caractères recherchée au début du nom
+        max_resultats : int
+            Le nombre maximum de résultats à retourner
+
+        Returns
+        -------
+        list[Cocktail]
+            Liste des cocktails correspondant à la recherche, triée par nom
+
+        Raises
+        ------
+        DAOError
+            En cas d'erreur de base de données
+
+        """
         with DBConnection().connection as connection, connection.cursor() as cursor:
             cursor.execute(
                 "SELECT *                       "
@@ -75,12 +116,43 @@ class CocktailDAO(metaclass=Singleton):
     @staticmethod
     @log
     def rechercher_cocktail_aleatoire() -> Cocktail:
-        """Doc."""
+        """Récupère un cocktail aléatoire de la base de données.
+
+        Returns
+        -------
+        Cocktail
+        Un cocktail sélectionné aléatoirement
+
+        Raises
+        ------
+        DAOError
+        En cas d'erreur de base de données
+
+        """
 
     @staticmethod
     @log
     def get_cocktail_id_by_name(cocktail_name: str) -> int | None:
-        """Récupère l'ID d'un cocktail par son nom."""
+        """Récupère l'identifiant d'un cocktail par son nom.
+
+        La recherche est insensible à la casse et ignore les espaces superflus.
+
+        Parameters
+        ----------
+        cocktail_name : str
+            Le nom du cocktail à rechercher
+
+        Returns
+        -------
+        int | None
+            L'identifiant du cocktail si trouvé, None sinon
+
+        Raises
+        ------
+        DAOError
+            En cas d'erreur de base de données
+
+        """
         with DBConnection().connection as connection, connection.cursor() as cursor:
             cursor.execute(
                 """
@@ -98,10 +170,27 @@ class CocktailDAO(metaclass=Singleton):
     def get_tous_cocktails_avec_ingredients() -> list[dict]:
         """Récupère tous les cocktails avec leurs ingrédients requis.
 
+        Pour chaque cocktail, retourne ses informations de base ainsi que
+        la liste complète de ses ingrédients avec quantités et unités.
+
         Returns
         -------
         list[dict]
-            Liste de tous les cocktails avec leurs ingrédients
+            Liste de dictionnaires contenant pour chaque ligne :
+            - id_cocktail : int
+            - nom : str
+            - categorie : str
+            - verre : str
+            - alcool : bool
+            - image : str
+            - id_ingredient : int
+            - qte : float
+            - unite : str
+
+        Raises
+        ------
+        DAOError
+            En cas d'erreur de base de données
 
         """
         try:

@@ -1,4 +1,4 @@
-"""doc."""
+"""Couche service pour les opérations sur les cocktails."""
 
 from src.business_object.cocktail import Cocktail
 from src.dao.cocktail_dao import CocktailDAO
@@ -271,7 +271,26 @@ class CocktailService:
             raise ServiceError(message=f"Erreur inattendue : {e}") from e
 
     def _build_cocktails_dict(self, rows: list[dict]) -> dict:
-        """Construit le dictionnaire des cocktails avec leurs ingrédients."""
+        """Construit le dictionnaire des cocktails avec leurs ingrédients.
+
+        Pour chaque cocktail, initialise sa structure avec les informations de base
+        et compte les ingrédients manquants en vérifiant la disponibilité en stock.
+
+        Parameters
+        ----------
+        rows : list[dict]
+            Liste des lignes de résultats de la base de données contenant
+            les cocktails et leurs ingrédients
+
+        Returns
+        -------
+        dict
+            Dictionnaire avec id_cocktail comme clé et pour chaque cocktail :
+            - info : dict avec id_cocktail, nom, categorie, verre, alcool, image
+            - ingredients_manquants : list[str] des noms d'ingrédients manquants
+            - total_ingredients : int nombre total d'ingrédients du cocktail
+
+        """
         cocktails_dict = {}
 
         for row in rows:
@@ -302,7 +321,23 @@ class CocktailService:
         return cocktails_dict
 
     def _is_ingredient_available(self, row: dict) -> bool:
-        """Vérifie si un ingrédient est disponible en quantité suffisante."""
+        """Vérifie si un ingrédient est disponible en quantité suffisante dans le stock.
+
+        Compare la quantité requise avec la quantité en stock en gérant les
+        conversions d'unités pour les liquides (ml) et solides (g).
+
+        Parameters
+        ----------
+        row : dict
+            Ligne contenant les informations de l'ingrédient :
+            quantite_requise, unite_requise, quantite_stock, unite_stock, nom_ingredient
+
+        Returns
+        -------
+        bool
+            True si l'ingrédient est disponible en quantité suffisante, False sinon
+
+        """
         quantite_requise = float(row["quantite_requise"]) if row["quantite_requise"] else 0
         unite_requise = row["unite_requise"]
         quantite_stock = float(row["quantite_stock"]) if row["quantite_stock"] else None
@@ -342,7 +377,25 @@ class CocktailService:
         quantite_stock: float,
         unite_stock: str,
     ) -> bool:
-        """Compare deux quantités de liquides en les convertissant en ml."""
+        """Compare deux quantités de liquides en les convertissant en ml.
+
+        Parameters
+        ----------
+        quantite_requise : float
+            La quantité requise
+        unite_requise : str
+            L'unité de la quantité requise
+        quantite_stock : float
+            La quantité en stock
+        unite_stock : str
+            L'unité de la quantité en stock
+
+        Returns
+        -------
+        bool
+            True si le stock est suffisant (ml_stock >= ml_requis), False sinon
+
+        """
         ml_requis = UnitConverter.convert_to_ml(quantite_requise, unite_requise)
         ml_stock = UnitConverter.convert_to_ml(quantite_stock, unite_stock)
 
@@ -358,7 +411,25 @@ class CocktailService:
         quantite_stock: float,
         unite_stock: str,
     ) -> bool:
-        """Compare deux quantités de solides en les convertissant en g."""
+        """Compare deux quantités de solides en les convertissant en grammes.
+
+        Parameters
+        ----------
+        quantite_requise : float
+            La quantité requise
+        unite_requise : str
+            L'unité de la quantité requise
+        quantite_stock : float
+            La quantité en stock
+        unite_stock : str
+            L'unité de la quantité en stock
+
+        Returns
+        -------
+        bool
+            True si le stock est suffisant (g_stock >= g_requis), False sinon
+
+        """
         g_requis = UnitConverter.convert_to_g(quantite_requise, unite_requise)
         g_stock = UnitConverter.convert_to_g(quantite_stock, unite_stock)
 
@@ -372,7 +443,30 @@ class CocktailService:
         cocktails_dict: dict,
         max_ingredients_manquants: int,
     ) -> list[dict]:
-        """Filtre et formate les cocktails selon le nombre d'ingrédients manquants."""
+        """Filtre et formate les cocktails selon le nombre d'ingrédients manquants.
+
+        Sélectionne les cocktails ayant entre 1 et max_ingredients_manquants ingrédients
+        manquants, calcule le pourcentage de possession et trie les résultats.
+
+        Parameters
+        ----------
+        cocktails_dict : dict
+            Dictionnaire des cocktails construit par _build_cocktails_dict
+        max_ingredients_manquants : int
+            Nombre maximum d'ingrédients manquants autorisés
+
+        Returns
+        -------
+        list[dict]
+            Liste des cocktails quasi-réalisables, triée par :
+            1. Nombre d'ingrédients manquants (croissant)
+            2. Pourcentage de possession (décroissant)
+            3. Nom (alphabétique)
+            Chaque dictionnaire contient : toutes les infos du cocktail,
+            ingredients_manquants, nombre_ingredients_manquants,
+            nombre_ingredients_total, pourcentage_possession
+
+        """
         cocktails_quasi_realisables = []
 
         for data in cocktails_dict.values():

@@ -30,7 +30,35 @@ def add_favoris(
     nom_cocktail: str,
     current_user: CurrentUser,
 ) -> dict:
-    """Ajoute un cocktail aux favoris."""
+    """Ajoute un cocktail aux favoris de l'utilisateur connecté.
+
+    Crée un avis avec favoris=TRUE si l'avis n'existe pas encore.
+    Si l'avis existe déjà, met à jour le champ favoris.
+
+    L'utilisateur est automatiquement récupéré depuis le token JWT.
+
+    Parameters
+    ----------
+    nom_cocktail : str
+        Le nom du cocktail à ajouter aux favoris
+    current_user : CurrentUser
+        L'utilisateur authentifié (injecté automatiquement)
+
+    Returns
+    -------
+    dict
+        Dictionnaire contenant le message de confirmation
+
+    Raises
+    ------
+    HTTPException(404)
+        Si le cocktail n'existe pas (avec suggestions)
+    HTTPException(400)
+        En cas d'erreur lors de l'ajout aux favoris
+    HTTPException(401/403)
+        Si non authentifié ou token invalide
+
+    """
     try:
         return service.add_favoris(
             id_utilisateur=current_user.id_utilisateur,
@@ -67,7 +95,30 @@ Récupère la liste de mes cocktails favoris (format simplifié).
 """,
 )
 def get_mes_favoris(current_user: CurrentUser) -> dict:
-    """Récupère les cocktails favoris (format simplifié)."""
+    """Récupère la liste des cocktails favoris de l'utilisateur connecté au format simplifié.
+
+    L'utilisateur est automatiquement récupéré depuis le token JWT.
+
+    Parameters
+    ----------
+    current_user : CurrentUser
+        L'utilisateur authentifié (injecté automatiquement)
+
+    Returns
+    -------
+    dict
+        Dictionnaire contenant :
+        - pseudo_utilisateur : str
+        - cocktails_favoris : list[str] (liste des noms de cocktails)
+
+    Raises
+    ------
+    HTTPException(400)
+        En cas d'erreur lors de la récupération
+    HTTPException(401/403)
+        Si non authentifié ou token invalide
+
+    """
     try:
         return service.get_mes_favoris_simple(
             id_utilisateur=current_user.id_utilisateur,
@@ -94,7 +145,36 @@ def remove_favoris(
     nom_cocktail: str,
     current_user: CurrentUser,
 ) -> dict:
-    """Retire un cocktail des favoris."""
+    """Retire un cocktail des favoris de l'utilisateur connecté.
+
+    Met le champ favoris à FALSE dans l'avis correspondant.
+
+    L'utilisateur est automatiquement récupéré depuis le token JWT.
+
+    Parameters
+    ----------
+    nom_cocktail : str
+        Le nom du cocktail à retirer des favoris
+    current_user : CurrentUser
+        L'utilisateur authentifié (injecté automatiquement)
+
+    Returns
+    -------
+    dict
+        Dictionnaire contenant :
+        - status : str ("success")
+        - message : str (message de confirmation)
+
+    Raises
+    ------
+    HTTPException(404)
+        Si le cocktail n'existe pas (avec suggestions) ou n'est pas dans les favoris
+    HTTPException(400)
+        En cas d'erreur lors du retrait des favoris
+    HTTPException(401/403)
+        Si non authentifié ou token invalide
+
+    """
     try:
         message = service.remove_favoris(
             id_utilisateur=current_user.id_utilisateur,

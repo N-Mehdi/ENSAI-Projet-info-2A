@@ -157,7 +157,24 @@ class UtilisateurDAO(metaclass=Singleton):
         return res > 0
 
     def read(self, id_utilisateur: int) -> User | None:
-        """Doc."""
+        """Récupère un utilisateur par son identifiant.
+
+        Parameters
+        ----------
+        id_utilisateur : int
+            L'identifiant de l'utilisateur à récupérer
+
+        Returns
+        -------
+        User | None
+            L'objet User si trouvé, None sinon
+
+        Raises
+        ------
+        DAOError
+            En cas d'erreur de base de données
+
+        """
         try:
             with DBConnection().connection as connection, connection.cursor() as cursor:
                 cursor.execute(
@@ -189,15 +206,22 @@ class UtilisateurDAO(metaclass=Singleton):
         return None
 
     def recuperer_par_pseudo(self, pseudo: str) -> User | None:
-        """Récupérer le mot de passe hashé et le pseudo d'un utilisateur par son pseudo.
+        """Récupère un utilisateur par son pseudo.
 
         Parameters
         ----------
-            pseudo: Le pseudo de l'utilisateur.
+        pseudo : str
+            Le pseudo de l'utilisateur à récupérer
 
         Returns
         -------
-            User si trouvé, None sinon.
+        User | None
+            L'objet User si trouvé, None sinon
+
+        Raises
+        ------
+        DAOError
+            En cas d'erreur de base de données
 
         """
         try:
@@ -235,11 +259,20 @@ class UtilisateurDAO(metaclass=Singleton):
     def pseudo_existe(self, pseudo: str) -> bool:
         """Vérifie si un pseudo existe déjà en base de données.
 
-        Args:
-            pseudo: Le pseudo à vérifier
+        Parameters
+        ----------
+        pseudo : str
+            Le pseudo à vérifier
 
-        Returns:
-            bool: True si le pseudo existe, False sinon
+        Returns
+        -------
+        bool
+            True si le pseudo existe, False sinon
+
+        Raises
+        ------
+        DAOError
+            En cas d'erreur de base de données
 
         """
         try:
@@ -259,11 +292,20 @@ class UtilisateurDAO(metaclass=Singleton):
     def mail_existe(self, mail: str) -> bool:
         """Vérifie si un email existe déjà en base de données.
 
-        Args:
-            mail: L'email à vérifier
+        Parameters
+        ----------
+        mail : str
+            L'email à vérifier
 
-        Returns:
-            bool: True si l'email existe, False sinon
+        Returns
+        -------
+        bool
+            True si l'email existe, False sinon
+
+        Raises
+        ------
+        DAOError
+            En cas d'erreur de base de données
 
         """
         try:

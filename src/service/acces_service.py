@@ -28,7 +28,32 @@ class AccesService:
         self.dao_cocktail = CocktailDAO()
 
     def grant_access_to_user(self, owner_pseudo: str, user_pseudo: str) -> AccessResponse:
-        """Donne l'accès à un utilisateur pour voir les cocktails privés."""
+        """Donne l'accès à un utilisateur pour voir les cocktails privés du propriétaire.
+
+        Parameters
+        ----------
+        owner_pseudo : str
+            Le pseudo du propriétaire des cocktails privés
+        user_pseudo : str
+            Le pseudo de l'utilisateur à qui donner l'accès
+
+        Returns
+        -------
+        AccessResponse
+            Objet contenant le succès de l'opération et les détails de l'accès accordé
+
+        Raises
+        ------
+        UserNotFoundError
+            Si le propriétaire ou l'utilisateur n'existe pas
+        SelfAccessError
+            Si l'utilisateur tente de se donner accès à lui-même
+        AccessAlreadyExistsError
+            Si l'utilisateur a déjà accès aux cocktails du propriétaire
+        DAOError
+            En cas d'erreur de base de données
+
+        """
         owner_id = self.dao.get_user_id_by_pseudo(owner_pseudo)
         if owner_id is None:
             raise UserNotFoundError(message=f"Utilisateur propriétaire '{owner_pseudo}' introuvable")
@@ -55,7 +80,30 @@ class AccesService:
         )
 
     def revoke_access_from_user(self, owner_pseudo: str, user_pseudo: str) -> AccessResponse:
-        """Retire l'accès d'un utilisateur."""
+        """Retire l'accès d'un utilisateur aux cocktails privés du propriétaire.
+
+        Parameters
+        ----------
+        owner_pseudo : str
+            Le pseudo du propriétaire des cocktails privés
+        user_pseudo : str
+            Le pseudo de l'utilisateur à qui retirer l'accès
+
+        Returns
+        -------
+        AccessResponse
+            Objet contenant le succès de l'opération et les détails de l'accès retiré
+
+        Raises
+        ------
+        UserNotFoundError
+            Si le propriétaire ou l'utilisateur n'existe pas
+        AccessNotFoundError
+            Si l'utilisateur n'a pas d'accès aux cocktails du propriétaire
+        DAOError
+            En cas d'erreur de base de données
+
+        """
         owner_id = self.dao.get_user_id_by_pseudo(owner_pseudo)
         if owner_id is None:
             raise UserNotFoundError(message=f"Utilisateur propriétaire '{owner_pseudo}' introuvable")
@@ -79,7 +127,26 @@ class AccesService:
         )
 
     def get_users_with_access(self, owner_pseudo: str) -> AccessList:
-        """Récupère la liste des utilisateurs ayant accès aux cocktails privés."""
+        """Récupère la liste des utilisateurs ayant accès aux cocktails privés.
+
+        Parameters
+        ----------
+        owner_pseudo : str
+            Le pseudo du propriétaire des cocktails privés
+
+        Returns
+        -------
+        AccessList
+            Objet contenant la liste des pseudos avec accès et le total
+
+        Raises
+        ------
+        UserNotFoundError
+            Si le propriétaire n'existe pas
+        DAOError
+            En cas d'erreur de base de données
+
+        """
         owner_id = self.dao.get_user_id_by_pseudo(owner_pseudo)
         if owner_id is None:
             raise UserNotFoundError(message=f"Utilisateur '{owner_pseudo}' introuvable")
@@ -93,7 +160,30 @@ class AccesService:
         )
 
     def view_private_cocktails(self, owner_pseudo: str, viewer_pseudo: str) -> PrivateCocktailsList:
-        """Permet à un utilisateur de voir les cocktails privés d'un autre utilisateur."""
+        """Permet à un utilisateur de voir les cocktails privés d'un autre utilisateur.
+
+        Parameters
+        ----------
+        owner_pseudo : str
+            Le pseudo du propriétaire des cocktails privés
+        viewer_pseudo : str
+            Le pseudo de l'utilisateur qui souhaite voir les cocktails
+
+        Returns
+        -------
+        PrivateCocktailsList
+            Liste des cocktails privés avec leurs ingrédients
+
+        Raises
+        ------
+        UserNotFoundError
+            Si le propriétaire ou le visiteur n'existe pas
+        AccessDeniedError
+            Si le visiteur n'a pas accès aux cocktails privés
+        DAOError
+            En cas d'erreur de base de données
+
+        """
         owner_id = self.dao.get_user_id_by_pseudo(owner_pseudo)
         if owner_id is None:
             raise UserNotFoundError(message=f"Utilisateur '{owner_pseudo}' introuvable")
@@ -125,11 +215,53 @@ class AccesService:
         )
 
     def get_my_private_cocktails(self, owner_pseudo: str) -> PrivateCocktailsList:
-        """Récupère ses propres cocktails privés."""
+        """Récupère ses propres cocktails privés.
+
+        Parameters
+        ----------
+        owner_pseudo : str
+            Le pseudo du propriétaire
+
+        Returns
+        -------
+        PrivateCocktailsList
+            Liste des cocktails privés du propriétaire avec leurs ingrédients
+
+        Raises
+        ------
+        UserNotFoundError
+            Si le propriétaire n'existe pas
+        DAOError
+            En cas d'erreur de base de données
+
+        """
         return self.view_private_cocktails(owner_pseudo, owner_pseudo)
 
     def add_cocktail_to_private_list(self, owner_pseudo: str, cocktail_id: int) -> AccessResponse:
-        """Ajoute un cocktail à la liste privée."""
+        """Ajoute un cocktail à la liste privée par son identifiant.
+
+        Parameters
+        ----------
+        owner_pseudo : str
+            Le pseudo du propriétaire
+        cocktail_id : int
+            L'identifiant du cocktail à ajouter
+
+        Returns
+        -------
+        AccessResponse
+            Objet contenant le succès de l'opération et un message de confirmation
+
+        Raises
+        ------
+        UserNotFoundError
+            Si le propriétaire n'existe pas
+        AccessAlreadyExistsError
+            Si le cocktail est déjà dans la liste privée
+        DAOError
+            En cas d'erreur de base de données
+
+        """
         owner_id = self.dao.get_user_id_by_pseudo(owner_pseudo)
         if owner_id is None:
             raise UserNotFoundError(message=f"Utilisateur '{owner_pseudo}' introuvable")
@@ -148,7 +280,32 @@ class AccesService:
         )
 
     def add_cocktail_to_private_list_by_name(self, owner_pseudo: str, cocktail_name: str) -> AccessResponse:
-        """Ajoute un cocktail à la liste privée en utilisant son nom."""
+        """Ajoute un cocktail à la liste privée par son nom.
+
+        Parameters
+        ----------
+        owner_pseudo : str
+            Le pseudo du propriétaire
+        cocktail_name : str
+            Le nom du cocktail à ajouter
+
+        Returns
+        -------
+        AccessResponse
+            Objet contenant le succès de l'opération et un message de confirmation
+
+        Raises
+        ------
+        UserNotFoundError
+            Si le propriétaire n'existe pas
+        CocktailNotFoundError
+            Si le cocktail n'existe pas
+        AccessAlreadyExistsError
+            Si le cocktail est déjà dans la liste privée
+        DAOError
+            En cas d'erreur de base de données
+
+        """
         owner_id = self.dao.get_user_id_by_pseudo(owner_pseudo)
         if owner_id is None:
             raise UserNotFoundError(message=f"Utilisateur '{owner_pseudo}' introuvable")
@@ -171,7 +328,30 @@ class AccesService:
         )
 
     def remove_cocktail_from_private_list(self, owner_pseudo: str, cocktail_id: int) -> AccessResponse:
-        """Retire un cocktail de la liste privée."""
+        """Retire un cocktail de la liste privée par son identifiant.
+
+        Parameters
+        ----------
+        owner_pseudo : str
+            Le pseudo du propriétaire
+        cocktail_id : int
+            L'identifiant du cocktail à retirer
+
+        Returns
+        -------
+        AccessResponse
+            Objet contenant le succès de l'opération et un message de confirmation
+
+        Raises
+        ------
+        UserNotFoundError
+            Si le propriétaire n'existe pas
+        AccessNotFoundError
+            Si le cocktail n'est pas dans la liste privée
+        DAOError
+            En cas d'erreur de base de données
+
+        """
         owner_id = self.dao.get_user_id_by_pseudo(owner_pseudo)
         if owner_id is None:
             raise UserNotFoundError(message=f"Utilisateur '{owner_pseudo}' introuvable")
@@ -190,7 +370,32 @@ class AccesService:
         )
 
     def remove_cocktail_from_private_list_by_name(self, owner_pseudo: str, cocktail_name: str) -> AccessResponse:
-        """Retire un cocktail de la liste privée en utilisant son nom."""
+        """Retire un cocktail de la liste privée par son nom.
+
+        Parameters
+        ----------
+        owner_pseudo : str
+            Le pseudo du propriétaire
+        cocktail_name : str
+            Le nom du cocktail à retirer
+
+        Returns
+        -------
+        AccessResponse
+            Objet contenant le succès de l'opération et un message de confirmation
+
+        Raises
+        ------
+        UserNotFoundError
+            Si le propriétaire n'existe pas
+        CocktailNotFoundError
+            Si le cocktail n'existe pas
+        AccessNotFoundError
+            Si le cocktail n'est pas dans la liste privée
+        DAOError
+            En cas d'erreur de base de données
+
+        """
         owner_id = self.dao.get_user_id_by_pseudo(owner_pseudo)
         if owner_id is None:
             raise UserNotFoundError(message=f"Utilisateur '{owner_pseudo}' introuvable")

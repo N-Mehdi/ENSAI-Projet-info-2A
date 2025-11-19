@@ -20,7 +20,29 @@ service = CocktailUtilisateurService()
     "L'utilisateur propriétaire est automatiquement récupéré depuis le token JWT.",
 )
 def get_mes_cocktails_testes(current_user: CurrentUser) -> list[CocktailResponse]:
-    """Récupère tous les cocktails testés par l'utilisateur connecté."""
+    """Récupère tous les cocktails testés par l'utilisateur connecté.
+
+    L'utilisateur est automatiquement récupéré depuis le token JWT.
+
+    Parameters
+    ----------
+    current_user : CurrentUser
+        L'utilisateur authentifié (injecté automatiquement)
+
+    Returns
+    -------
+    list[CocktailResponse]
+        Liste des cocktails marqués comme testés avec leurs informations
+        (id_cocktail, nom, categorie, verre, alcool, image)
+
+    Raises
+    ------
+    HTTPException(500)
+        En cas d'erreur lors de la récupération des cocktails testés
+    HTTPException(401/403)
+        Si non authentifié ou token invalide
+
+    """
     try:
         cocktails = service.get_cocktails_testes(current_user.id_utilisateur)
         return [
@@ -52,7 +74,38 @@ def ajouter_cocktail_teste(
     nom_cocktail: Annotated[str, Query(description="Le nom du cocktail à marquer comme testé")],
     current_user: CurrentUser,
 ) -> dict:
-    """Ajoute un cocktail aux cocktails testés pour l'utilisateur connecté."""
+    """Ajoute un cocktail aux cocktails testés pour l'utilisateur connecté.
+
+    Crée un avis avec teste=TRUE si l'avis n'existe pas encore.
+    Si le cocktail est déjà testé, retourne un message approprié.
+
+    L'utilisateur est automatiquement récupéré depuis le token JWT.
+
+    Parameters
+    ----------
+    nom_cocktail : str
+        Le nom du cocktail à marquer comme testé
+    current_user : CurrentUser
+        L'utilisateur authentifié (injecté automatiquement)
+
+    Returns
+    -------
+    dict
+        Dictionnaire contenant :
+        - message : str (message de confirmation)
+        - nom_cocktail : str
+        - teste : bool (True)
+
+    Raises
+    ------
+    HTTPException(404)
+        Si le cocktail n'existe pas
+    HTTPException(500)
+        En cas d'erreur lors de l'ajout
+    HTTPException(401/403)
+        Si non authentifié ou token invalide
+
+    """
     try:
         result = service.ajouter_cocktail_teste(
             current_user.id_utilisateur,
@@ -94,7 +147,37 @@ def retirer_cocktail_teste(
     nom_cocktail: Annotated[str, Query(description="Le nom du cocktail dont retirer le statut testé")],
     current_user: CurrentUser,
 ) -> dict:
-    """Retire un cocktail des cocktails testés pour l'utilisateur connecté."""
+    """Retire un cocktail des cocktails testés pour l'utilisateur connecté.
+
+    Met le champ teste à FALSE dans l'avis correspondant.
+
+    L'utilisateur est automatiquement récupéré depuis le token JWT.
+
+    Parameters
+    ----------
+    nom_cocktail : str
+        Le nom du cocktail dont retirer le statut testé
+    current_user : CurrentUser
+        L'utilisateur authentifié (injecté automatiquement)
+
+    Returns
+    -------
+    dict
+        Dictionnaire contenant :
+        - message : str (message de confirmation)
+        - nom_cocktail : str
+        - teste : bool (False)
+
+    Raises
+    ------
+    HTTPException(404)
+        Si le cocktail n'existe pas ou n'était pas testé
+    HTTPException(500)
+        En cas d'erreur lors du retrait
+    HTTPException(401/403)
+        Si non authentifié ou token invalide
+
+    """
     try:
         result = service.retirer_cocktail_teste(
             current_user.id_utilisateur,

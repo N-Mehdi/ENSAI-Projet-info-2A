@@ -1,4 +1,4 @@
-"""doc."""
+"""Couche service pour les opérations sur les ingrédients."""
 
 from src.dao.ingredient_dao import IngredientDAO
 
@@ -11,7 +11,27 @@ class IngredientService:
         self.dao = IngredientDAO()
 
     def check_if_alcoholic(self, ingredient_id: int) -> dict:
-        """Vérifie si un ingrédient contient de l'alcool."""
+        """Vérifie si un ingrédient contient de l'alcool par son identifiant.
+
+        Parameters
+        ----------
+        ingredient_id : int
+            L'identifiant de l'ingrédient à vérifier
+
+        Returns
+        -------
+        dict
+            Dictionnaire contenant :
+            - ingredient_id : int
+            - is_alcoholic : bool
+            - message : str (message descriptif)
+
+        Raises
+        ------
+        ValueError
+            Si l'ingrédient n'existe pas
+
+        """
         is_alcoholic = self.dao.is_alcoholic(ingredient_id)
 
         if is_alcoholic is None:
@@ -24,7 +44,27 @@ class IngredientService:
         }
 
     def check_if_alcoholic_by_name(self, ingredient_name: str) -> dict:
-        """Vérifie si un ingrédient contient de l'alcool en utilisant son nom."""
+        """Vérifie si un ingrédient contient de l'alcool par son nom.
+
+        Parameters
+        ----------
+        ingredient_name : str
+            Le nom de l'ingrédient à vérifier
+
+        Returns
+        -------
+        dict
+            Dictionnaire contenant :
+            - ingredient_name : str
+            - is_alcoholic : bool
+            - message : str (message descriptif)
+
+        Raises
+        ------
+        ValueError
+            Si l'ingrédient n'existe pas
+
+        """
         is_alcoholic = self.dao.is_alcoholic_by_name(ingredient_name)
 
         if is_alcoholic is None:

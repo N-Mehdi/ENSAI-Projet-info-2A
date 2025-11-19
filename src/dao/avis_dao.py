@@ -71,7 +71,28 @@ class AvisDAO(metaclass=Singleton):
         id_utilisateur: int,
         id_cocktail: int,
     ) -> dict | None:
-        """Récupère un avis spécifique."""
+        """Récupère un avis spécifique d'un utilisateur sur un cocktail.
+
+        Parameters
+        ----------
+        id_utilisateur : int
+            L'identifiant de l'utilisateur
+        id_cocktail : int
+            L'identifiant du cocktail
+
+        Returns
+        -------
+        dict | None
+            Dictionnaire contenant les informations de l'avis si trouvé, None sinon.
+            Contient : id_utilisateur, pseudo_utilisateur, id_cocktail, nom_cocktail,
+            note, commentaire, favoris, date_creation, date_modification
+
+        Raises
+        ------
+        DAOError
+            En cas d'erreur de base de données
+
+        """
         with DBConnection().connection as connection, connection.cursor() as cursor:
             cursor.execute(
                 """
@@ -100,7 +121,28 @@ class AvisDAO(metaclass=Singleton):
 
     @log
     def get_avis_by_cocktail(self, id_cocktail: int) -> list[dict]:
-        """Récupère tous les avis d'un cocktail."""
+        """Récupère tous les avis d'un cocktail.
+
+        Les avis sont triés par date de création décroissante (du plus récent au plus ancien).
+
+        Parameters
+        ----------
+        id_cocktail : int
+            L'identifiant du cocktail
+
+        Returns
+        -------
+        list[dict]
+            Liste des avis pour le cocktail. Chaque dictionnaire contient :
+            id_utilisateur, pseudo_utilisateur, id_cocktail, nom_cocktail,
+            note, commentaire, favoris, date_creation, date_modification
+
+        Raises
+        ------
+        DAOError
+            En cas d'erreur de base de données
+
+        """
         with DBConnection().connection as connection, connection.cursor() as cursor:
             cursor.execute(
                 """
@@ -126,7 +168,28 @@ class AvisDAO(metaclass=Singleton):
 
     @log
     def get_avis_by_user(self, id_utilisateur: int) -> list[dict]:
-        """Récupère tous les avis d'un utilisateur."""
+        """Récupère tous les avis d'un utilisateur.
+
+        Les avis sont triés par date de création décroissante (du plus récent au plus ancien).
+
+        Parameters
+        ----------
+        id_utilisateur : int
+            L'identifiant de l'utilisateur
+
+        Returns
+        -------
+        list[dict]
+            Liste des avis de l'utilisateur. Chaque dictionnaire contient :
+            id_utilisateur, pseudo_utilisateur, id_cocktail, nom_cocktail,
+            note, commentaire, favoris, date_creation, date_modification
+
+        Raises
+        ------
+        DAOError
+            En cas d'erreur de base de données
+
+        """
         with DBConnection().connection as connection, connection.cursor() as cursor:
             cursor.execute(
                 """
@@ -152,7 +215,26 @@ class AvisDAO(metaclass=Singleton):
 
     @log
     def delete_avis(self, id_utilisateur: int, id_cocktail: int) -> bool:
-        """Supprime un avis."""
+        """Supprime un avis d'un utilisateur sur un cocktail.
+
+        Parameters
+        ----------
+        id_utilisateur : int
+            L'identifiant de l'utilisateur
+        id_cocktail : int
+            L'identifiant du cocktail
+
+        Returns
+        -------
+        bool
+            True si un avis a été supprimé, False sinon
+
+        Raises
+        ------
+        DAOError
+            En cas d'erreur de base de données
+
+        """
         with DBConnection().connection as connection, connection.cursor() as cursor:
             cursor.execute(
                 """
@@ -169,7 +251,25 @@ class AvisDAO(metaclass=Singleton):
 
     @log
     def get_avis_summary(self, id_cocktail: int) -> dict:
-        """Récupère un résumé des avis pour un cocktail."""
+        """Récupère un résumé statistique des avis pour un cocktail.
+
+        Parameters
+        ----------
+        id_cocktail : int
+            L'identifiant du cocktail
+
+        Returns
+        -------
+        dict | None
+            Dictionnaire contenant les statistiques si le cocktail existe, None sinon.
+            Contient : id_cocktail, nom_cocktail, nombre_avis, note_moyenne, nombre_favoris
+
+        Raises
+        ------
+        DAOError
+            En cas d'erreur de base de données
+
+        """
         with DBConnection().connection as connection, connection.cursor() as cursor:
             cursor.execute(
                 """
@@ -199,7 +299,28 @@ class AvisDAO(metaclass=Singleton):
 
     @log
     def get_favoris_by_user(self, id_utilisateur: int) -> list[dict]:
-        """Récupère tous les cocktails favoris d'un utilisateur."""
+        """Récupère tous les cocktails favoris d'un utilisateur avec leurs avis.
+
+        Les résultats sont triés par date de modification décroissante.
+
+        Parameters
+        ----------
+        id_utilisateur : int
+            L'identifiant de l'utilisateur
+
+        Returns
+        -------
+        list[dict]
+            Liste des avis favoris de l'utilisateur. Chaque dictionnaire contient :
+            id_utilisateur, pseudo_utilisateur, id_cocktail, nom_cocktail,
+            note, commentaire, favoris, date_creation, date_modification
+
+        Raises
+        ------
+        DAOError
+            En cas d'erreur de base de données
+
+        """
         with DBConnection().connection as connection, connection.cursor() as cursor:
             cursor.execute(
                 """
@@ -284,12 +405,26 @@ class AvisDAO(metaclass=Singleton):
 
     @log
     def remove_favoris(self, id_utilisateur: int, id_cocktail: int) -> bool:
-        """Retire un cocktail des favoris (met favoris à FALSE).
+        """Retire un cocktail des favoris d'un utilisateur.
+
+        Met le champ favoris à FALSE et met à jour la date de modification.
+
+        Parameters
+        ----------
+        id_utilisateur : int
+            L'identifiant de l'utilisateur
+        id_cocktail : int
+            L'identifiant du cocktail
 
         Returns
         -------
         bool
-            True si le cocktail était en favoris, False sinon
+            True si le cocktail était en favoris et a été retiré, False sinon
+
+        Raises
+        ------
+        DAOError
+            En cas d'erreur de base de données
 
         """
         with DBConnection().connection as connection, connection.cursor() as cursor:

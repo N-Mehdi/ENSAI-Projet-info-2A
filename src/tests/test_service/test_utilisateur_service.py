@@ -1,4 +1,4 @@
-"""Classe de test de src/service/utilisateur_service."""
+"""Classe de test de UtilisateurService."""
 
 from datetime import date, timedelta
 from unittest.mock import MagicMock
@@ -29,7 +29,7 @@ class TestUtilisateurService:
 
     # ========== Tests pour creer_compte ==========
 
-    def test_creer_compte_succes(self):
+    def test_creer_compte_succes(self) -> None:
         # GIVEN
         donnees = UserRegister(
             pseudo="john_doe",
@@ -118,7 +118,7 @@ class TestUtilisateurService:
             service.creer_compte(donnees)
         assert "passé" in str(exc_info.value)
 
-    def test_creer_compte_age_moins_de_13_ans(self):
+    def test_creer_compte_age_moins_de_18_ans(self):
         # GIVEN
         date_trop_recente = (date.today() - timedelta(days=365 * 10)).isoformat()
         donnees = UserRegister(
@@ -134,7 +134,7 @@ class TestUtilisateurService:
         # WHEN / THEN
         with pytest.raises(InvalidBirthDateError) as exc_info:
             service.creer_compte(donnees)
-        assert "13 ans" in str(exc_info.value)
+        assert "18 ans" in str(exc_info.value)
 
     def test_creer_compte_date_non_realiste(self):
         # GIVEN

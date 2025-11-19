@@ -17,7 +17,24 @@ class CocktailUtilisateurDAO(metaclass=Singleton):
     @staticmethod
     @log
     def get_prive(id_utilisateur) -> list[Cocktail]:
-        """Obtenir tous les cocktails privés d'un utilisateur."""
+        """Récupère tous les cocktails privés d'un utilisateur.
+
+        Parameters
+        ----------
+        id_utilisateur : int
+            L'identifiant de l'utilisateur
+
+        Returns
+        -------
+        list[Cocktail]
+            Liste des cocktails dont l'utilisateur est propriétaire
+
+        Raises
+        ------
+        DAOError
+            En cas d'erreur de base de données
+
+        """
         with DBConnection().connection as connection, connection.cursor() as cursor:
             cursor.execute(
                 "SELECT c.id_cocktail,                           "
@@ -54,7 +71,29 @@ class CocktailUtilisateurDAO(metaclass=Singleton):
     @staticmethod
     @log
     def insert_cocktail_prive(id_utilisateur, cocktail: Cocktail) -> int:
-        """Ajoute un nouveau cocktail privé d'un utilisateur."""
+        """Ajoute un nouveau cocktail privé pour un utilisateur.
+
+        Crée le cocktail dans la base de données et établit la relation
+        de propriété dans la table acces.
+
+        Parameters
+        ----------
+        id_utilisateur : int
+            L'identifiant de l'utilisateur propriétaire
+        cocktail : Cocktail
+            L'objet Cocktail contenant les informations du cocktail à créer
+
+        Returns
+        -------
+        int
+            L'identifiant du cocktail créé
+
+        Raises
+        ------
+        DAOError
+            En cas d'erreur de base de données
+
+        """
         # Ajout du cocktail dans la base de données et récupération de son id
         sql_insert_cocktail = """
         INSERT INTO cocktail (nom, categorie, verre, alcool, image)
@@ -94,7 +133,24 @@ class CocktailUtilisateurDAO(metaclass=Singleton):
     @staticmethod
     @log
     def get_cocktail_ingredient(id_cocktail) -> dict:
-        """Récupère tous les ingrédients d'un cocktail donné."""
+        """Récupère tous les ingrédients d'un cocktail donné.
+
+        Parameters
+        ----------
+        id_cocktail : int
+            L'identifiant du cocktail
+
+        Returns
+        -------
+        dict
+            Dictionnaire avec les id_ingredient comme clés et les quantités comme valeurs
+
+        Raises
+        ------
+        DAOError
+            En cas d'erreur de base de données
+
+        """
         with DBConnection().connection as connection, connection.cursor() as cursor:
             cursor.execute(
                 "SELECT id_ingredient, quantite FROM cocktail_ingredient WHERE id_cocktail = %(id_cocktail)s",
@@ -111,7 +167,27 @@ class CocktailUtilisateurDAO(metaclass=Singleton):
         id_ingredient,
         quantite,
     ) -> None:
-        """Change la quantité d'un ingrédient dans la recette privée d'un utilisateur."""
+        """Change la quantité d'un ingrédient dans un cocktail privé.
+
+        Parameters
+        ----------
+        id_utilisateur : int
+            L'identifiant de l'utilisateur
+        id_cocktail : int
+            L'identifiant du cocktail
+        id_ingredient : int
+            L'identifiant de l'ingrédient à modifier
+        quantite : float
+            La nouvelle quantité de l'ingrédient
+
+        Raises
+        ------
+        PermissionDeniedError
+            Si l'utilisateur n'est pas le propriétaire du cocktail
+        DAOError
+            En cas d'erreur de base de données
+
+        """
         with DBConnection().connection as connection, connection.cursor() as cursor:
             # Vérifier si l'utilisateur est bien le propriétaire du cocktail
             cursor.execute(
@@ -150,7 +226,27 @@ class CocktailUtilisateurDAO(metaclass=Singleton):
         id_ingredient,
         quantite,
     ) -> None:
-        """Ajouter un ingrédient à la recette privée d'un utilisateur."""
+        """Ajoute un ingrédient à un cocktail privé.
+
+        Parameters
+        ----------
+        id_utilisateur : int
+            L'identifiant de l'utilisateur
+        id_cocktail : int
+            L'identifiant du cocktail
+        id_ingredient : int
+            L'identifiant de l'ingrédient à ajouter
+        quantite : float
+            La quantité de l'ingrédient
+
+        Raises
+        ------
+        PermissionDeniedError
+            Si l'utilisateur n'est pas le propriétaire du cocktail
+        DAOError
+            En cas d'erreur de base de données
+
+        """
         with DBConnection().connection as connection, connection.cursor() as cursor:
             # Vérifier si l'utilisateur est bien le propriétaire du cocktail
             cursor.execute(
@@ -189,7 +285,25 @@ class CocktailUtilisateurDAO(metaclass=Singleton):
         id_cocktail,
         id_ingredient,
     ) -> None:
-        """Supprimer un ingrédient de la recette privée d'un utilisateur."""
+        """Supprime un ingrédient d'un cocktail privé.
+
+        Parameters
+        ----------
+        id_utilisateur : int
+            L'identifiant de l'utilisateur
+        id_cocktail : int
+            L'identifiant du cocktail
+        id_ingredient : int
+            L'identifiant de l'ingrédient à supprimer
+
+        Raises
+        ------
+        PermissionDeniedError
+            Si l'utilisateur n'est pas le propriétaire du cocktail
+        DAOError
+            En cas d'erreur de base de données
+
+        """
         with DBConnection().connection as connection, connection.cursor() as cursor:
             # Vérifier si l'utilisateur est bien le propriétaire du cocktail
             cursor.execute(
@@ -221,7 +335,23 @@ class CocktailUtilisateurDAO(metaclass=Singleton):
     @staticmethod
     @log
     def delete_cocktail_prive(id_utilisateur, id_cocktail) -> None:
-        """Supprime le cocktail privé d'un utilisateur."""
+        """Supprime un cocktail privé d'un utilisateur.
+
+        Supprime la relation d'accès et le cocktail de la base de données.
+
+        Parameters
+        ----------
+        id_utilisateur : int
+            L'identifiant de l'utilisateur propriétaire
+        id_cocktail : int
+            L'identifiant du cocktail à supprimer
+
+        Raises
+        ------
+        DAOError
+            En cas d'erreur de base de données
+
+        """
         sql_delete_acces = """
         DELETE FROM acces
         WHERE id_cocktail = %(id_cocktail)s
@@ -248,7 +378,24 @@ class CocktailUtilisateurDAO(metaclass=Singleton):
     @staticmethod
     @log
     def get_favoris(id_utilisateur) -> list[Cocktail]:
-        """Obtenir tous les cocktails favoris d'un utilisateur."""
+        """Récupère tous les cocktails favoris d'un utilisateur.
+
+        Parameters
+        ----------
+        id_utilisateur : int
+            L'identifiant de l'utilisateur
+
+        Returns
+        -------
+        list[Cocktail]
+            Liste des cocktails marqués comme favoris par l'utilisateur
+
+        Raises
+        ------
+        DAOError
+            En cas d'erreur de base de données
+
+        """
         with DBConnection().connection as connection, connection.cursor() as cursor:
             cursor.execute(
                 "SELECT c.id_cocktail,                           "
@@ -285,7 +432,21 @@ class CocktailUtilisateurDAO(metaclass=Singleton):
     @staticmethod
     @log
     def update_cocktail_favoris(id_utilisateur, id_cocktail) -> None:
-        """Ajoute un cocktail dans les favoris d'un utilisateur."""
+        """Ajoute un cocktail dans les favoris d'un utilisateur.
+
+        Parameters
+        ----------
+        id_utilisateur : int
+            L'identifiant de l'utilisateur
+        id_cocktail : int
+            L'identifiant du cocktail à ajouter aux favoris
+
+        Raises
+        ------
+        DAOError
+            En cas d'erreur de base de données
+
+        """
         with DBConnection().connection as connection, connection.cursor() as cursor:
             cursor.execute(
                 "UPDATE avis                                "
@@ -301,7 +462,21 @@ class CocktailUtilisateurDAO(metaclass=Singleton):
     @staticmethod
     @log
     def delete_cocktail_favoris(id_utilisateur, id_cocktail) -> None:
-        """Supprime un cocktail des favoris d'un utilisateur."""
+        """Retire un cocktail des favoris d'un utilisateur.
+
+        Parameters
+        ----------
+        id_utilisateur : int
+            L'identifiant de l'utilisateur
+        id_cocktail : int
+            L'identifiant du cocktail à retirer des favoris
+
+        Raises
+        ------
+        DAOError
+            En cas d'erreur de base de données
+
+        """
         with DBConnection().connection as connection, connection.cursor() as cursor:
             cursor.execute(
                 "UPDATE avis                                "
@@ -317,7 +492,24 @@ class CocktailUtilisateurDAO(metaclass=Singleton):
     @staticmethod
     @log
     def get_teste(id_utilisateur: int) -> list[Cocktail]:
-        """Obtenir tous les cocktails testés par un utilisateur."""
+        """Récupère tous les cocktails testés par un utilisateur.
+
+        Parameters
+        ----------
+        id_utilisateur : int
+            L'identifiant de l'utilisateur
+
+        Returns
+        -------
+        list[Cocktail]
+            Liste des cocktails marqués comme testés par l'utilisateur
+
+        Raises
+        ------
+        DAOError
+            En cas d'erreur de base de données
+
+        """
         with DBConnection().connection as connection, connection.cursor() as cursor:
             cursor.execute(
                 "SELECT c.id_cocktail,                           "
@@ -354,7 +546,26 @@ class CocktailUtilisateurDAO(metaclass=Singleton):
     @staticmethod
     @log
     def get_cocktail_id_by_name(nom_cocktail: str) -> int | None:
-        """Récupère l'ID d'un cocktail par son nom."""
+        """Récupère l'identifiant d'un cocktail par son nom.
+
+        La recherche est insensible à la casse.
+
+        Parameters
+        ----------
+        nom_cocktail : str
+            Le nom du cocktail à rechercher
+
+        Returns
+        -------
+        int | None
+            L'identifiant du cocktail si trouvé, None sinon
+
+        Raises
+        ------
+        DAOError
+            En cas d'erreur de base de données
+
+        """
         with DBConnection().connection as connection, connection.cursor() as cursor:
             cursor.execute(
                 "SELECT id_cocktail FROM cocktail WHERE LOWER(nom) = LOWER(%(nom)s)",
@@ -365,8 +576,34 @@ class CocktailUtilisateurDAO(metaclass=Singleton):
 
     @log
     def ajouter_cocktail_teste(self, id_utilisateur: int, nom_cocktail: str) -> dict:
-        """Ajoute un cocktail aux cocktails testés par son nom.
-        Crée l'avis s'il n'existe pas (avec note et commentaire NULL).
+        """Ajoute un cocktail aux cocktails testés par un utilisateur.
+
+        Crée un avis avec teste=TRUE si l'avis n'existe pas encore.
+        Si l'avis existe déjà, met à jour le champ teste.
+
+        Parameters
+        ----------
+        id_utilisateur : int
+            L'identifiant de l'utilisateur
+        nom_cocktail : str
+            Le nom du cocktail à marquer comme testé
+
+        Returns
+        -------
+        dict
+            Dictionnaire contenant :
+            - nom_cocktail : str
+            - id_cocktail : int
+            - teste : bool (True)
+            - deja_teste : bool (True si déjà testé avant, False sinon)
+
+        Raises
+        ------
+        CocktailNotFoundError
+            Si le cocktail n'existe pas
+        DAOError
+            En cas d'erreur de base de données
+
         """
         # Récupérer l'ID du cocktail par son nom
         id_cocktail = self.get_cocktail_id_by_name(nom_cocktail)
@@ -424,7 +661,33 @@ class CocktailUtilisateurDAO(metaclass=Singleton):
 
     @log
     def retirer_cocktail_teste(self, id_utilisateur: int, nom_cocktail: str) -> dict:
-        """Retire un cocktail des cocktails testés par son nom."""
+        """Retire un cocktail des cocktails testés par un utilisateur.
+
+        Parameters
+        ----------
+        id_utilisateur : int
+            L'identifiant de l'utilisateur
+        nom_cocktail : str
+            Le nom du cocktail à retirer des testés
+
+        Returns
+        -------
+        dict
+            Dictionnaire contenant :
+            - nom_cocktail : str
+            - id_cocktail : int
+            - teste : bool (False)
+
+        Raises
+        ------
+        CocktailNotFoundError
+            Si le cocktail n'existe pas
+        CocktailNotTestedError
+            Si le cocktail n'était pas marqué comme testé
+        DAOError
+            En cas d'erreur de base de données
+
+        """
         # Récupérer l'ID du cocktail par son nom
         id_cocktail = self.get_cocktail_id_by_name(nom_cocktail)
 

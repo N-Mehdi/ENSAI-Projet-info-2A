@@ -1,4 +1,4 @@
-"""doc."""
+"""Couche service pour les opérations sur les listes de course."""
 
 from src.dao.ingredient_dao import IngredientDAO
 from src.dao.liste_course_dao import ListeCourseDAO
@@ -18,7 +18,28 @@ class ListeCourseService:
         self.ingredient_dao = IngredientDAO()
 
     def get_liste_course(self, id_utilisateur: int) -> ListeCourse:
-        """Récupère la liste de course d'un utilisateur."""
+        """Récupère la liste de course complète d'un utilisateur.
+
+        Parameters
+        ----------
+        id_utilisateur : int
+            L'identifiant de l'utilisateur
+
+        Returns
+        -------
+        ListeCourse
+            Objet contenant :
+            - id_utilisateur : int
+            - items : list[ListeCourseItem]
+            - nombre_items : int (nombre total d'items)
+            - nombre_effectues : int (nombre d'items cochés)
+
+        Raises
+        ------
+        ServiceError
+            En cas d'erreur lors de la récupération de la liste de course
+
+        """
         try:
             rows = self.liste_course_dao.get_liste_course(id_utilisateur)
 
@@ -117,11 +138,32 @@ class ListeCourseService:
     ) -> str:
         """Retire un ingrédient de la liste de course et l'ajoute au stock.
 
-        Gère intelligemment les conversions d'unités :
-        - Même unité → additionne directement
-        - Unités liquides différentes → convertit en ml puis additionne
-        - Unités solides différentes → convertit en g puis additionne
+        Gère intelligemment les conversions d'unités lors de l'ajout au stock :
+        - Même unité → additionne directement les quantités
+        - Unités liquides différentes → convertit en ml, additionne et reconvertit
+        - Unités solides différentes → convertit en g, additionne et reconvertit
         - Types incompatibles → remplace par la nouvelle quantité
+
+        Parameters
+        ----------
+        id_utilisateur : int
+            L'identifiant de l'utilisateur
+        nom_ingredient : str
+            Le nom de l'ingrédient à transférer
+
+        Returns
+        -------
+        str
+            Message de confirmation avec la quantité et l'unité finale
+
+        Raises
+        ------
+        IngredientNotFoundError
+            Si l'ingrédient n'existe pas
+        ServiceError
+            Si l'ingrédient n'est pas dans la liste de course ou en cas d'erreur
+            lors du transfert
+
         """
         ingredient = self.ingredient_dao.get_by_name_with_suggestions(nom_ingredient)
 
@@ -310,7 +352,32 @@ class ListeCourseService:
         id_utilisateur: int,
         nom_ingredient: str,
     ) -> dict:
-        """Toggle le statut 'effectué' d'un item de la liste de course."""
+        """Bascule le statut 'effectué' d'un item de la liste de course.
+
+        Change l'état de coché à décoché ou inversement.
+
+        Parameters
+        ----------
+        id_utilisateur : int
+            L'identifiant de l'utilisateur
+        nom_ingredient : str
+            Le nom de l'ingrédient dont on change le statut
+
+        Returns
+        -------
+        dict
+            Dictionnaire contenant :
+            - effectue : bool (nouveau statut)
+            - message : str (message de confirmation)
+
+        Raises
+        ------
+        IngredientNotFoundError
+            Si l'ingrédient n'existe pas
+        ServiceError
+            En cas d'erreur lors de la modification du statut
+
+        """
         # Utiliser la méthode du DAO
         ingredient = self.ingredient_dao.get_by_name_with_suggestions(nom_ingredient)
 

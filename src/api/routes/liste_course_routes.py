@@ -29,7 +29,33 @@ Récupère ma liste de course complète.
 """,
 )
 def get_my_liste_course(current_user: CurrentUser) -> ListeCourse:
-    """Récupère la liste de course."""
+    """Récupère la liste de course complète de l'utilisateur connecté.
+
+    L'utilisateur est automatiquement récupéré depuis le token JWT.
+
+    Parameters
+    ----------
+    current_user : CurrentUser
+        L'utilisateur authentifié (injecté automatiquement)
+
+    Returns
+    -------
+    ListeCourse
+        Objet contenant :
+        - id_utilisateur : int
+        - items : list[ListeCourseItem] (avec id_ingredient, nom_ingredient,
+          quantite, effectue, id_unite, code_unite, nom_unite_complet)
+        - nombre_items : int
+        - nombre_effectues : int
+
+    Raises
+    ------
+    HTTPException(400)
+        En cas d'erreur lors de la récupération
+    HTTPException(401/403)
+        Si non authentifié ou token invalide
+
+    """
     try:
         return service.get_liste_course(current_user.id_utilisateur)
     except ServiceError as e:
@@ -104,7 +130,43 @@ def add_to_liste_course(
     unite: Annotated[str, Query(min_length=1, description="Abréviation de l'unité (ex: 'ml', 'cl', 'g', 'kg')", example="ml")],
     current_user: CurrentUser,
 ) -> dict:
-    """Ajoute un ingrédient à la liste de course."""
+    """Ajoute un ingrédient à la liste de course avec gestion intelligente des conversions.
+
+    Si l'ingrédient existe déjà :
+    - Même unité → additionne les quantités
+    - Unités différentes mais compatibles → convertit et additionne
+    - Unités incompatibles → remplace
+
+    L'utilisateur est automatiquement récupéré depuis le token JWT.
+
+    Parameters
+    ----------
+    nom_ingredient : str
+        Nom de l'ingrédient (minimum 2 caractères)
+    quantite : float
+        Quantité à acheter (doit être > 0)
+    unite : str
+        Abréviation de l'unité (ex: 'ml', 'cl', 'g', 'kg')
+    current_user : CurrentUser
+        L'utilisateur authentifié (injecté automatiquement)
+
+    Returns
+    -------
+    dict
+        Dictionnaire contenant :
+        - status : str ("success")
+        - message : str (confirmation avec quantité et unité)
+
+    Raises
+    ------
+    HTTPException(400)
+        Si la quantité est invalide
+    HTTPException(404)
+        Si l'ingrédient ou l'unité n'existe pas (avec suggestions pour l'ingrédient)
+    HTTPException(401/403)
+        Si non authentifié ou token invalide
+
+    """
     try:
         message = service.add_to_liste_course(
             id_utilisateur=current_user.id_utilisateur,
@@ -155,7 +217,38 @@ def mark_as_bought(
     nom_ingredient: str,
     current_user: CurrentUser,
 ) -> dict:
-    """Retire de la liste et ajoute au stock."""
+    """Retire un ingrédient de la liste de course et l'ajoute au stock.
+
+    Effectue deux opérations :
+    1. Retire l'ingrédient de la liste de course
+    2. Ajoute l'ingrédient au stock avec conversion automatique si nécessaire
+
+    L'utilisateur est automatiquement récupéré depuis le token JWT.
+
+    Parameters
+    ----------
+    nom_ingredient : str
+        Le nom de l'ingrédient à marquer comme acheté
+    current_user : CurrentUser
+        L'utilisateur authentifié (injecté automatiquement)
+
+    Returns
+    -------
+    dict
+        Dictionnaire contenant :
+        - status : str ("success")
+        - message : str (confirmation avec quantité ajoutée au stock)
+
+    Raises
+    ------
+    HTTPException(404)
+        Si l'ingrédient n'existe pas (avec suggestions)
+    HTTPException(400)
+        En cas d'erreur lors du transfert
+    HTTPException(401/403)
+        Si non authentifié ou token invalide
+
+    """
     try:
         message = service.remove_from_liste_course_and_add_to_stock(
             id_utilisateur=current_user.id_utilisateur,
@@ -193,7 +286,36 @@ def remove_from_liste_course(
     nom_ingredient: str,
     current_user: CurrentUser,
 ) -> dict:
-    """Retire de la liste sans ajouter au stock."""
+    """Retire un ingrédient de la liste de course SANS l'ajouter au stock.
+
+    Simple suppression, contrairement à `/achete/{nom}` qui transfère au stock.
+
+    L'utilisateur est automatiquement récupéré depuis le token JWT.
+
+    Parameters
+    ----------
+    nom_ingredient : str
+        Le nom de l'ingrédient à retirer
+    current_user : CurrentUser
+        L'utilisateur authentifié (injecté automatiquement)
+
+    Returns
+    -------
+    dict
+        Dictionnaire contenant :
+        - status : str ("success")
+        - message : str (confirmation de suppression)
+
+    Raises
+    ------
+    HTTPException(404)
+        Si l'ingrédient n'existe pas (avec suggestions)
+    HTTPException(400)
+        En cas d'erreur lors de la suppression
+    HTTPException(401/403)
+        Si non authentifié ou token invalide
+
+    """
     try:
         message = service.remove_from_liste_course(
             id_utilisateur=current_user.id_utilisateur,
@@ -227,7 +349,32 @@ Les ingrédients ne sont PAS ajoutés au stock.
 """,
 )
 def clear_liste_course(current_user: CurrentUser) -> dict:
-    """Vide la liste de course."""
+    """Vide complètement la liste de course.
+
+    ⚠️ Supprime TOUS les ingrédients sans les ajouter au stock.
+
+    L'utilisateur est automatiquement récupéré depuis le token JWT.
+
+    Parameters
+    ----------
+    current_user : CurrentUser
+        L'utilisateur authentifié (injecté automatiquement)
+
+    Returns
+    -------
+    dict
+        Dictionnaire contenant :
+        - status : str ("success")
+        - message : str (confirmation de suppression)
+
+    Raises
+    ------
+    HTTPException(400)
+        En cas d'erreur lors de la suppression
+    HTTPException(401/403)
+        Si non authentifié ou token invalide
+
+    """
     try:
         message = service.clear_liste_course(current_user.id_utilisateur)
 
@@ -257,7 +404,37 @@ def toggle_effectue(
     nom_ingredient: str,
     current_user: CurrentUser,
 ) -> dict:
-    """Toggle le statut effectué."""
+    """Bascule le statut 'effectué' d'un item de la liste de course.
+
+    Change l'état coché/décoché sans retirer l'ingrédient de la liste.
+    Pour retirer et ajouter au stock, utiliser `/achete/{nom}`.
+
+    L'utilisateur est automatiquement récupéré depuis le token JWT.
+
+    Parameters
+    ----------
+    nom_ingredient : str
+        Le nom de l'ingrédient à cocher/décocher
+    current_user : CurrentUser
+        L'utilisateur authentifié (injecté automatiquement)
+
+    Returns
+    -------
+    dict
+        Dictionnaire contenant :
+        - effectue : bool (nouveau statut)
+        - message : str (confirmation)
+
+    Raises
+    ------
+    HTTPException(404)
+        Si l'ingrédient n'existe pas (avec suggestions)
+    HTTPException(400)
+        En cas d'erreur lors de la modification
+    HTTPException(401/403)
+        Si non authentifié ou token invalide
+
+    """
     try:
         return service.toggle_effectue(
             id_utilisateur=current_user.id_utilisateur,

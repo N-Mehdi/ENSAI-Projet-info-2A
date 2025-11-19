@@ -1,4 +1,4 @@
-"""doc."""
+"""Class dao manipulant les listes de courses."""
 
 from src.dao.db_connection import DBConnection
 from src.utils.conversion_unite import UnitConverter
@@ -53,7 +53,43 @@ class ListeCourseDAO(metaclass=Singleton):
         quantite: float,
         id_unite: int,
     ) -> dict:
-        """Ajoute un ingrédient à la liste de course."""
+        """Ajoute un ingrédient à la liste de course d'un utilisateur.
+
+        Si l'ingrédient existe déjà dans la liste de course :
+        - Si les unités sont identiques : additionne les quantités
+        - Si les unités sont différentes mais de même type (liquide) :
+        convertit en ml, additionne et reconvertit dans l'unité existante
+        - Sinon : remplace par la nouvelle quantité et unité
+
+        Parameters
+        ----------
+        id_utilisateur : int
+            L'identifiant de l'utilisateur
+        id_ingredient : int
+            L'identifiant de l'ingrédient à ajouter
+        quantite : float
+            La quantité de l'ingrédient à ajouter
+        id_unite : int
+            L'identifiant de l'unité de mesure
+
+        Returns
+        -------
+        dict
+            Un dictionnaire contenant les informations de l'item ajouté/modifié :
+            - id_ingredient : int
+            - nom_ingredient : str
+            - quantite : float
+            - effectue : bool
+            - id_unite : int
+            - code_unite : str
+            - nom_unite_complet : str
+
+        Raises
+        ------
+        DAOError
+            En cas d'erreur de base de données
+
+        """
         with DBConnection().connection as connection, connection.cursor() as cursor:
             # Vérifier si l'ingrédient existe déjà dans la liste
             cursor.execute(
@@ -89,7 +125,7 @@ class ListeCourseDAO(metaclass=Singleton):
                 code_nouvelle_norm = UnitConverter.normalize_unit(code_unite_nouvelle)
 
                 if code_existante_norm == code_nouvelle_norm:
-                    # Même unité → additionner directement
+                    # Même unité : additionner directement
                     nouvelle_quantite = quantite_existante + quantite
 
                     cursor.execute(
@@ -112,7 +148,7 @@ class ListeCourseDAO(metaclass=Singleton):
                     and type_unite_existante == new_unite_info["type_unite"]
                     and type_unite_existante == "liquide"
                 ):
-                    # Unités différentes mais même type (liquide) -> convertir et additionner
+                    # Unités différentes mais même type (liquide) : convertir et additionner
                     code_unite_nouvelle = new_unite_info["abbreviation"]
 
                     # Convertir tout en ml
@@ -140,7 +176,7 @@ class ListeCourseDAO(metaclass=Singleton):
                             },
                         )
                     else:
-                        # Conversion impossible -> remplacer
+                        # Conversion impossible : remplacer
                         cursor.execute(
                             """
                             UPDATE liste_course
@@ -158,7 +194,7 @@ class ListeCourseDAO(metaclass=Singleton):
                             },
                         )
                 else:
-                    # Types différents ou non convertibles -> remplacer
+                    # Types différents ou non convertibles : remplacer
                     cursor.execute(
                         """
                         UPDATE liste_course
@@ -176,7 +212,7 @@ class ListeCourseDAO(metaclass=Singleton):
                         },
                     )
             else:
-                # L'ingrédient n'existe pas -> créer
+                # L'ingrédient n'existe pas : créer
                 cursor.execute(
                     """
                     INSERT INTO liste_course (id_utilisateur, id_ingredient, quantite, id_unite, effectue)

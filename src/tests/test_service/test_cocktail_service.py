@@ -1,270 +1,662 @@
-"""Classe de test de cocktail_service."""
+"""Tests pour le service CocktailService."""
+
+from unittest.mock import MagicMock
 
 import pytest
 
 from src.business_object.cocktail import Cocktail
 from src.dao.cocktail_dao import CocktailDAO
 from src.service.cocktail_service import CocktailService
+from src.utils.exceptions import DAOError, EmptyFieldError, ServiceError
 
 
-class TestCocktailService:
-    """Tests pour CocktailService."""
+@pytest.fixture
+def mock_cocktail_dao():
+    """Fixture pour créer un mock de CocktailDAO."""
+    return MagicMock(spec=CocktailDAO)
 
-    def test_rechercher_cocktail_par_nom_succes(self) -> None:
-        """Teste la recherche d'un cocktail par nom avec succès."""
-        # GIVEN
-        nom = "Margarita"
 
-        # WHEN
-        dao = CocktailDAO()
-        service = CocktailService(dao)
-        resultat = service.rechercher_cocktail_par_nom(nom)
+@pytest.fixture
+def mock_stock_dao():
+    """Fixture pour créer un mock de StockCourseDAO."""
+    return MagicMock()
 
-        # THEN
-        cocktail_attendu = Cocktail(
-            id_cocktail=11007,
-            nom="Margarita",
-            categorie="Ordinary Drink",
-            verre="Cocktail glass",
-            alcool=True,
-            image="https://www.thecocktaildb.com/images/media/drink/5noda61589575158.jpg",
-        )
-        assert resultat == cocktail_attendu
 
-    def test_rechercher_cocktail_par_nom_non_trouve(self) -> None:
-        """Teste la recherche d'un cocktail par nom qui n'existe pas.
+@pytest.fixture
+def cocktail_service(mock_cocktail_dao):
+    """Fixture pour créer une instance de CocktailService avec des mocks."""
+    service = CocktailService(mock_cocktail_dao)
+    return service
 
-        Raises
-        ------
-        LookupError
-            Quand le cocktail n'est pas trouvé
 
-        """
-        # GIVEN
-        nom = "Margaritaa"
+@pytest.fixture
+def sample_cocktail():
+    """Fixture pour créer un cocktail de test."""
+    return Cocktail(
+        id_cocktail=1,
+        nom="Mojito",
+        categorie="Cocktail",
+        verre="Highball glass",
+        alcool=True,
+        image="mojito.jpg",
+    )
 
-        # WHEN & THEN
-        dao = CocktailDAO()
-        service = CocktailService(dao)
 
-        with pytest.raises(LookupError, match=f"Aucun cocktail trouvé pour le nom '{nom}'"):
-            service.rechercher_cocktail_par_nom(nom)
+class TestRechercherCocktailParNom:
+    """Tests pour la méthode rechercher_cocktail_par_nom."""
 
-    def test_rechercher_cocktail_par_nom_type_error(self) -> None:
-        """Teste la recherche avec un type de nom invalide.
+    def test_rechercher_cocktail_par_nom_success(self, cocktail_service, mock_cocktail_dao, sample_cocktail):
+        """Test de recherche réussie d'un cocktail par nom."""
+        # Arrange
+        mock_cocktail_dao.rechercher_cocktail_par_nom.return_value = sample_cocktail
 
-        Raises
-        ------
-        TypeError
-            Quand le nom n'est pas une chaîne de caractères
+        # Act
+        result = cocktail_service.rechercher_cocktail_par_nom("Mojito")
 
-        """
-        # GIVEN
-        nom = 12345  # Le nom n'est pas une chaîne de caractères
+        # Assert
+        assert result == sample_cocktail
+        mock_cocktail_dao.rechercher_cocktail_par_nom.assert_called_once_with("Mojito")
 
-        # WHEN & THEN
-        dao = CocktailDAO()
-        service = CocktailService(dao)
+    def test_rechercher_cocktail_par_nom_vide(self, cocktail_service):
+        """Test avec un nom vide."""
+        # Act & Assert
+        with pytest.raises(EmptyFieldError):
+            cocktail_service.rechercher_cocktail_par_nom("")
 
-        with pytest.raises(TypeError, match="Le nom du cocktail doit être une chaîne de caractères."):
-            service.rechercher_cocktail_par_nom(nom)
+    def test_rechercher_cocktail_par_nom_none(self, cocktail_service):
+        """Test avec None comme nom."""
+        # Act & Assert
+        with pytest.raises(EmptyFieldError):
+            cocktail_service.rechercher_cocktail_par_nom(None)
 
-    def test_rechercher_cocktail_par_nom_value_error(self) -> None:
-        """Teste la recherche avec un nom vide.
+    def test_rechercher_cocktail_par_nom_type_invalide(self, cocktail_service):
+        """Test avec un type invalide (non string)."""
+        # Act & Assert
+        with pytest.raises(TypeError):
+            cocktail_service.rechercher_cocktail_par_nom(123)
 
-        Raises
-        ------
-        ValueError
-            Quand le nom est une chaîne vide
+    def test_rechercher_cocktail_par_nom_non_trouve(self, cocktail_service, mock_cocktail_dao):
+        """Test quand aucun cocktail n'est trouvé."""
+        # Arrange
+        mock_cocktail_dao.rechercher_cocktail_par_nom.return_value = None
 
-        """
-        # GIVEN
-        nom = ""  # Le nom est une chaîne vide
+        # Act & Assert
+        with pytest.raises(LookupError):
+            cocktail_service.rechercher_cocktail_par_nom("CocktailInexistant")
 
-        # WHEN & THEN
-        dao = CocktailDAO()
-        service = CocktailService(dao)
 
-        with pytest.raises(ValueError, match="Le nom du cocktail doit être fourni."):
-            service.rechercher_cocktail_par_nom(nom)
+class TestRechercherCocktailParSequenceDebut:
+    """Tests pour la méthode rechercher_cocktail_par_sequence_debut."""
 
-    def test_rechercher_cocktail_par_nom_none(self) -> None:
-        """Teste la recherche avec un nom None.
+    def test_rechercher_par_sequence_success(self, cocktail_service, mock_cocktail_dao, sample_cocktail):
+        """Test de recherche réussie par séquence."""
+        # Arrange
+        cocktails = [sample_cocktail]
+        mock_cocktail_dao.rechercher_cocktail_par_sequence_debut.return_value = cocktails
 
-        Raises
-        ------
-        ValueError
-            Quand le nom est None
+        # Act
+        result = cocktail_service.rechercher_cocktail_par_sequence_debut("Moj", 10)
 
-        """
-        # GIVEN
-        nom = None  # Le nom est None
+        # Assert
+        assert result == cocktails
+        mock_cocktail_dao.rechercher_cocktail_par_sequence_debut.assert_called_once_with("Moj", 10)
 
-        # WHEN & THEN
-        dao = CocktailDAO()
-        service = CocktailService(dao)
+    def test_rechercher_par_sequence_vide(self, cocktail_service):
+        """Test avec une séquence vide."""
+        # Act & Assert
+        with pytest.raises(EmptyFieldError):
+            cocktail_service.rechercher_cocktail_par_sequence_debut("", 10)
 
-        with pytest.raises(ValueError, match="Le nom du cocktail doit être fourni."):
-            service.rechercher_cocktail_par_nom(nom)
+    def test_rechercher_par_sequence_type_invalide(self, cocktail_service):
+        """Test avec un type invalide pour la séquence."""
+        # Act & Assert
+        with pytest.raises(TypeError):
+            cocktail_service.rechercher_cocktail_par_sequence_debut(123, 10)
 
-    # Tests pour rechercher_cocktail_sequence_debut
+    def test_rechercher_par_sequence_max_resultats_invalide_type(self, cocktail_service):
+        """Test avec un type invalide pour max_resultats."""
+        # Act & Assert
+        with pytest.raises(TypeError):
+            cocktail_service.rechercher_cocktail_par_sequence_debut("Moj", "10")
 
-    def test_rechercher_cocktail_par_sequence_debut_succes(self) -> None:
-        """Teste la recherche de cocktails par séquence de début avec succès."""
-        # GIVEN
-        sequence = "ma"
-        max_resultats = 3
+    def test_rechercher_par_sequence_max_resultats_invalide_valeur(self, cocktail_service):
+        """Test avec une valeur invalide pour max_resultats."""
+        # Act & Assert
+        with pytest.raises(ValueError):
+            cocktail_service.rechercher_cocktail_par_sequence_debut("Moj", 0)
 
-        # WHEN
-        dao = CocktailDAO()
-        service = CocktailService(dao)
-        resultat = service.rechercher_cocktail_par_sequence_debut(sequence, max_resultats)
+    def test_rechercher_par_sequence_aucun_resultat(self, cocktail_service, mock_cocktail_dao):
+        """Test quand aucun cocktail n'est trouvé."""
+        # Arrange
+        mock_cocktail_dao.rechercher_cocktail_par_sequence_debut.return_value = []
 
-        # THEN
-        cocktails_attendus = [
-            Cocktail(
-                id_cocktail=11690,
-                nom="Mai Tai",
-                categorie="Ordinary Drink",
-                verre="Collins glass",
-                alcool=True,
-                image="https://www.thecocktaildb.com/images/media/drink/twyrrp1439907470.jpg",
-            ),
-            Cocktail(
-                id_cocktail=15224,
-                nom="Malibu Twister",
-                categorie="Cocktail",
-                verre="Highball glass",
-                alcool=True,
-                image="https://www.thecocktaildb.com/images/media/drink/2dwae41504885321.jpg",
-            ),
-            Cocktail(
-                id_cocktail=12716,
-                nom="Mango Orange Smoothie",
-                categorie="Other / Unknown",
-                verre="Highball Glass",
-                alcool=False,
-                image="https://www.thecocktaildb.com/images/media/drink/vdp2do1487603520.jpg",
-            ),
+        # Act & Assert
+        with pytest.raises(LookupError):
+            cocktail_service.rechercher_cocktail_par_sequence_debut("Xyz", 10)
+
+
+class TestGetCocktailsRealisables:
+    """Tests pour la méthode get_cocktails_realisables."""
+
+    def test_get_cocktails_realisables_success(self, cocktail_service):
+        """Test de récupération réussie des cocktails réalisables."""
+        # Arrange
+        id_utilisateur = 1
+
+        # Mock du stock
+        stock_rows = [
+            {
+                "id_ingredient": 1,
+                "nom_ingredient": "Vodka",
+                "quantite": 500.0,
+                "code_unite": "ml",
+            },
+            {
+                "id_ingredient": 2,
+                "nom_ingredient": "Orange Juice",
+                "quantite": 1000.0,
+                "code_unite": "ml",
+            },
         ]
-        assert resultat == cocktails_attendus
 
-    def test_rechercher_cocktail_par_sequence_debut_non_trouve(self) -> None:
-        """Teste la recherche par séquence qui ne retourne aucun résultat.
+        # Mock des cocktails
+        cocktails_rows = [
+            {
+                "id_cocktail": 1,
+                "nom": "Screwdriver",
+                "categorie": "Ordinary Drink",
+                "verre": "Highball glass",
+                "alcool": True,
+                "image": "screwdriver.jpg",
+                "id_ingredient": 1,
+                "qte": 50.0,
+                "unite": "ml",
+            },
+            {
+                "id_cocktail": 1,
+                "nom": "Screwdriver",
+                "categorie": "Ordinary Drink",
+                "verre": "Highball glass",
+                "alcool": True,
+                "image": "screwdriver.jpg",
+                "id_ingredient": 2,
+                "qte": 200.0,
+                "unite": "ml",
+            },
+        ]
 
-        Raises
-        ------
-        LookupError
-            Quand aucun cocktail ne correspond à la séquence
+        cocktail_service.stock_dao.get_stock = MagicMock(return_value=stock_rows)
+        cocktail_service.cocktail_dao.get_tous_cocktails_avec_ingredients = MagicMock(
+            return_value=cocktails_rows,
+        )
 
-        """
-        # GIVEN
-        sequence = "Maaa"
-        max_resultats = 1
+        # Act
+        result = cocktail_service.get_cocktails_realisables(id_utilisateur)
 
-        # WHEN & THEN
-        dao = CocktailDAO()
-        service = CocktailService(dao)
+        # Assert
+        assert "cocktails_realisables" in result
+        assert "nombre_cocktails" in result
+        assert result["nombre_cocktails"] == 1
+        assert len(result["cocktails_realisables"]) == 1
+        assert result["cocktails_realisables"][0]["nom"] == "Screwdriver"
 
-        with pytest.raises(LookupError, match=f"Aucun cocktail trouvé pour la séquence '{sequence}'"):
-            service.rechercher_cocktail_par_sequence_debut(sequence, max_resultats)
+    def test_get_cocktails_realisables_aucun_stock(self, cocktail_service):
+        """Test quand l'utilisateur n'a pas de stock."""
+        # Arrange
+        id_utilisateur = 1
+        cocktail_service.stock_dao.get_stock = MagicMock(return_value=[])
 
-    def test_rechercher_cocktail_par_sequence_debut_value_error_sequence(self) -> None:
-        """Teste la recherche avec une séquence vide.
+        # Mock avec un cocktail qui a des ingrédients
+        cocktails_rows = [
+            {
+                "id_cocktail": 1,
+                "nom": "Mojito",
+                "categorie": "Cocktail",
+                "verre": "Highball glass",
+                "alcool": True,
+                "image": "mojito.jpg",
+                "id_ingredient": 1,
+                "qte": 50.0,
+                "unite": "ml",
+            },
+        ]
 
-        Raises
-        ------
-        ValueError
-            Quand la séquence est vide
+        cocktail_service.cocktail_dao.get_tous_cocktails_avec_ingredients = MagicMock(
+            return_value=cocktails_rows,
+        )
 
-        """
-        # GIVEN
-        sequence = ""
-        max_resultats = 1
+        # Act
+        result = cocktail_service.get_cocktails_realisables(id_utilisateur)
 
-        # WHEN & THEN
-        dao = CocktailDAO()
-        service = CocktailService(dao)
+        # Assert
+        assert result["nombre_cocktails"] == 0
+        assert result["cocktails_realisables"] == []
 
-        with pytest.raises(ValueError, match="La séquence doit être fournie."):
-            service.rechercher_cocktail_par_sequence_debut(sequence, max_resultats)
+    def test_get_cocktails_realisables_quantite_insuffisante(self, cocktail_service):
+        """Test quand la quantité en stock est insuffisante."""
+        # Arrange
+        id_utilisateur = 1
+        stock_rows = [
+            {
+                "id_ingredient": 1,
+                "nom_ingredient": "Vodka",
+                "quantite": 30.0,  # Insuffisant pour faire le cocktail
+                "code_unite": "ml",
+            },
+        ]
 
-    def test_rechercher_cocktail_par_sequence_debut_none(self) -> None:
-        """Teste la recherche avec une séquence None.
+        cocktails_rows = [
+            {
+                "id_cocktail": 1,
+                "nom": "Vodka Shot",
+                "categorie": "Shot",
+                "verre": "Shot glass",
+                "alcool": True,
+                "image": "vodka_shot.jpg",
+                "id_ingredient": 1,
+                "qte": 50.0,
+                "unite": "ml",
+            },
+        ]
 
-        Raises
-        ------
-        ValueError
-            Quand la séquence est None
+        cocktail_service.stock_dao.get_stock = MagicMock(return_value=stock_rows)
+        cocktail_service.cocktail_dao.get_tous_cocktails_avec_ingredients = MagicMock(
+            return_value=cocktails_rows,
+        )
 
-        """
-        # GIVEN
-        sequence = None
-        max_resultats = 1
+        # Act
+        result = cocktail_service.get_cocktails_realisables(id_utilisateur)
 
-        # WHEN & THEN
-        dao = CocktailDAO()
-        service = CocktailService(dao)
+        # Assert
+        assert result["nombre_cocktails"] == 0
 
-        with pytest.raises(ValueError, match="La séquence doit être fournie."):
-            service.rechercher_cocktail_par_sequence_debut(sequence, max_resultats)
+    def test_get_cocktails_realisables_conversion_unites(self, cocktail_service):
+        """Test avec conversion d'unités (cl vers ml)."""
+        # Arrange
+        id_utilisateur = 1
+        stock_rows = [
+            {
+                "id_ingredient": 1,
+                "nom_ingredient": "Vodka",
+                "quantite": 10.0,  # 10 cl = 100 ml
+                "code_unite": "cl",
+            },
+        ]
 
-    def test_rechercher_cocktail_par_sequence_debut_type_error_sequence(self) -> None:
-        """Teste la recherche avec un type de séquence invalide.
+        cocktails_rows = [
+            {
+                "id_cocktail": 1,
+                "nom": "Vodka Shot",
+                "categorie": "Shot",
+                "verre": "Shot glass",
+                "alcool": True,
+                "image": "vodka_shot.jpg",
+                "id_ingredient": 1,
+                "qte": 50.0,  # 50 ml requis
+                "unite": "ml",
+            },
+        ]
 
-        Raises
-        ------
-        TypeError
-            Quand la séquence n'est pas une chaîne de caractères
+        cocktail_service.stock_dao.get_stock = MagicMock(return_value=stock_rows)
+        cocktail_service.cocktail_dao.get_tous_cocktails_avec_ingredients = MagicMock(
+            return_value=cocktails_rows,
+        )
 
-        """
-        # GIVEN
-        sequence = 12345
-        max_resultats = 1
+        # Act
+        result = cocktail_service.get_cocktails_realisables(id_utilisateur)
 
-        # WHEN & THEN
-        dao = CocktailDAO()
-        service = CocktailService(dao)
+        # Assert
+        assert result["nombre_cocktails"] == 1
 
-        with pytest.raises(TypeError, match="L'argument 'sequence' doit être une chaîne de caractères."):
-            service.rechercher_cocktail_par_sequence_debut(sequence, max_resultats)
+    def test_get_cocktails_realisables_dao_error(self, cocktail_service):
+        """Test avec erreur DAO."""
+        # Arrange
+        cocktail_service.stock_dao.get_stock = MagicMock(side_effect=DAOError("Erreur DAO"))
 
-    def test_rechercher_cocktail_par_sequence_debut_type_error_max_resultats(self) -> None:
-        """Teste la recherche avec un type de max_resultats invalide.
+        # Act & Assert
+        with pytest.raises(ServiceError):
+            cocktail_service.get_cocktails_realisables(1)
 
-        Raises
-        ------
-        TypeError
-            Quand max_resultats n'est pas un entier
 
-        """
-        # GIVEN
-        sequence = "Ma"
-        max_resultats = "a"
+class TestGetCocktailsQuasiRealisables:
+    """Tests pour la méthode get_cocktails_quasi_realisables."""
 
-        # WHEN & THEN
-        dao = CocktailDAO()
-        service = CocktailService(dao)
+    def test_get_cocktails_quasi_realisables_success(self, cocktail_service, mock_cocktail_dao):
+        """Test de récupération réussie des cocktails quasi-réalisables."""
+        # Arrange
+        id_utilisateur = 1
+        rows = [
+            {
+                "id_cocktail": 1,
+                "nom": "Mojito",
+                "categorie": "Cocktail",
+                "verre": "Highball glass",
+                "alcool": True,
+                "image": "mojito.jpg",
+                "id_ingredient": 1,
+                "nom_ingredient": "Rhum Blanc",
+                "quantite_requise": 50.0,
+                "unite_requise": "ml",
+                "quantite_stock": None,  # Manquant
+                "unite_stock": None,
+            },
+            {
+                "id_cocktail": 1,
+                "nom": "Mojito",
+                "categorie": "Cocktail",
+                "verre": "Highball glass",
+                "alcool": True,
+                "image": "mojito.jpg",
+                "id_ingredient": 2,
+                "nom_ingredient": "Menthe",
+                "quantite_requise": 10.0,
+                "unite_requise": "g",
+                "quantite_stock": 20.0,  # Disponible
+                "unite_stock": "g",
+            },
+        ]
 
-        with pytest.raises(TypeError, match="L'argument 'max_resultats' doit être un entier."):
-            service.rechercher_cocktail_par_sequence_debut(sequence, max_resultats)
+        mock_cocktail_dao.get_cocktails_quasi_realisables.return_value = rows
 
-    def test_rechercher_cocktail_par_sequence_debut_value_error_max_resultats(self) -> None:
-        """Teste la recherche avec un max_resultats négatif.
+        # Act
+        result = cocktail_service.get_cocktails_quasi_realisables(id_utilisateur, max_ingredients_manquants=1)
 
-        Raises
-        ------
-        ValueError
-            Quand max_resultats est inférieur à 1
+        # Assert
+        assert "cocktails_quasi_realisables" in result
+        assert "nombre_cocktails" in result
+        assert result["nombre_cocktails"] == 1
+        assert result["max_ingredients_manquants"] == 1
+        cocktail = result["cocktails_quasi_realisables"][0]
+        assert cocktail["nom"] == "Mojito"
+        assert cocktail["nombre_ingredients_manquants"] == 1
+        assert "Rhum Blanc" in cocktail["ingredients_manquants"]
 
-        """
-        # GIVEN
-        sequence = "Ma"
-        max_resultats = -1
+    def test_get_cocktails_quasi_realisables_aucun_resultat(self, cocktail_service, mock_cocktail_dao):
+        """Test quand aucun cocktail quasi-réalisable n'est trouvé."""
+        # Arrange
+        mock_cocktail_dao.get_cocktails_quasi_realisables.return_value = []
 
-        # WHEN & THEN
-        dao = CocktailDAO()
-        service = CocktailService(dao)
+        # Act
+        result = cocktail_service.get_cocktails_quasi_realisables(1, max_ingredients_manquants=1)
 
-        with pytest.raises(ValueError, match="L'argument 'max_resultats' doit être supérieur ou égal à 1."):
-            service.rechercher_cocktail_par_sequence_debut(sequence, max_resultats)
+        # Assert
+        assert result["nombre_cocktails"] == 0
+        assert result["cocktails_quasi_realisables"] == []
+
+    def test_get_cocktails_quasi_realisables_tri(self, cocktail_service, mock_cocktail_dao):
+        """Test du tri des cocktails quasi-réalisables."""
+        # Arrange
+        rows = [
+            # Cocktail A : 2 ingrédients manquants sur 3 (33% possession)
+            {
+                "id_cocktail": 1,
+                "nom": "Cocktail A",
+                "categorie": "Cocktail",
+                "verre": "Glass",
+                "alcool": True,
+                "image": "a.jpg",
+                "id_ingredient": 1,
+                "nom_ingredient": "Ing1",
+                "quantite_requise": 50.0,
+                "unite_requise": "ml",
+                "quantite_stock": None,
+                "unite_stock": None,
+            },
+            {
+                "id_cocktail": 1,
+                "nom": "Cocktail A",
+                "categorie": "Cocktail",
+                "verre": "Glass",
+                "alcool": True,
+                "image": "a.jpg",
+                "id_ingredient": 2,
+                "nom_ingredient": "Ing2",
+                "quantite_requise": 50.0,
+                "unite_requise": "ml",
+                "quantite_stock": None,
+                "unite_stock": None,
+            },
+            {
+                "id_cocktail": 1,
+                "nom": "Cocktail A",
+                "categorie": "Cocktail",
+                "verre": "Glass",
+                "alcool": True,
+                "image": "a.jpg",
+                "id_ingredient": 3,
+                "nom_ingredient": "Ing3",
+                "quantite_requise": 50.0,
+                "unite_requise": "ml",
+                "quantite_stock": 50.0,
+                "unite_stock": "ml",
+            },
+            # Cocktail B : 1 ingrédient manquant sur 2 (50% possession)
+            {
+                "id_cocktail": 2,
+                "nom": "Cocktail B",
+                "categorie": "Cocktail",
+                "verre": "Glass",
+                "alcool": True,
+                "image": "b.jpg",
+                "id_ingredient": 4,
+                "nom_ingredient": "Ing4",
+                "quantite_requise": 50.0,
+                "unite_requise": "ml",
+                "quantite_stock": None,
+                "unite_stock": None,
+            },
+            {
+                "id_cocktail": 2,
+                "nom": "Cocktail B",
+                "categorie": "Cocktail",
+                "verre": "Glass",
+                "alcool": True,
+                "image": "b.jpg",
+                "id_ingredient": 5,
+                "nom_ingredient": "Ing5",
+                "quantite_requise": 50.0,
+                "unite_requise": "ml",
+                "quantite_stock": 50.0,
+                "unite_stock": "ml",
+            },
+        ]
+
+        mock_cocktail_dao.get_cocktails_quasi_realisables.return_value = rows
+
+        # Act
+        result = cocktail_service.get_cocktails_quasi_realisables(1, max_ingredients_manquants=2)
+
+        # Assert
+        cocktails = result["cocktails_quasi_realisables"]
+        assert len(cocktails) == 2
+        # Cocktail B devrait être en premier (1 manquant vs 2 manquants)
+        assert cocktails[0]["nom"] == "Cocktail B"
+        assert cocktails[1]["nom"] == "Cocktail A"
+
+    def test_get_cocktails_quasi_realisables_dao_error(self, cocktail_service, mock_cocktail_dao):
+        """Test avec erreur DAO."""
+        # Arrange
+        mock_cocktail_dao.get_cocktails_quasi_realisables.side_effect = DAOError("Erreur DAO")
+
+        # Act & Assert
+        with pytest.raises(ServiceError):
+            cocktail_service.get_cocktails_quasi_realisables(1)
+
+
+class TestIsIngredientAvailable:
+    """Tests pour la méthode _is_ingredient_available."""
+
+    def test_is_ingredient_available_pas_de_stock(self, cocktail_service):
+        """Test quand l'ingrédient n'est pas en stock."""
+        # Arrange
+        row = {
+            "quantite_requise": 50.0,
+            "unite_requise": "ml",
+            "quantite_stock": None,
+            "unite_stock": None,
+            "nom_ingredient": "Vodka",
+        }
+
+        # Act
+        result = cocktail_service._is_ingredient_available(row)
+
+        # Assert
+        assert result is False
+
+    def test_is_ingredient_available_meme_unite_suffisant(self, cocktail_service):
+        """Test avec même unité et quantité suffisante."""
+        # Arrange
+        row = {
+            "quantite_requise": 50.0,
+            "unite_requise": "ml",
+            "quantite_stock": 100.0,
+            "unite_stock": "ml",
+            "nom_ingredient": "Vodka",
+        }
+
+        # Act
+        result = cocktail_service._is_ingredient_available(row)
+
+        # Assert
+        assert result is True
+
+    def test_is_ingredient_available_meme_unite_insuffisant(self, cocktail_service):
+        """Test avec même unité mais quantité insuffisante."""
+        # Arrange
+        row = {
+            "quantite_requise": 100.0,
+            "unite_requise": "ml",
+            "quantite_stock": 50.0,
+            "unite_stock": "ml",
+            "nom_ingredient": "Vodka",
+        }
+
+        # Act
+        result = cocktail_service._is_ingredient_available(row)
+
+        # Assert
+        assert result is False
+
+    def test_is_ingredient_available_conversion_liquide(self, cocktail_service):
+        """Test avec conversion d'unités liquides (cl vers ml)."""
+        # Arrange
+        row = {
+            "quantite_requise": 50.0,  # 50 ml requis
+            "unite_requise": "ml",
+            "quantite_stock": 10.0,  # 10 cl = 100 ml en stock
+            "unite_stock": "cl",
+            "nom_ingredient": "Vodka",
+        }
+
+        # Act
+        result = cocktail_service._is_ingredient_available(row)
+
+        # Assert
+        assert result is True
+
+    def test_is_ingredient_available_conversion_solide(self, cocktail_service):
+        """Test avec conversion d'unités solides (kg vers g)."""
+        # Arrange
+        row = {
+            "quantite_requise": 50.0,  # 50 g requis
+            "unite_requise": "g",
+            "quantite_stock": 1.0,  # 1 kg = 1000 g en stock
+            "unite_stock": "kg",
+            "nom_ingredient": "Sucre",
+        }
+
+        # Act
+        result = cocktail_service._is_ingredient_available(row)
+
+        # Assert
+        assert result is True
+
+    def test_is_ingredient_available_unites_incompatibles(self, cocktail_service):
+        """Test avec unités incompatibles (liquide vs solide)."""
+        # Arrange
+        row = {
+            "quantite_requise": 50.0,
+            "unite_requise": "ml",  # Liquide
+            "quantite_stock": 50.0,
+            "unite_stock": "g",  # Solide
+            "nom_ingredient": "Vodka",
+        }
+
+        # Act
+        result = cocktail_service._is_ingredient_available(row)
+
+        # Assert
+        assert result is False
+
+    def test_is_ingredient_available_sans_unite(self, cocktail_service):
+        """Test sans unité définie."""
+        # Arrange
+        row = {
+            "quantite_requise": 2.0,
+            "unite_requise": None,
+            "quantite_stock": 5.0,
+            "unite_stock": None,
+            "nom_ingredient": "Citron",
+        }
+
+        # Act
+        result = cocktail_service._is_ingredient_available(row)
+
+        # Assert
+        assert result is True
+
+
+class TestCompareLiquidQuantities:
+    """Tests pour la méthode _compare_liquid_quantities."""
+
+    def test_compare_liquid_quantities_suffisant(self, cocktail_service):
+        """Test avec quantité suffisante."""
+        # Act
+        result = cocktail_service._compare_liquid_quantities(50.0, "ml", 100.0, "ml")
+
+        # Assert
+        assert result is True
+
+    def test_compare_liquid_quantities_insuffisant(self, cocktail_service):
+        """Test avec quantité insuffisante."""
+        # Act
+        result = cocktail_service._compare_liquid_quantities(100.0, "ml", 50.0, "ml")
+
+        # Assert
+        assert result is False
+
+    def test_compare_liquid_quantities_conversion(self, cocktail_service):
+        """Test avec conversion d'unités."""
+        # Act (50 ml requis, 10 cl = 100 ml en stock)
+        result = cocktail_service._compare_liquid_quantities(50.0, "ml", 10.0, "cl")
+
+        # Assert
+        assert result is True
+
+
+class TestCompareSolidQuantities:
+    """Tests pour la méthode _compare_solid_quantities."""
+
+    def test_compare_solid_quantities_suffisant(self, cocktail_service):
+        """Test avec quantité suffisante."""
+        # Act
+        result = cocktail_service._compare_solid_quantities(50.0, "g", 100.0, "g")
+
+        # Assert
+        assert result is True
+
+    def test_compare_solid_quantities_insuffisant(self, cocktail_service):
+        """Test avec quantité insuffisante."""
+        # Act
+        result = cocktail_service._compare_solid_quantities(100.0, "g", 50.0, "g")
+
+        # Assert
+        assert result is False
+
+    def test_compare_solid_quantities_conversion(self, cocktail_service):
+        """Test avec conversion d'unités."""
+        # Act (50 g requis, 1 kg = 1000 g en stock)
+        result = cocktail_service._compare_solid_quantities(50.0, "g", 1.0, "kg")
+
+        # Assert
+        assert result is True
