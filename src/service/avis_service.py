@@ -53,12 +53,14 @@ class AvisService:
                 )
             )
             suggestions = [c.nom for c in suggestions_cocktails]
-
+            if len(suggestions_cocktails) == 0:
+                raise CocktailNotFoundError(
+                    message=f"Cocktail '{nom_normalized}' non trouvé.",
+                )
             raise CocktailNotFoundError(
-                message=f"Cocktail '{nom_normalized}' non trouvé."
+                message=f"Cocktail '{nom_normalized}' non trouvé. "
                 f"Vouliez-vous dire : {', '.join(suggestions[:3])} ?",
             )
-
         return {
             "id_cocktail": cocktail.id_cocktail,
             "nom": cocktail.nom,
@@ -83,7 +85,7 @@ class AvisService:
             ID de l'utilisateur
         nom_cocktail : str
             Nom du cocktail
-        note : int | None
+        note : str | None
             Note entre 0 et 10
         commentaire : str | None
             Commentaire
@@ -94,9 +96,22 @@ class AvisService:
             Message de confirmation
 
         """
-        # Validation : au moins note OU commentaire
-        if note is None and commentaire is None:
-            raise InvalidAvisError
+        if len(note) == 0:
+            raise InvalidAvisError(
+                message="Champ 'note' vide. Renseignez une note.",
+            )
+        if len(commentaire) == 0:
+            raise InvalidAvisError(
+                message="Champ 'commentaire' vide. Renseignez un commentaire.",
+            )
+        try:
+            float(note)
+        except ValueError as e:
+            raise InvalidAvisError(message="Renseignez une note valide.") from e
+
+        note_min, note_max = 0, 10
+        if float(note) < note_min or float(note) > note_max:
+            raise InvalidAvisError(message="La note doit être comprise entre 0 et 10.")
 
         cocktail = self.get_cocktail_by_name(nom_cocktail)
 
@@ -273,7 +288,7 @@ class AvisService:
             }
 
         except Exception as e:
-            raise ServiceError(
+            raise CocktailNotFoundError(
                 message=f"Erreur lors de l'ajout aux favoris : {e}",
             ) from e
 

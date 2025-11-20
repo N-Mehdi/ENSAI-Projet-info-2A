@@ -95,7 +95,7 @@ class IngredientService:
         Parameters
         ----------
         nom : str
-            Nom de l'ingrédient (doit être normalisé au format Title Case)
+            Nom de l'ingrédient (sera normalisé au format Title Case)
 
         Returns
         -------
@@ -112,20 +112,24 @@ class IngredientService:
         nom_normalized = normalize_ingredient_name(nom)
 
         # Chercher l'ingrédient
-        ingredient = self.get_by_name(nom_normalized)
-        nb_sugg = 3
+        ingredient = self.dao.get_by_name(nom_normalized)
+
         if not ingredient:
             # Chercher des suggestions
-            suggestions_data = self.rechercher_ingredient_par_sequence_debut(
-                sequence=nom_normalized[:nb_sugg]
-                if len(nom_normalized) >= nb_sugg
-                else nom_normalized,
-                max_resultats=5,
+            suggestions_data = self.dao.search_by_name(
+                nom=nom_normalized,
+                limit=5,
             )
-            suggestions = [ing.nom for ing in suggestions_data]
+            suggestions = [ing["nom"] for ing in suggestions_data]
+
+            if len(suggestions_data) == 0:
+                raise IngredientNotFoundError(
+                    message=f"Ingrédient '{nom_normalized}' non trouvé.",
+                )
+
             raise IngredientNotFoundError(
-                message=f"Ingrédient '{nom_normalized}'"
-                f"introuvable. Vouliez-vous dire : {', '.join(suggestions[:3])} ?",
+                message=f"Ingrédient '{nom_normalized}' non trouvé. "
+                f"Vouliez-vous dire : {', '.join(suggestions[:3])} ?",
             )
 
         return ingredient

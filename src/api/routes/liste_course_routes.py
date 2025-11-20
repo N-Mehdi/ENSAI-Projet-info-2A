@@ -33,7 +33,7 @@ Récupère ma liste de course complète.
 - Nombre d'items cochés
 """,
 )
-def get_my_liste_course(current_user: CurrentUser) -> ListeCourse:
+def get_my_liste_course(current_user: CurrentUser) -> dict:
     """Récupère la liste de course complète de l'utilisateur connecté.
 
     L'utilisateur est automatiquement récupéré depuis le token JWT.
@@ -203,8 +203,6 @@ def add_to_liste_course(
             status_code=404,
             detail={
                 "error": str(e),
-                "ingredient_recherche": e.nom_ingredient,
-                "suggestions": e.suggestions,
             },
         ) from e
     except UniteNotFoundError as e:
@@ -282,8 +280,6 @@ def mark_as_bought(
             status_code=404,
             detail={
                 "error": str(e),
-                "ingredient_recherche": e.nom_ingredient,
-                "suggestions": e.suggestions,
             },
         ) from e
     except ServiceError as e:
@@ -350,8 +346,6 @@ def remove_from_liste_course(
             status_code=404,
             detail={
                 "error": str(e),
-                "ingredient_recherche": e.nom_ingredient,
-                "suggestions": e.suggestions,
             },
         ) from e
     except ServiceError as e:
@@ -464,13 +458,11 @@ def toggle_effectue(
             nom_ingredient=nom_ingredient,
         )
 
-    except IngredientNotFoundError as e:
+    except c as e:
         raise HTTPException(
             status_code=404,
             detail={
                 "error": str(e),
-                "ingredient_recherche": e.nom_ingredient,
-                "suggestions": e.suggestions,
             },
         ) from e
     except ServiceError as e:

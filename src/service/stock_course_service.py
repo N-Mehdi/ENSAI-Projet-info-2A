@@ -58,7 +58,7 @@ class StockCourseService:
             )
             suggestions = [s["nom"] for s in suggestions_data]
             raise IngredientNotFoundError(
-                message=f"Ingrédient{nom_normalized} introuvable,"
+                message=f"Ingrédient{nom_normalized} introuvable. "
                 f"Vouliez-vous dire {','.join(suggestions[:3])} ?",
             )
 

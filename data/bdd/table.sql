@@ -217,5 +217,7 @@ ALTER TABLE cocktail_ingredient RENAME COLUMN Y TO unite;
 
 --ALTER TABLE acces RENAME can_access TO has_access 
 
-ALTER TABLE avis
-ADD COLUMN teste BOOLEAN DEFAULT true;
+-- ALTER TABLE avis
+-- ADD COLUMN teste BOOLEAN DEFAULT true;
+
+CREATE EXTENSION IF NOT EXISTS pg_trgm;

@@ -3,8 +3,10 @@
 from src.dao.ingredient_dao import IngredientDAO
 from src.dao.liste_course_dao import ListeCourseDAO
 from src.dao.stock_course_dao import StockCourseDAO
-from src.models.liste_course import ListeCourse, ListeCourseItem
+from src.dao.utilisateur_dao import UtilisateurDAO
+from src.models.liste_course import ListeCourseItem
 from src.service.ingredient_service import IngredientService
+from src.service.utilisateur_service import UtilisateurService
 from src.utils.conversion_unite import UnitConverter
 from src.utils.exceptions import (
     IngredientNotFoundError,
@@ -22,8 +24,10 @@ class ListeCourseService:
         self.stock_dao = StockCourseDAO()
         self.ingredient_dao = IngredientDAO()
         self.ingredient_svc = IngredientService()
+        utilisateur_dao = UtilisateurDAO()
+        self.utilisateur_svc = UtilisateurService(utilisateur_dao)
 
-    def get_liste_course(self, id_utilisateur: int) -> ListeCourse:
+    def get_liste_course(self, id_utilisateur: int) -> dict:
         """Récupère la liste de course complète d'un utilisateur.
 
         Parameters
@@ -48,7 +52,7 @@ class ListeCourseService:
         """
         try:
             rows = self.liste_course_dao.get_liste_course(id_utilisateur)
-
+            pseudo = self.utilisateur_svc.read(id_utilisateur=id_utilisateur).pseudo
             items = [
                 ListeCourseItem(
                     id_ingredient=row["id_ingredient"],
@@ -64,12 +68,12 @@ class ListeCourseService:
 
             nombre_effectues = sum(1 for item in items if item.effectue)
 
-            return ListeCourse(
-                id_utilisateur=id_utilisateur,
-                items=items,
-                nombre_items=len(items),
-                nombre_effectues=nombre_effectues,
-            )
+            return {
+                "pseudo": pseudo,
+                "items": items,
+                "nombre_items": len(items),
+                "nombre_effectues": nombre_effectues,
+            }
         except Exception as e:
             raise ServiceError(
                 message=f"Erreur lors de la récupération de la liste de course : {e}",
@@ -324,21 +328,23 @@ class ListeCourseService:
         Parameters
         ----------
         id_utilisateur : int
-            Identifiant unique de l'utilisateur dont on souhaite modifier
-            la liste de course.
+        Identifiant unique de l'utilisateur dont on souhaite modifier
+        la liste de course.
         nom_ingredient : str
-            Nom de l'ingrédient à retirer.
+        Nom de l'ingrédient à retirer.
 
         Returns
         -------
         str
-            Message confirmant que l'ingrédient a été retiré de la liste de course.
+        Message confirmant que l'ingrédient a été retiré de la liste de course.
 
         Raises
         ------
+        IngredientNotFoundError
+        Si l'ingrédient n'existe pas (avec suggestions)
         ServiceError
-            Si l'ingrédient n'est pas présent dans la liste de course ou en cas d'erreur
-            lors de l'accès à la base de données.
+        Si l'ingrédient n'est pas présent dans la liste de course ou en cas d'erreur
+        lors de l'accès à la base de données.
 
         """
         ingredient = self.ingredient_svc.get_by_name_with_suggestions(nom_ingredient)
@@ -358,8 +364,8 @@ class ListeCourseService:
 
         if not success:
             raise ServiceError(
-                message=f"L'ingrédient '{ingredient['nom']}' n'est pas dans votre liste"
-                "de course",
+                message=f"L'ingrédient '{ingredient['nom']}' n'est pas dans votre"
+                "liste de course",
             )
 
         return f"Ingrédient '{ingredient['nom']}' retiré de la liste de course"

@@ -163,8 +163,6 @@ def add_to_stock(
             status_code=status.HTTP_404_NOT_FOUND,
             detail={
                 "error": str(e),
-                "ingredient_recherche": e.nom_ingredient,
-                "suggestions": e.suggestions,
             },
         ) from e
     except UniteNotFoundError as e:
@@ -322,8 +320,6 @@ def get_my_ingredient(
             status_code=status.HTTP_404_NOT_FOUND,
             detail={
                 "error": str(e),
-                "ingredient_recherche": e.nom_ingredient,
-                "suggestions": e.suggestions,
             },
         ) from e
     except ServiceError as e:
@@ -429,11 +425,7 @@ def remove_quantity_from_stock(
     except IngredientNotFoundError as e:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail={
-                "error": str(e),
-                "ingredient_recherche": e.nom_ingredient,
-                "suggestions": e.suggestions,
-            },
+            detail={"error": str(e)},
         ) from e
     except ServiceError as e:
         raise HTTPException(
@@ -518,8 +510,6 @@ def delete_ingredient_completely(
             status_code=status.HTTP_404_NOT_FOUND,
             detail={
                 "error": str(e),
-                "ingredient_recherche": e.nom_ingredient,
-                "suggestions": e.suggestions,
             },
         ) from e
     except ServiceError as e:

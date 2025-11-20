@@ -77,11 +77,11 @@ class IngredientDAO(metaclass=Singleton):
                 """
                 SELECT id_ingredient, nom
                 FROM ingredient
-                WHERE nom ILIKE %(nom)s
-                ORDER BY nom
+                WHERE SIMILARITY(nom, %(nom)s) > 0.2
+                ORDER BY SIMILARITY(nom, %(nom)s) DESC
                 LIMIT %(limit)s
                 """,
-                {"nom": f"%{nom}%", "limit": limit},
+                {"nom": nom, "limit": limit},
             )
             return cursor.fetchall()
 

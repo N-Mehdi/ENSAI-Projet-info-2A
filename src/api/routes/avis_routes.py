@@ -7,7 +7,7 @@ from src.models.avis import AvisCreate, AvisSummary
 from src.service.avis_service import AvisService
 from src.utils.exceptions import (
     AvisNotFoundError,
-    IngredientNotFoundError,
+    CocktailNotFoundError,
     InvalidAvisError,
     ServiceError,
 )
@@ -80,13 +80,11 @@ def add_avis(
 
     except InvalidAvisError as e:
         raise HTTPException(status_code=400, detail=str(e)) from e
-    except IngredientNotFoundError as e:
+    except CocktailNotFoundError as e:
         raise HTTPException(
             status_code=404,
             detail={
                 "error": str(e),
-                "cocktail_recherche": e.nom_ingredient,
-                "suggestions": e.suggestions,
             },
         ) from e
     except ServiceError as e:
@@ -144,13 +142,11 @@ def delete_avis(
 
     except AvisNotFoundError as e:
         raise HTTPException(status_code=404, detail=str(e)) from e
-    except IngredientNotFoundError as e:
+    except CocktailNotFoundError as e:
         raise HTTPException(
             status_code=404,
             detail={
                 "error": str(e),
-                "cocktail_recherche": e.nom_ingredient,
-                "suggestions": e.suggestions,
             },
         ) from e
     except ServiceError as e:
@@ -262,13 +258,11 @@ def get_avis_cocktail(nom_cocktail: str, _current_user: CurrentUser) -> list:
     """
     try:
         return service.get_avis_cocktail(nom_cocktail)
-    except IngredientNotFoundError as e:
+    except CocktailNotFoundError as e:
         raise HTTPException(
             status_code=404,
             detail={
                 "error": str(e),
-                "cocktail_recherche": e.nom_ingredient,
-                "suggestions": e.suggestions,
             },
         ) from e
     except ServiceError as e:
@@ -313,13 +307,11 @@ def get_avis_summary(nom_cocktail: str, _current_user: CurrentUser) -> AvisSumma
     """
     try:
         return service.get_avis_summary(nom_cocktail)
-    except IngredientNotFoundError as e:
+    except CocktailNotFoundError as e:
         raise HTTPException(
             status_code=404,
             detail={
                 "error": str(e),
-                "cocktail_recherche": e.nom_ingredient,
-                "suggestions": e.suggestions,
             },
         ) from e
     except ServiceError as e:

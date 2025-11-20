@@ -69,8 +69,6 @@ def add_favoris(
             status_code=404,
             detail={
                 "error": str(e),
-                "cocktail_recherche": e.nom_cocktail,
-                "suggestions": e.suggestions,
             },
         ) from e
     except ServiceError as e:
@@ -190,9 +188,7 @@ def remove_favoris(
         raise HTTPException(
             status_code=404,
             detail={
-                "error": str(e),
-                "cocktail_recherche": e.nom_cocktail,
-                "suggestions": e.suggestions,
+                "error": str(e)
             },
         ) from e
     except ServiceError as e:

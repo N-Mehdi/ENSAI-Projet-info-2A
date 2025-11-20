@@ -14,12 +14,10 @@ class AvisCreate(BaseModel):
         description="Nom du cocktail",
         example="Mojito",
     )
-    note: int | None = Field(
+    note: str | None = Field(
         None,
-        ge=0,
-        le=10,
         description="Note entre 0 et 10",
-        example=8,
+        example="8",
     )
     commentaire: str | None = Field(
         None,

@@ -15,7 +15,7 @@ class AvisDAO(metaclass=Singleton):
         self,
         id_utilisateur: int,
         id_cocktail: int,
-        note: int | None,
+        note: str | None,
         commentaire: str | None,
     ) -> dict:
         """Crée ou met à jour un avis (UPSERT).
@@ -26,7 +26,7 @@ class AvisDAO(metaclass=Singleton):
             ID de l'utilisateur
         id_cocktail : int
             ID du cocktail
-        note : int | None
+        note : str | None
             Note entre 0 et 10
         commentaire : str | None
             Commentaire texte
@@ -61,7 +61,7 @@ class AvisDAO(metaclass=Singleton):
                 {
                     "id_utilisateur": id_utilisateur,
                     "id_cocktail": id_cocktail,
-                    "note": note,
+                    "note": float(note),
                     "commentaire": commentaire,
                 },
             )
