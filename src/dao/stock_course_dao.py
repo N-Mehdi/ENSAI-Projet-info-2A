@@ -350,9 +350,8 @@ class StockCourseDAO(metaclass=Singleton):
             )
             return cursor.fetchone()
 
-    @staticmethod
     @log
-    def get_unite_id_by_abbreviation(abbreviation: str) -> int | None:
+    def get_unite_id_by_abbreviation(self, abbreviation: str) -> int | None:
         """Récupère l'ID d'une unité par son abréviation.
 
         Parameters

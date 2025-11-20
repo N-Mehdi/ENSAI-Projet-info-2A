@@ -74,7 +74,7 @@ class AvisService:
         self,
         id_utilisateur: int,
         nom_cocktail: str,
-        note: int | None,
+        note: str | None,
         commentaire: str | None,
     ) -> str:
         """Crée ou met à jour un avis.
@@ -120,7 +120,7 @@ class AvisService:
             self.avis_dao.create_or_update_avis(
                 id_utilisateur=id_utilisateur,
                 id_cocktail=cocktail["id_cocktail"],
-                note=note,
+                note=float(note),
                 commentaire=commentaire,
             )
 

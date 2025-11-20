@@ -119,8 +119,7 @@ class ListeCourseService:
 
         # Récupérer l'ID de l'unité via son abréviation
         try:
-            stock_dao = StockCourseDAO()
-            id_unite = stock_dao.get_unite_id_by_abbreviation(abbreviation_unite)
+            id_unite = self.stock_dao.get_unite_id_by_abbreviation(abbreviation_unite)
 
         except IngredientNotFoundError as e:
             raise IngredientNotFoundError(message="L'ingrédient n'existe pas") from e
@@ -328,10 +327,10 @@ class ListeCourseService:
         Parameters
         ----------
         id_utilisateur : int
-        Identifiant unique de l'utilisateur dont on souhaite modifier
-        la liste de course.
+            Identifiant unique de l'utilisateur dont on souhaite modifier
+            la liste de course.
         nom_ingredient : str
-        Nom de l'ingrédient à retirer.
+            Nom de l'ingrédient à retirer.
 
         Returns
         -------

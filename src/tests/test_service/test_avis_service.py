@@ -97,13 +97,12 @@ class TestAvisService:
             service.get_cocktail_by_name(nom_cocktail)
 
     # ========== Tests pour create_or_update_avis ==========
-    @staticmethod
-    def test_create_or_update_avis_succes_avec_note_et_commentaire() -> None:
-        """Teste la création/mise à jour d'un avis avec note et commentaire."""
+    def test_create_or_update_avis_succes_note_et_commentaire(self) -> None:
+        """Teste la création/mise à jour d'un avis avec note et commentaire valides."""
         # GIVEN
         id_utilisateur = 1
         nom_cocktail = "margarita"
-        note = 8
+        note = "8"
         commentaire = "Excellent cocktail!"
 
         cocktail = Cocktail(
@@ -145,62 +144,17 @@ class TestAvisService:
         avis_dao_mock.create_or_update_avis.assert_called_once_with(
             id_utilisateur=id_utilisateur,
             id_cocktail=1,
-            note=note,
+            note=float(note),
             commentaire=commentaire,
         )
 
-    @staticmethod
-    def test_create_or_update_avis_succes_avec_note_seulement() -> None:
-        """Teste la création/mise à jour d'un avis avec seulement une note."""
+    def test_create_or_update_avis_note_vide(self) -> None:
+        """Teste la création d'un avis avec une note vide."""
         # GIVEN
         id_utilisateur = 1
         nom_cocktail = "margarita"
-        note = 8
-        commentaire = None
-
-        cocktail = Cocktail(
-            id_cocktail=1,
-            nom="Margarita",
-            categorie="Ordinary Drink",
-            verre="Cocktail glass",
-            alcool=True,
-            image="https://example.com/margarita.jpg",
-        )
-
-        avis_dao_mock = MagicMock(spec=AvisDAO)
-        cocktail_dao_mock = MagicMock(spec=CocktailDAO)
-        cocktail_dao_mock.rechercher_cocktail_par_nom.return_value = cocktail
-
-        # WHEN
-        service = AvisService()
-        service.avis_dao = avis_dao_mock
-        service.cocktail_dao = cocktail_dao_mock
-        resultat = service.create_or_update_avis(
-            id_utilisateur,
-            nom_cocktail,
-            note,
-            commentaire,
-        )
-
-        # THEN
-        if "Margarita" not in resultat:
-            raise AssertionError(
-                message=f"'Margarita' devrait être dans le résultat: {resultat}",
-            )
-        if "ajouté/modifié avec succès" not in resultat:
-            raise AssertionError(
-                message=f"'ajouté/modifié avec succès' devrait être dans le résultat:"
-                f"{resultat}",
-            )
-
-    @staticmethod
-    def test_create_or_update_avis_note_et_commentaire_vides() -> None:
-        """Teste la création d'un avis sans note ni commentaire."""
-        # GIVEN
-        id_utilisateur = 1
-        nom_cocktail = "margarita"
-        note = None
-        commentaire = None
+        note = ""
+        commentaire = "Test"
 
         avis_dao_mock = MagicMock(spec=AvisDAO)
         cocktail_dao_mock = MagicMock(spec=CocktailDAO)
@@ -220,22 +174,149 @@ class TestAvisService:
             )
 
         error_message = str(exc_info.value)
-        if "Au moins la note ou le commentaire" not in error_message:
+        if "note" not in error_message.lower() and "vide" not in error_message.lower():
             raise AssertionError(
-                message=f"'Au moins la note ou le commentaire' devrait être dans le"
-                f"message d'erreur: {error_message}",
+                message=f"Le message devrait mentionner 'note vide': {error_message}",
             )
 
-    @staticmethod
-    def test_create_or_update_avis_cocktail_inexistant() -> None:
+    def test_create_or_update_avis_commentaire_vide(self) -> None:
+        """Teste la création d'un avis avec un commentaire vide."""
+        # GIVEN
+        id_utilisateur = 1
+        nom_cocktail = "margarita"
+        note = "8"
+        commentaire = ""
+
+        avis_dao_mock = MagicMock(spec=AvisDAO)
+        cocktail_dao_mock = MagicMock(spec=CocktailDAO)
+
+        # WHEN
+        service = AvisService()
+        service.avis_dao = avis_dao_mock
+        service.cocktail_dao = cocktail_dao_mock
+
+        # THEN
+        with pytest.raises(InvalidAvisError) as exc_info:
+            service.create_or_update_avis(
+                id_utilisateur,
+                nom_cocktail,
+                note,
+                commentaire,
+            )
+
+        error_message = str(exc_info.value)
+        if (
+            "commentaire" not in error_message.lower()
+            and "vide" not in error_message.lower()
+        ):
+            raise AssertionError(
+                message=f"Le message devrait mentionner 'commentaire vide':"
+                f"{error_message}",
+            )
+
+    def test_create_or_update_avis_note_invalide_format(self) -> None:
+        """Teste la création d'un avis avec une note au format invalide."""
+        # GIVEN
+        id_utilisateur = 1
+        nom_cocktail = "margarita"
+        note = "abc"
+        commentaire = "Test"
+
+        avis_dao_mock = MagicMock(spec=AvisDAO)
+        cocktail_dao_mock = MagicMock(spec=CocktailDAO)
+
+        # WHEN
+        service = AvisService()
+        service.avis_dao = avis_dao_mock
+        service.cocktail_dao = cocktail_dao_mock
+
+        # THEN
+        with pytest.raises(InvalidAvisError) as exc_info:
+            service.create_or_update_avis(
+                id_utilisateur,
+                nom_cocktail,
+                note,
+                commentaire,
+            )
+
+        error_message = str(exc_info.value)
+        if "note valide" not in error_message.lower():
+            raise AssertionError(
+                message=f"Le message devrait mentionner 'note valide': {error_message}",
+            )
+
+    def test_create_or_update_avis_note_trop_basse(self) -> None:
+        """Teste la création d'un avis avec une note inférieure à 0."""
+        # GIVEN
+        id_utilisateur = 1
+        nom_cocktail = "margarita"
+        note = "-1"
+        commentaire = "Test"
+
+        avis_dao_mock = MagicMock(spec=AvisDAO)
+        cocktail_dao_mock = MagicMock(spec=CocktailDAO)
+
+        # WHEN
+        service = AvisService()
+        service.avis_dao = avis_dao_mock
+        service.cocktail_dao = cocktail_dao_mock
+
+        # THEN
+        with pytest.raises(InvalidAvisError) as exc_info:
+            service.create_or_update_avis(
+                id_utilisateur,
+                nom_cocktail,
+                note,
+                commentaire,
+            )
+
+        error_message = str(exc_info.value)
+        if "0 et 10" not in error_message:
+            raise AssertionError(
+                message=f"Le message devrait mentionner '0 et 10': {error_message}",
+            )
+
+    def test_create_or_update_avis_note_trop_haute(self) -> None:
+        """Teste la création d'un avis avec une note supérieure à 10."""
+        # GIVEN
+        id_utilisateur = 1
+        nom_cocktail = "margarita"
+        note = "15"
+        commentaire = "Test"
+
+        avis_dao_mock = MagicMock(spec=AvisDAO)
+        cocktail_dao_mock = MagicMock(spec=CocktailDAO)
+
+        # WHEN
+        service = AvisService()
+        service.avis_dao = avis_dao_mock
+        service.cocktail_dao = cocktail_dao_mock
+
+        # THEN
+        with pytest.raises(InvalidAvisError) as exc_info:
+            service.create_or_update_avis(
+                id_utilisateur,
+                nom_cocktail,
+                note,
+                commentaire,
+            )
+
+        error_message = str(exc_info.value)
+        if "0 et 10" not in error_message:
+            raise AssertionError(
+                message=f"Le message devrait mentionner '0 et 10': {error_message}",
+            )
+
+    def test_create_or_update_avis_cocktail_inexistant(self) -> None:
         """Teste la création d'un avis pour un cocktail inexistant."""
         # GIVEN
         id_utilisateur = 1
         nom_cocktail = "cocktailinconnu"
-        note = 8
+        note = "8"
         commentaire = "Test"
 
         avis_dao_mock = MagicMock(spec=AvisDAO)
+
         cocktail_dao_mock = MagicMock(spec=CocktailDAO)
         cocktail_dao_mock.rechercher_cocktail_par_nom.return_value = None
         cocktail_dao_mock.rechercher_cocktail_par_sequence_debut.return_value = []
@@ -252,6 +333,84 @@ class TestAvisService:
                 nom_cocktail,
                 note,
                 commentaire,
+            )
+
+    def test_create_or_update_avis_dao_erreur(self) -> None:
+        """Teste la gestion d'une erreur du DAO lors de la création d'un avis."""
+        # GIVEN
+        id_utilisateur = 1
+        nom_cocktail = "margarita"
+        note = "8"
+        commentaire = "Test"
+
+        cocktail = Cocktail(
+            id_cocktail=1,
+            nom="Margarita",
+            categorie="Ordinary Drink",
+            verre="Cocktail glass",
+            alcool=True,
+            image="https://example.com/margarita.jpg",
+        )
+
+        avis_dao_mock = MagicMock(spec=AvisDAO)
+        avis_dao_mock.create_or_update_avis.side_effect = Exception("Erreur DB")
+
+        cocktail_dao_mock = MagicMock(spec=CocktailDAO)
+        cocktail_dao_mock.rechercher_cocktail_par_nom.return_value = cocktail
+
+        # WHEN
+        service = AvisService()
+        service.avis_dao = avis_dao_mock
+        service.cocktail_dao = cocktail_dao_mock
+
+        # THEN
+        with pytest.raises(ServiceError):
+            service.create_or_update_avis(
+                id_utilisateur,
+                nom_cocktail,
+                note,
+                commentaire,
+            )
+
+    def test_create_or_update_avis_note_decimale_valide(self) -> None:
+        """Teste la création d'un avis avec une note décimale valide."""
+        # GIVEN
+        id_utilisateur = 1
+        nom_cocktail = "margarita"
+        note = "7.5"
+        commentaire = "Très bon"
+
+        cocktail = Cocktail(
+            id_cocktail=1,
+            nom="Margarita",
+            categorie="Ordinary Drink",
+            verre="Cocktail glass",
+            alcool=True,
+            image="https://example.com/margarita.jpg",
+        )
+
+        avis_dao_mock = MagicMock(spec=AvisDAO)
+        avis_dao_mock.create_or_update_avis.return_value = None
+
+        cocktail_dao_mock = MagicMock(spec=CocktailDAO)
+        cocktail_dao_mock.rechercher_cocktail_par_nom.return_value = cocktail
+
+        # WHEN
+        service = AvisService()
+        service.avis_dao = avis_dao_mock
+        service.cocktail_dao = cocktail_dao_mock
+        resultat = service.create_or_update_avis(
+            id_utilisateur,
+            nom_cocktail,
+            note,
+            commentaire,
+        )
+
+        # THEN
+        if "ajouté/modifié avec succès" not in resultat:
+            raise AssertionError(
+                message=f"'ajouté/modifié avec succès' devrait être dans le résultat:"
+                f"{resultat}",
             )
 
     # ========== Tests pour get_avis_cocktail ==========

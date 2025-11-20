@@ -28,9 +28,21 @@ class TestIngredientService:
         resultat = service.check_if_alcoholic(ingredient_id)
 
         # THEN
-        assert resultat["ingredient_id"] == ingredient_id
-        assert resultat["is_alcoholic"] is True
-        assert "contient de l'alcool" in resultat["message"]
+        if resultat["ingredient_id"] != ingredient_id:
+            raise AssertionError(
+                message=f"ingredient_id devrait être {ingredient_id}, obtenu:"
+                f"{resultat['ingredient_id']}",
+            )
+        if resultat["is_alcoholic"] is not True:
+            raise AssertionError(
+                message=f"is_alcoholic devrait être True, obtenu:"
+                f"{resultat['is_alcoholic']}",
+            )
+        if "contient de l'alcool" not in resultat["message"]:
+            raise AssertionError(
+                message=f"'contient de l'alcool' devrait être dans le message:"
+                f"{resultat['message']}",
+            )
         dao_mock.is_alcoholic.assert_called_once_with(ingredient_id)
 
     def test_check_if_alcoholic_false(self) -> None:
@@ -47,9 +59,21 @@ class TestIngredientService:
         resultat = service.check_if_alcoholic(ingredient_id)
 
         # THEN
-        assert resultat["ingredient_id"] == ingredient_id
-        assert resultat["is_alcoholic"] is False
-        assert "ne contient pas d'alcool" in resultat["message"]
+        if resultat["ingredient_id"] != ingredient_id:
+            raise AssertionError(
+                message=f"ingredient_id devrait être {ingredient_id}, obtenu:"
+                f"{resultat['ingredient_id']}",
+            )
+        if resultat["is_alcoholic"] is not False:
+            raise AssertionError(
+                message=f"is_alcoholic devrait être False, obtenu:"
+                f"{resultat['is_alcoholic']}",
+            )
+        if "ne contient pas d'alcool" not in resultat["message"]:
+            raise AssertionError(
+                message=f"'ne contient pas d'alcool' devrait être dans le message:"
+                f"{resultat['message']}",
+            )
         dao_mock.is_alcoholic.assert_called_once_with(ingredient_id)
 
     def test_check_if_alcoholic_ingredient_inexistant(self) -> None:
@@ -74,8 +98,16 @@ class TestIngredientService:
         # THEN
         with pytest.raises(IngredientNotFoundError) as exc_info:
             service.check_if_alcoholic(ingredient_id)
-        assert "introuvable" in str(exc_info.value)
-        assert str(ingredient_id) in str(exc_info.value)
+
+        error_message = str(exc_info.value)
+        if "introuvable" not in error_message:
+            raise AssertionError(
+                message=f"'introuvable' devrait être dans l'erreur: {error_message}",
+            )
+        if str(ingredient_id) not in error_message:
+            raise AssertionError(
+                message=f"'{ingredient_id}' devrait être dans l'erreur:{error_message}",
+            )
 
     def test_check_if_alcoholic_id_negatif(self) -> None:
         """Teste la vérification avec un ID négatif.
@@ -116,9 +148,21 @@ class TestIngredientService:
         resultat = service.check_if_alcoholic_by_name(ingredient_name)
 
         # THEN
-        assert resultat["ingredient_name"] == ingredient_name
-        assert resultat["is_alcoholic"] is True
-        assert "contient de l'alcool" in resultat["message"]
+        if resultat["ingredient_name"] != ingredient_name:
+            raise AssertionError(
+                message=f"ingredient_name devrait être '{ingredient_name}', obtenu:"
+                f"{resultat['ingredient_name']}",
+            )
+        if resultat["is_alcoholic"] is not True:
+            raise AssertionError(
+                message=f"is_alcoholic devrait être True, obtenu:"
+                f"{resultat['is_alcoholic']}",
+            )
+        if "contient de l'alcool" not in resultat["message"]:
+            raise AssertionError(
+                message=f"'contient de l'alcool' devrait être dans le message:"
+                f"{resultat['message']}",
+            )
         dao_mock.is_alcoholic_by_name.assert_called_once_with(ingredient_name)
 
     def test_check_if_alcoholic_by_name_false(self) -> None:
@@ -135,9 +179,21 @@ class TestIngredientService:
         resultat = service.check_if_alcoholic_by_name(ingredient_name)
 
         # THEN
-        assert resultat["ingredient_name"] == ingredient_name
-        assert resultat["is_alcoholic"] is False
-        assert "ne contient pas d'alcool" in resultat["message"]
+        if resultat["ingredient_name"] != ingredient_name:
+            raise AssertionError(
+                message=f"ingredient_name devrait être '{ingredient_name}', obtenu:"
+                f"{resultat['ingredient_name']}",
+            )
+        if resultat["is_alcoholic"] is not False:
+            raise AssertionError(
+                message=f"is_alcoholic devrait être False, obtenu:"
+                f"{resultat['is_alcoholic']}",
+            )
+        if "ne contient pas d'alcool" not in resultat["message"]:
+            raise AssertionError(
+                message=f"'ne contient pas d'alcool' devrait être dans le message:"
+                f"{resultat['message']}",
+            )
         dao_mock.is_alcoholic_by_name.assert_called_once_with(ingredient_name)
 
     def test_check_if_alcoholic_by_name_ingredient_inexistant(self) -> None:
@@ -162,8 +218,17 @@ class TestIngredientService:
         # THEN
         with pytest.raises(IngredientNotFoundError) as exc_info:
             service.check_if_alcoholic_by_name(ingredient_name)
-        assert "introuvable" in str(exc_info.value)
-        assert ingredient_name in str(exc_info.value)
+
+        error_message = str(exc_info.value)
+        if "introuvable" not in error_message:
+            raise AssertionError(
+                message=f"'introuvable' devrait être dans l'erreur: {error_message}",
+            )
+        if ingredient_name not in error_message:
+            raise AssertionError(
+                message=f"'{ingredient_name}' devrait être dans l'erreur:"
+                f"{error_message}",
+            )
 
     def test_check_if_alcoholic_by_name_nom_vide(self) -> None:
         """Teste la vérification avec un nom vide.
@@ -202,6 +267,14 @@ class TestIngredientService:
         resultat = service.check_if_alcoholic_by_name(ingredient_name)
 
         # THEN
-        assert resultat["ingredient_name"] == ingredient_name
-        assert resultat["is_alcoholic"] is True
+        if resultat["ingredient_name"] != ingredient_name:
+            raise AssertionError(
+                message=f"ingredient_name devrait être '{ingredient_name}', obtenu:"
+                f"{resultat['ingredient_name']}",
+            )
+        if resultat["is_alcoholic"] is not True:
+            raise AssertionError(
+                message=f"is_alcoholic devrait être True, obtenu:"
+                f"{resultat['is_alcoholic']}",
+            )
         dao_mock.is_alcoholic_by_name.assert_called_once_with(ingredient_name)
