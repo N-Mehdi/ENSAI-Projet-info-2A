@@ -7,7 +7,7 @@ from psycopg2 import Error as DBError
 from src.business_object.cocktail import Cocktail
 from src.dao.db_connection import DBConnection
 from src.utils.exceptions import DAOError
-from src.utils.log_decorator import log, logging
+from src.utils.log_decorator import log
 from src.utils.singleton import Singleton
 
 
@@ -216,14 +216,14 @@ class CocktailDAO(metaclass=Singleton):
                 return cursor.fetchall()
 
         except DBError as e:
-            logging.exception("Erreur lors de la récupération des cocktails avec ingrédients")
             raise DAOError(message=None) from e
 
     def get_cocktails_quasi_realisables(
         self,
         id_utilisateur: int,
     ) -> list[dict]:
-        """Récupère tous les cocktails avec leurs ingrédients et le stock de l'utilisateur.
+        """Récupère tous les cocktails avec leurs ingrédients et le stock de
+        l'utilisateur.
 
         Retourne les données brutes sans calcul de conversion.
 
@@ -269,5 +269,4 @@ class CocktailDAO(metaclass=Singleton):
                 return cursor.fetchall()
 
         except DBError as e:
-            logging.exception("Erreur lors de la récupération des données pour cocktails quasi-réalisables")
             raise DAOError(message=None) from e

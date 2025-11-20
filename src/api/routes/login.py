@@ -82,7 +82,8 @@ def creer_compte(donnees: UserRegister) -> str:
         - Champ vide : "Le champ '{nom_champ}' ne peut pas être vide"
         - Pseudo déjà utilisé : "Username already registered"
         - Email déjà utilisé : "Email already registered"
-        - Date de naissance invalide : "Invalid birth date: must be in the past and user must be at least 13 years old"
+        - Date de naissance invalide : "Invalid birth date: must be in the past and user
+          must be at least 13 years old"
 
     HTTPException (500 - Internal Server Error)
         - Erreur lors de la création du compte

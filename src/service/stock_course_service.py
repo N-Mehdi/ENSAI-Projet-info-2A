@@ -24,7 +24,7 @@ class StockCourseService:
         self.stock_dao = StockCourseDAO()
         self.ingredient_dao = IngredientDAO()
 
-    def _get_ingredient_by_name(self, nom_ingredient: str) -> dict:
+    def get_ingredient_by_name(self, nom_ingredient: str) -> dict:
         """Méthode privée pour récupérer un ingrédient par son nom.
         Lève une exception avec suggestions si non trouvé.
 
@@ -52,9 +52,15 @@ class StockCourseService:
 
         if not ingredient:
             # Chercher des suggestions
-            suggestions_data = self.ingredient_dao.search_by_name(nom_normalized, limit=5)
+            suggestions_data = self.ingredient_dao.search_by_name(
+                nom_normalized,
+                limit=5,
+            )
             suggestions = [s["nom"] for s in suggestions_data]
-            raise IngredientNotFoundError(nom_normalized, suggestions)
+            raise IngredientNotFoundError(
+                message=f"Ingrédient{nom_normalized} introuvable,"
+                f"Vouliez-vous dire {','.join(suggestions[:3])} ?",
+            )
 
         return ingredient
 
@@ -97,10 +103,12 @@ class StockCourseService:
         """
         # Validation quantité
         if quantite <= 0:
-            raise InvalidQuantityError(quantite)
+            raise InvalidQuantityError(
+                message=f"Quantité invalide : {quantite}.La quantité doit être > 0",
+            )
 
         # Récupérer l'ingrédient (lève exception si non trouvé)
-        ingredient = self._get_ingredient_by_name(nom_ingredient)
+        ingredient = self.get_ingredient_by_name(nom_ingredient)
 
         # Récupérer l'ID de l'unité via son abréviation
         try:
@@ -128,7 +136,10 @@ class StockCourseService:
         if not success:
             raise ServiceError(message="Impossible d'ajouter l'ingrédient au stock")
 
-        return f"Ingrédient '{ingredient['nom']}' ajouté/mis à jour avec succès ({quantite} {abbreviation_unite})"
+        return (
+            f"Ingrédient '{ingredient['nom']}' ajouté/mis à jour avec succès"
+            f"({quantite} {abbreviation_unite})"
+        )
 
     def get_user_stock(
         self,
@@ -176,7 +187,9 @@ class StockCourseService:
                 items=items,
             )
         except Exception as e:
-            raise ServiceError(message=f"Erreur lors de la récupération du stock : {e}") from e
+            raise ServiceError(
+                message=f"Erreur lors de la récupération du stock : {e}",
+            ) from e
 
     def get_ingredient_from_stock_by_name(
         self,
@@ -204,7 +217,7 @@ class StockCourseService:
 
         """
         # Récupérer l'ingrédient (lève exception si non trouvé)
-        ingredient = self._get_ingredient_by_name(nom_ingredient)
+        ingredient = self.get_ingredient_by_name(nom_ingredient)
 
         try:
             # Le DAO retourne un dictionnaire
@@ -220,13 +233,15 @@ class StockCourseService:
             return StockItem(
                 id_ingredient=row["id_ingredient"],
                 nom_ingredient=row["nom_ingredient"],
-                quantite=float(row["quantite"]),  # ← Conversion Decimal → float
+                quantite=float(row["quantite"]),  # Conversion Decimal : float
                 id_unite=row["id_unite"],
                 code_unite=row["code_unite"],
                 nom_unite_complet=row["nom_unite_complet"],
             )
         except Exception as e:
-            raise ServiceError(message=f"Erreur lors de la récupération de l'ingrédient : {e}") from e
+            raise ServiceError(
+                message=f"Erreur lors de la récupération de l'ingrédient : {e}",
+            ) from e
 
     def remove_ingredient_by_name(
         self,
@@ -264,10 +279,12 @@ class StockCourseService:
         """
         # Validation de la quantité
         if quantite <= 0:
-            raise InvalidQuantityError(quantite)
+            raise InvalidQuantityError(
+                message=f"Quantité invalide : {quantite}. La quantité doit être > 0",
+            )
 
         # Récupérer l'ingrédient (lève exception si non trouvé)
-        ingredient = self._get_ingredient_by_name(nom_ingredient)
+        ingredient = self.get_ingredient_by_name(nom_ingredient)
 
         try:
             result = self.stock_dao.decrement_stock_item(
@@ -277,27 +294,44 @@ class StockCourseService:
             )
 
             if result["supprime"]:
-                return f"Ingrédient '{ingredient['nom']}' retiré complètement du stock (quantité épuisée)"
-            return f"{quantite} retiré(s) de '{ingredient['nom']}'. Nouvelle quantité : {result['nouvelle_quantite']}"
+                return (
+                    f"Ingrédient '{ingredient['nom']}' retiré complètement du stock"
+                    f"(quantité épuisée)"
+                )
+            return (
+                f"{quantite} retiré(s) de '{ingredient['nom']}'. Nouvelle quantité :"
+                f"{result['nouvelle_quantite']}"
+            )
 
         except ValueError as e:
             # Capturer les erreurs de quantité insuffisante ou ingrédient non trouvé
             error_msg = str(e)
             if "Impossible de retirer" in error_msg:
-                # Extraire les quantités du message d'erreur, format: "Impossible de retirer X (quantité disponible : Y)"
+                # Extraire les quantités du message d'erreur, format: "Impossible de
+                # retirer X (quantité disponible : Y)"
 
                 match = re.search(r"retirer ([\d.]+).*disponible : ([\d.]+)", error_msg)
                 if match:
                     quantite_demandee = float(match.group(1))
                     quantite_disponible = float(match.group(2))
-                    raise InsufficientQuantityError(quantite_demandee, quantite_disponible) from e
+                    raise InsufficientQuantityError(
+                        quantite_demandee,
+                        quantite_disponible,
+                    ) from e
 
             if "non trouvé dans le stock" in error_msg:
-                raise ServiceError(message=f"L'ingrédient '{ingredient['nom']}' n'est pas dans votre stock") from e
+                raise ServiceError(
+                    message=f"L'ingrédient '{ingredient['nom']}' n'est pas dans"
+                    "votre stock",
+                ) from e
 
             raise ServiceError(error_msg) from e
 
-        except (InvalidQuantityError, IngredientNotFoundError, InsufficientQuantityError):
+        except (
+            InvalidQuantityError,
+            IngredientNotFoundError,
+            InsufficientQuantityError,
+        ):
             raise
         except Exception as e:
             raise ServiceError(message=f"Erreur lors du retrait : {e}") from e
@@ -333,7 +367,7 @@ class StockCourseService:
 
         """
         # Récupérer l'ingrédient (lève exception si non trouvé)
-        ingredient = self._get_ingredient_by_name(nom_ingredient)
+        ingredient = self.get_ingredient_by_name(nom_ingredient)
 
         try:
             success = self.stock_dao.delete_stock_item(
@@ -346,7 +380,11 @@ class StockCourseService:
         except Exception as e:
             raise ServiceError(message=f"Erreur lors de la suppression : {e}") from e
         if not success:
-            raise ServiceError(message=f"L'ingrédient '{ingredient['nom']}' n'est pas dans votre stock")
+            raise ServiceError(
+                message=(
+                    f"L'ingrédient '{ingredient['nom']}' n'est pas dans votrestock",
+                ),
+            )
 
         return f"Ingrédient '{ingredient['nom']}' supprimé complètement du stock"
 
@@ -367,4 +405,6 @@ class StockCourseService:
         try:
             return self.stock_dao.get_full_stock(id_utilisateur)
         except Exception as e:
-            raise ServiceError(message=f"Erreur lors de la récupération du stock complet : {e}") from e
+            raise ServiceError(
+                message=f"Erreur lors de la récupération du stock complet : {e}",
+            ) from e

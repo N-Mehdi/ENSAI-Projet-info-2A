@@ -1,10 +1,13 @@
+"""Module contenant les fonctions qui manipulent les chaines de caractères."""
+
+
 def normalize_ingredient_name(nom: str) -> str:
     """Normalise le nom d'un ingrédient au format standard.
 
     Règles :
     - Title Case pour tous les mots
     - Exception : noms commençant par des chiffres (151 Proof Rum, 7-Up)
-    - Espaces multiples → un seul espace
+    - Espaces multiples : un seul espace
     - Trim des espaces au début/fin
 
     Examples

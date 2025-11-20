@@ -19,7 +19,9 @@ from src.utils.singleton import Singleton
 
 
 class UtilisateurDAO(metaclass=Singleton):
-    """Classe contenant les méthodes agissant sur les utilisateurs de la base de données."""
+    """Classe contenant les méthodes agissant sur les utilisateurs de la base de
+    données.
+    """
 
     @log
     def create_compte(self, utilisateur: UserCreate) -> bool:
@@ -41,7 +43,10 @@ class UtilisateurDAO(metaclass=Singleton):
             raise EmptyFieldError(field="pseudo")
         if not utilisateur.mail or not utilisateur.mail.strip():
             raise EmptyFieldError(field="mail")
-        if not utilisateur.mot_de_passe_hashed or not utilisateur.mot_de_passe_hashed.strip():
+        if (
+            not utilisateur.mot_de_passe_hashed
+            or not utilisateur.mot_de_passe_hashed.strip()
+        ):
             raise EmptyFieldError(field="mot_de_passe")
         if not utilisateur.date_naissance:
             raise EmptyFieldError(field="date_naissance")
@@ -51,7 +56,8 @@ class UtilisateurDAO(metaclass=Singleton):
                 cursor.execute(
                     """
                     INSERT INTO utilisateur(pseudo, mail, date_naissance, mot_de_passe)
-                    VALUES (%(pseudo)s, %(mail)s, %(date_naissance)s, %(mot_de_passe_hashed)s)
+                    VALUES (%(pseudo)s, %(mail)s, %(date_naissance)s,
+                    %(mot_de_passe_hashed)s)
                     RETURNING *
                     """,
                     {
@@ -199,7 +205,9 @@ class UtilisateurDAO(metaclass=Singleton):
                     mail=row["mail"],
                     date_naissance=row["date_naissance"].isoformat(),
                     mot_de_passe_hashed=row["mot_de_passe"],
-                    date_inscription=row["date_inscription"].isoformat() if row["date_inscription"] else None,  # ✅ AJOUTÉ
+                    date_inscription=row["date_inscription"].isoformat()
+                    if row["date_inscription"]
+                    else None,
                 )
         except DBError as exc:
             raise DAOError from exc
@@ -250,9 +258,13 @@ class UtilisateurDAO(metaclass=Singleton):
                 id_utilisateur=res["id_utilisateur"],
                 pseudo=res["pseudo"],
                 mail=res["mail"],
-                date_naissance=res["date_naissance"].isoformat() if res["date_naissance"] else None,
+                date_naissance=res["date_naissance"].isoformat()
+                if res["date_naissance"]
+                else None,
                 mot_de_passe_hashed=res["mot_de_passe"],
-                date_inscription=res["date_inscription"].isoformat() if res["date_inscription"] else None,  # ✅ AJOUTÉ
+                date_inscription=res["date_inscription"].isoformat()
+                if res["date_inscription"]
+                else None,
             )
         return utilisateur
 
@@ -279,7 +291,8 @@ class UtilisateurDAO(metaclass=Singleton):
             with DBConnection().connection as connection:
                 with connection.cursor() as cursor:
                     cursor.execute(
-                        "SELECT EXISTS(SELECT 1 FROM utilisateur WHERE pseudo = %(pseudo)s)",
+                        "SELECT EXISTS(SELECT 1 FROM utilisateur WHERE pseudo = "
+                        "%(pseudo)s)",
                         {"pseudo": pseudo},
                     )
                     result = cursor.fetchone()
@@ -312,7 +325,8 @@ class UtilisateurDAO(metaclass=Singleton):
             with DBConnection().connection as connection:
                 with connection.cursor() as cursor:
                     cursor.execute(
-                        "SELECT EXISTS(SELECT 1 FROM utilisateur WHERE mail = %(mail)s)",
+                        "SELECT EXISTS(SELECT 1 FROM utilisateur WHERE mail = "
+                        "%(mail)s)",
                         {"mail": mail},
                     )
                     result = cursor.fetchone()
@@ -414,7 +428,8 @@ class UtilisateurDAO(metaclass=Singleton):
         Returns
         -------
         str | None
-            Date d'inscription au format ISO (YYYY-MM-DD) ou None si l'utilisateur n'existe pas
+            Date d'inscription au format ISO (YYYY-MM-DD) ou None si l'utilisateur
+            n'existe pas
 
         Raises
         ------

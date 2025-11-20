@@ -6,6 +6,7 @@ import pytest
 
 from src.dao.ingredient_dao import IngredientDAO
 from src.service.ingredient_service import IngredientService
+from src.utils.exceptions import IngredientNotFoundError
 
 
 class TestIngredientService:
@@ -71,7 +72,7 @@ class TestIngredientService:
         service.dao = dao_mock
 
         # THEN
-        with pytest.raises(ValueError) as exc_info:
+        with pytest.raises(IngredientNotFoundError) as exc_info:
             service.check_if_alcoholic(ingredient_id)
         assert "introuvable" in str(exc_info.value)
         assert str(ingredient_id) in str(exc_info.value)
@@ -96,7 +97,7 @@ class TestIngredientService:
         service.dao = dao_mock
 
         # THEN
-        with pytest.raises(ValueError):
+        with pytest.raises(IngredientNotFoundError):
             service.check_if_alcoholic(ingredient_id)
 
     # ========== Tests pour check_if_alcoholic_by_name ==========
@@ -159,7 +160,7 @@ class TestIngredientService:
         service.dao = dao_mock
 
         # THEN
-        with pytest.raises(ValueError) as exc_info:
+        with pytest.raises(IngredientNotFoundError) as exc_info:
             service.check_if_alcoholic_by_name(ingredient_name)
         assert "introuvable" in str(exc_info.value)
         assert ingredient_name in str(exc_info.value)
@@ -184,7 +185,7 @@ class TestIngredientService:
         service.dao = dao_mock
 
         # THEN
-        with pytest.raises(ValueError):
+        with pytest.raises(IngredientNotFoundError):
             service.check_if_alcoholic_by_name(ingredient_name)
 
     def test_check_if_alcoholic_by_name_casse_differente(self) -> None:

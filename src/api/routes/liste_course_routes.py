@@ -7,7 +7,12 @@ from fastapi import APIRouter, HTTPException, Query
 from src.api.deps import CurrentUser
 from src.models.liste_course import ListeCourse
 from src.service.liste_course_service import ListeCourseService
-from src.utils.exceptions import IngredientNotFoundError, InvalidQuantityError, ServiceError, UniteNotFoundError
+from src.utils.exceptions import (
+    IngredientNotFoundError,
+    InvalidQuantityError,
+    ServiceError,
+    UniteNotFoundError,
+)
 
 router = APIRouter(prefix="/liste-course", tags=["Liste de Courses"])
 service = ListeCourseService()
@@ -71,9 +76,10 @@ Ajoute un ingrédient à la liste de course.
 🔒 Authentification requise
 
 **Comportement intelligent :**
-- Si l'ingrédient existe déjà avec la **même unité** → additionne les quantités
-- Si l'ingrédient existe avec une **unité différente** (même type) → convertit et additionne
-- Si les unités ne sont pas compatibles → remplace
+- Si l'ingrédient existe déjà avec la **même unité** : additionne les quantités
+- Si l'ingrédient existe avec une **unité différente** (même type) : convertit
+  et additionne
+- Si les unités ne sont pas compatibles : remplace
 
 **Unités acceptées :**
 - **Liquides** : ml, cl, l, dl, oz, fl oz, tsp, tbsp, cup, shot
@@ -92,7 +98,8 @@ Ajoute un ingrédient à la liste de course.
                 "application/json": {
                     "example": {
                         "status": "success",
-                        "message": "Ingrédient 'Vodka' ajouté à la liste de course (500.0 ml)",
+                        "message": "Ingrédient 'Vodka' ajouté à la liste de course"
+                        "(500.0 ml)",
                     },
                 },
             },
@@ -115,7 +122,8 @@ Ajoute un ingrédient à la liste de course.
                         "unite_not_found": {
                             "summary": "Unité non trouvée",
                             "value": {
-                                "detail": "Unité 'mml' non trouvée. Unités valides : ml, cl, l, g, kg, oz, etc.",
+                                "detail": "Unité 'mml' non trouvée. Unités valides :"
+                                "ml,cl, l, g, kg, oz, etc.",
                             },
                         },
                     },
@@ -125,17 +133,30 @@ Ajoute un ingrédient à la liste de course.
     },
 )
 def add_to_liste_course(
-    nom_ingredient: Annotated[str, Query(min_length=2, description="Nom de l'ingrédient", example="Vodka")],
-    quantite: Annotated[float, Query(gt=0, description="Quantité à acheter (doit être > 0)", example=500.0)],
-    unite: Annotated[str, Query(min_length=1, description="Abréviation de l'unité (ex: 'ml', 'cl', 'g', 'kg')", example="ml")],
+    nom_ingredient: Annotated[
+        str,
+        Query(min_length=2, description="Nom de l'ingrédient", example="Vodka"),
+    ],
+    quantite: Annotated[
+        float,
+        Query(gt=0, description="Quantité à acheter (doit être > 0)", example=500.0),
+    ],
+    unite: Annotated[
+        str,
+        Query(
+            min_length=1,
+            description="Abréviation de l'unité (ex: 'ml', 'cl', 'g', 'kg')",
+            example="ml",
+        ),
+    ],
     current_user: CurrentUser,
 ) -> dict:
-    """Ajoute un ingrédient à la liste de course avec gestion intelligente des conversions.
+    """Ajoute un ingrédient à la liste de course.
 
     Si l'ingrédient existe déjà :
-    - Même unité → additionne les quantités
-    - Unités différentes mais compatibles → convertit et additionne
-    - Unités incompatibles → remplace
+    - Même unité : additionne les quantités
+    - Unités différentes mais compatibles : convertit et additionne
+    - Unités incompatibles : remplace
 
     L'utilisateur est automatiquement récupéré depuis le token JWT.
 
@@ -189,7 +210,8 @@ def add_to_liste_course(
     except UniteNotFoundError as e:
         raise HTTPException(
             status_code=404,
-            detail=f"Unité '{e.abbreviation}' non trouvée. Unités valides : ml, cl, l, g, kg, oz, etc.",
+            detail=f"Unité '{e.abbreviation}' non trouvée. Unités valides : ml, cl, l,"
+            "g, kg, oz, etc.",
         ) from e
     except ServiceError as e:
         raise HTTPException(status_code=400, detail=str(e)) from e
@@ -277,9 +299,9 @@ Retire un ingrédient de la liste de course SANS l'ajouter au stock.
 
 🔒 Authentification requise
 
-**Différence avec `/achete/{nom}` :**
-- `/achete/{nom}` : Retire ET ajoute au stock
-- `/{nom}` : Retire uniquement (suppression)
+**Différence avec `/achete/{nom_ingredient}` :**
+- `/achete/{nom_ingredient}` : Retire et ajoute au stock
+- `/{nom_ingredient}` : Retire uniquement (suppression)
 """,
 )
 def remove_from_liste_course(
@@ -288,7 +310,8 @@ def remove_from_liste_course(
 ) -> dict:
     """Retire un ingrédient de la liste de course SANS l'ajouter au stock.
 
-    Simple suppression, contrairement à `/achete/{nom}` qui transfère au stock.
+    Simple suppression, contrairement à `/achete/{nom_ingredient}` qui transfère
+    au stock.
 
     L'utilisateur est automatiquement récupéré depuis le token JWT.
 
@@ -393,11 +416,11 @@ Toggle le statut 'effectué' d'un item de la liste de course.
 🔒 Authentification requise
 
 **Comportement :**
-- Si non coché → coche
-- Si coché → décoche
+- Si non coché : coche
+- Si coché : décoche
 
-**Note :** Ceci ne retire PAS l'ingrédient de la liste, c'est juste un indicateur visuel.
-Pour retirer et ajouter au stock, utilisez `/achete/{nom}`.
+Ceci ne retire PAS l'ingrédient de la liste, c'est juste un indicateur visuel.
+Pour retirer et ajouter au stock, utilisez '/achete/{nom_ingredient}'.
 """,
 )
 def toggle_effectue(
@@ -407,7 +430,7 @@ def toggle_effectue(
     """Bascule le statut 'effectué' d'un item de la liste de course.
 
     Change l'état coché/décoché sans retirer l'ingrédient de la liste.
-    Pour retirer et ajouter au stock, utiliser `/achete/{nom}`.
+    Pour retirer et ajouter au stock, utilisez '/achete/{nom_ingredient}'.
 
     L'utilisateur est automatiquement récupéré depuis le token JWT.
 

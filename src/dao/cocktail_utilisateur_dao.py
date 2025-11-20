@@ -2,16 +2,20 @@
 sur la table prive dans la base de données.
 """
 
-from business_object.cocktail import Cocktail
-from dao.db_connection import DBConnection
-from src.utils.exceptions import CocktailNotFoundError, CocktailNotTestedError, PermissionDeniedError
-from utils.log_decorator import log
-from utils.singleton import Singleton
+from src.business_object.cocktail import Cocktail
+from src.dao.db_connection import DBConnection
+from src.utils.exceptions import (
+    CocktailNotFoundError,
+    CocktailNotTestedError,
+    PermissionDeniedError,
+)
+from src.utils.log_decorator import log
+from src.utils.singleton import Singleton
 
 
 class CocktailUtilisateurDAO(metaclass=Singleton):
-    """Classe contenant les méthodes agissant sur les cocktails et utilisateurs de la base
-    de données.
+    """Classe contenant les méthodes agissant sur les cocktails et utilisateurs de
+    la base de données.
     """
 
     @staticmethod
@@ -143,7 +147,8 @@ class CocktailUtilisateurDAO(metaclass=Singleton):
         Returns
         -------
         dict
-            Dictionnaire avec les id_ingredient comme clés et les quantités comme valeurs
+            Dictionnaire avec les id_ingredient comme clés et les quantités comme
+            valeurs
 
         Raises
         ------
@@ -153,7 +158,8 @@ class CocktailUtilisateurDAO(metaclass=Singleton):
         """
         with DBConnection().connection as connection, connection.cursor() as cursor:
             cursor.execute(
-                "SELECT id_ingredient, quantite FROM cocktail_ingredient WHERE id_cocktail = %(id_cocktail)s",
+                "SELECT id_ingredient, quantite FROM cocktail_ingredient WHERE"
+                "id_cocktail = %(id_cocktail)s",
                 {"id_cocktail": id_cocktail},
             )
             # Retourne un dictionnaire {id_ingredient: quantite}

@@ -1,11 +1,8 @@
 """Classe DAO du business object Ingredient."""
 
-
 from src.dao.db_connection import DBConnection
-from src.utils.exceptions import IngredientNotFoundError
 from src.utils.log_decorator import log
 from src.utils.singleton import Singleton
-from src.utils.text_utils import normalize_ingredient_name
 
 
 class IngredientDAO(metaclass=Singleton):
@@ -30,44 +27,6 @@ class IngredientDAO(metaclass=Singleton):
                 """,
             )
             return cursor.fetchall()
-
-    @log
-    def get_by_name_with_suggestions(self, nom: str) -> dict:
-        """Cherche un ingrédient par son nom exact.
-        Si non trouvé, lève une exception avec des suggestions.
-
-        Parameters
-        ----------
-        nom : str
-            Nom de l'ingrédient (doit être normalisé au format Title Case)
-
-        Returns
-        -------
-        dict
-            L'ingrédient trouvé
-
-        Raises
-        ------
-        IngredientNotFoundError
-            Si l'ingrédient n'existe pas (avec suggestions)
-
-        """
-        # Normaliser le nom
-        nom_normalized = normalize_ingredient_name(nom)
-
-        # Chercher l'ingrédient
-        ingredient = self.get_by_name(nom_normalized)
-
-        if not ingredient:
-            # Chercher des suggestions
-            suggestions_data = self.rechercher_ingredient_par_sequence_debut(
-                sequence=nom_normalized[:3] if len(nom_normalized) >= 3 else nom_normalized,
-                max_resultats=5,
-            )
-            suggestions = [ing.nom for ing in suggestions_data]
-            raise IngredientNotFoundError(nom_normalized, suggestions)
-
-        return ingredient
 
     @log
     def get_by_name(self, nom: str) -> dict | None:

@@ -4,7 +4,7 @@ sur la table acces dans la base de données.
 
 from typing import Any
 
-from dao.db_connection import DBConnection
+from src.dao.db_connection import DBConnection
 from src.utils.singleton import Singleton
 
 
@@ -47,7 +47,8 @@ class AccesDAO(metaclass=Singleton):
 
     @staticmethod
     def grant_access(owner_id: int, user_id: int) -> bool:
-        """Donne l'accès à un utilisateur pour voir les cocktails privés du propriétaire.
+        """Donne l'accès à un utilisateur pour voir les cocktails privés du
+        propriétaire.
 
         Crée une ligne d'accès (is_owner=false, has_access=true) pour chaque
         cocktail privé du propriétaire auquel l'utilisateur n'a pas encore accès.
@@ -105,7 +106,8 @@ class AccesDAO(metaclass=Singleton):
                     # Créer l'accès : l'utilisateur reçoit une ligne avec is_owner=false
                     cursor.execute(
                         """
-                            INSERT INTO acces (id_utilisateur, id_cocktail, is_owner, has_access)
+                            INSERT INTO acces (id_utilisateur, id_cocktail, is_owner,
+                            has_access)
                             VALUES (%(user_id)s, %(cocktail_id)s, false, true)
                             """,
                         {"user_id": user_id, "cocktail_id": cocktail["id_cocktail"]},
@@ -200,7 +202,8 @@ class AccesDAO(metaclass=Singleton):
             return True
 
         with DBConnection().connection as connection, connection.cursor() as cursor:
-            # Vérifier si l'utilisateur a au moins une ligne d'accès aux cocktails du propriétaire
+            # Vérifier si l'utilisateur a au moins une ligne d'accès aux cocktails du
+            # propriétaire
             cursor.execute(
                 """
                     SELECT 1
@@ -223,7 +226,8 @@ class AccesDAO(metaclass=Singleton):
 
     @staticmethod
     def get_users_with_access(owner_id: int) -> list[str]:
-        """Récupère la liste des pseudos des utilisateurs ayant accès aux cocktails privés.
+        """Récupère la liste des pseudos des utilisateurs ayant accès aux cocktails
+        privés.
 
         Parameters
         ----------
@@ -242,7 +246,8 @@ class AccesDAO(metaclass=Singleton):
 
         """
         with DBConnection().connection as connection, connection.cursor() as cursor:
-            # Trouver tous les utilisateurs qui ont des lignes d'accès aux cocktails du propriétaire
+            # Trouver tous les utilisateurs qui ont des lignes d'accès aux cocktails du
+            # propriétaire
             cursor.execute(
                 """
                     SELECT DISTINCT u.pseudo
@@ -266,7 +271,8 @@ class AccesDAO(metaclass=Singleton):
 
     @staticmethod
     def get_private_cocktails(owner_id: int) -> list[dict[str, Any]]:
-        """Récupère la liste des cocktails privés d'un utilisateur avec leurs ingrédients.
+        """Récupère la liste des cocktails privés d'un utilisateur avec leurs
+        ingrédients.
 
         Parameters
         ----------
@@ -376,7 +382,8 @@ class AccesDAO(metaclass=Singleton):
             # Ajouter le cocktail à la liste privée
             cursor.execute(
                 """
-                    INSERT INTO acces (id_utilisateur, id_cocktail, is_owner, has_access)
+                    INSERT INTO acces (id_utilisateur, id_cocktail, is_owner,
+                                       has_access)
                     VALUES (%(owner_id)s, %(cocktail_id)s, true, true)
                     """,
                 {"owner_id": owner_id, "cocktail_id": cocktail_id},

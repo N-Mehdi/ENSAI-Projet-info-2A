@@ -1,9 +1,9 @@
 """Class dao manipulant les stocks."""
 
-from dao.db_connection import DBConnection
+from src.dao.db_connection import DBConnection
 from src.utils.exceptions import DAOError, IngredientNotFoundError, InvalidQuantityError
 from src.utils.log_decorator import log, logging
-from utils.singleton import Singleton
+from src.utils.singleton import Singleton
 
 
 class StockCourseDAO(metaclass=Singleton):
@@ -20,7 +20,8 @@ class StockCourseDAO(metaclass=Singleton):
         """Ajoute ou met à jour un ingrédient dans le stock.
 
         - Si l'ingrédient n'existe pas, il est créé avec la quantité donnée
-        - Si l'ingrédient existe, la quantité est ajoutée (cumul) et l'unité est mise à jour
+        - Si l'ingrédient existe, la quantité est ajoutée (cumul) et l'unité est
+          mise à jour
 
         Parameters
         ----------
@@ -43,7 +44,8 @@ class StockCourseDAO(metaclass=Singleton):
             cursor.execute(
                 """
                 INSERT INTO stock (id_utilisateur, id_ingredient, quantite, id_unite)
-                VALUES (%(id_utilisateur)s, %(id_ingredient)s, %(quantite)s, %(id_unite)s)
+                VALUES (%(id_utilisateur)s, %(id_ingredient)s, %(quantite)s,
+                        %(id_unite)s)
                 ON CONFLICT (id_utilisateur, id_ingredient)
                 DO UPDATE SET
                     quantite = stock.quantite + EXCLUDED.quantite,
@@ -194,20 +196,28 @@ class StockCourseDAO(metaclass=Singleton):
 
             row = cursor.fetchone()
             if not row:
-                raise IngredientNotFoundError
+                raise IngredientNotFoundError(
+                    message="Ingrédient introuvable dans le stock",
+                )
 
             # Convertir Decimal en float
             quantite_actuelle = float(row["quantite"])
 
-            # Vérifier que la quantité à retirer n'est pas supérieure à la quantité actuelle
+            # Vérifier que la quantité à retirer n'est pas supérieure
+            # à la quantité actuelle
             if quantite > quantite_actuelle:
-                raise InvalidQuantityError(quantite, quantite_actuelle)
+                raise InvalidQuantityError(
+                    message=f"Impossible de retirer {quantite}"
+                    f"(quantité disponible :{quantite_actuelle})",
+                )
 
             nouvelle_quantite = quantite_actuelle - quantite
 
             # Si la nouvelle quantité est 0 (ou très proche de 0), supprimer la ligne
             presque_zero = 0.0001
-            if nouvelle_quantite < presque_zero:  # Tolérance pour les arrondis flottants
+            if (
+                nouvelle_quantite < presque_zero
+            ):  # Tolérance pour les arrondis flottants
                 cursor.execute(
                     """
                     DELETE FROM stock
@@ -409,7 +419,8 @@ class StockCourseDAO(metaclass=Singleton):
             cursor.execute(
                 """
                 INSERT INTO stock (id_utilisateur, id_ingredient, quantite, id_unite)
-                VALUES (%(id_utilisateur)s, %(id_ingredient)s, %(quantite)s, %(id_unite)s)
+                VALUES (%(id_utilisateur)s, %(id_ingredient)s, %(quantite)s,
+                        %(id_unite)s)
                 ON CONFLICT (id_utilisateur, id_ingredient)
                 DO UPDATE SET
                     quantite = EXCLUDED.quantite,

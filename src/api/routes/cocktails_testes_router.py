@@ -71,7 +71,10 @@ def get_mes_cocktails_testes(current_user: CurrentUser) -> list[CocktailResponse
     "L'utilisateur propriétaire est automatiquement récupéré depuis le token JWT.",
 )
 def ajouter_cocktail_teste(
-    nom_cocktail: Annotated[str, Query(description="Le nom du cocktail à marquer comme testé")],
+    nom_cocktail: Annotated[
+        str,
+        Query(description="Le nom du cocktail à marquer commetesté"),
+    ],
     current_user: CurrentUser,
 ) -> dict:
     """Ajoute un cocktail aux cocktails testés pour l'utilisateur connecté.
@@ -114,7 +117,8 @@ def ajouter_cocktail_teste(
 
         if result.get("deja_teste"):
             return {
-                "message": f"Le cocktail '{result['nom_cocktail']}' est déjà dans vos cocktails testés",
+                "message": f"Le cocktail '{result['nom_cocktail']}' est déjà dans vos"
+                "cocktails testés",
                 "nom_cocktail": result["nom_cocktail"],
                 "teste": True,
             }
@@ -144,7 +148,10 @@ def ajouter_cocktail_teste(
     "L'utilisateur propriétaire est automatiquement récupéré depuis le token JWT.",
 )
 def retirer_cocktail_teste(
-    nom_cocktail: Annotated[str, Query(description="Le nom du cocktail dont retirer le statut testé")],
+    nom_cocktail: Annotated[
+        str,
+        Query(description="Le nom du cocktail dont retirer le statut testé"),
+    ],
     current_user: CurrentUser,
 ) -> dict:
     """Retire un cocktail des cocktails testés pour l'utilisateur connecté.

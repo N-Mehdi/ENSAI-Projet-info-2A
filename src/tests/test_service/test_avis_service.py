@@ -1,4 +1,4 @@
-"""Classe de test de src/service/avis_service.py."""
+"""Classe de test de AvisService."""
 
 from datetime import datetime
 from unittest.mock import MagicMock
@@ -12,7 +12,7 @@ from src.models.cocktail import Cocktail
 from src.service.avis_service import AvisService
 from src.utils.exceptions import (
     AvisNotFoundError,
-    IngredientNotFoundError,
+    CocktailNotFoundError,
     InvalidAvisError,
     ServiceError,
 )
@@ -21,9 +21,12 @@ from src.utils.exceptions import (
 class TestAvisService:
     """Tests pour AvisService."""
 
-    # ========== Tests pour _get_cocktail_by_name ==========
-
-    def test_get_cocktail_by_name_succes(self) -> None:
+    # ========== Tests pour get_cocktail_by_name ==========
+    @staticmethod
+    def test_get_cocktail_by_name_succes() -> None:
+        """Teste la méthode get_cocktail_by_name lorsque le cocktail est trouvé
+        avec succès.
+        """
         # GIVEN
         nom_cocktail = "margarita"
         cocktail_attendu = Cocktail(
@@ -43,14 +46,27 @@ class TestAvisService:
         service = AvisService()
         service.avis_dao = avis_dao_mock
         service.cocktail_dao = cocktail_dao_mock
-        resultat = service._get_cocktail_by_name(nom_cocktail)
+        resultat = service.get_cocktail_by_name(nom_cocktail)
 
         # THEN
-        assert resultat["id_cocktail"] == 1
-        assert resultat["nom"] == "Margarita"
-        cocktail_dao_mock.rechercher_cocktail_par_nom.assert_called_once_with("Margarita")
+        if resultat["id_cocktail"] != 1:
+            raise AssertionError(
+                message=f"L'id_cocktail devrait être 1, obtenu:"
+                f"{resultat['id_cocktail']}",
+            )
+        if resultat["nom"] != "Margarita":
+            raise AssertionError(
+                message=f"Le nom devrait être 'Margarita', obtenu: {resultat['nom']}",
+            )
+        cocktail_dao_mock.rechercher_cocktail_par_nom.assert_called_once_with(
+            "Margarita",
+        )
 
-    def test_get_cocktail_by_name_non_trouve(self) -> None:
+    @staticmethod
+    def test_get_cocktail_by_name_non_trouve() -> None:
+        """Teste la méthode get_cocktail_by_name lorsque le cocktail n'est pas
+        trouvé.
+        """
         # GIVEN
         nom_cocktail = "cocktailinconnu"
         suggestions = [
@@ -67,7 +83,9 @@ class TestAvisService:
         avis_dao_mock = MagicMock(spec=AvisDAO)
         cocktail_dao_mock = MagicMock(spec=CocktailDAO)
         cocktail_dao_mock.rechercher_cocktail_par_nom.return_value = None
-        cocktail_dao_mock.rechercher_cocktail_par_sequence_debut.return_value = suggestions
+        cocktail_dao_mock.rechercher_cocktail_par_sequence_debut.return_value = (
+            suggestions
+        )
 
         # WHEN
         service = AvisService()
@@ -75,14 +93,13 @@ class TestAvisService:
         service.cocktail_dao = cocktail_dao_mock
 
         # THEN
-        with pytest.raises(IngredientNotFoundError) as exc_info:
-            service._get_cocktail_by_name(nom_cocktail)
-        assert exc_info.value.nom_ingredient == "Cocktailinconnu"
-        assert exc_info.value.suggestions == ["Cocktail A"]
+        with pytest.raises(CocktailNotFoundError):
+            service.get_cocktail_by_name(nom_cocktail)
 
     # ========== Tests pour create_or_update_avis ==========
-
-    def test_create_or_update_avis_succes_avec_note_et_commentaire(self) -> None:
+    @staticmethod
+    def test_create_or_update_avis_succes_avec_note_et_commentaire() -> None:
+        """Teste la création/mise à jour d'un avis avec note et commentaire."""
         # GIVEN
         id_utilisateur = 1
         nom_cocktail = "margarita"
@@ -108,11 +125,23 @@ class TestAvisService:
         service = AvisService()
         service.avis_dao = avis_dao_mock
         service.cocktail_dao = cocktail_dao_mock
-        resultat = service.create_or_update_avis(id_utilisateur, nom_cocktail, note, commentaire)
+        resultat = service.create_or_update_avis(
+            id_utilisateur,
+            nom_cocktail,
+            note,
+            commentaire,
+        )
 
         # THEN
-        assert "Margarita" in resultat
-        assert "ajouté/modifié avec succès" in resultat
+        if "Margarita" not in resultat:
+            raise AssertionError(
+                message=f"'Margarita' devrait être dans le résultat: {resultat}",
+            )
+        if "ajouté/modifié avec succès" not in resultat:
+            raise AssertionError(
+                message=f"'ajouté/modifié avec succès' devrait être dans le résultat:"
+                f"{resultat}",
+            )
         avis_dao_mock.create_or_update_avis.assert_called_once_with(
             id_utilisateur=id_utilisateur,
             id_cocktail=1,
@@ -120,7 +149,9 @@ class TestAvisService:
             commentaire=commentaire,
         )
 
-    def test_create_or_update_avis_succes_avec_note_seulement(self) -> None:
+    @staticmethod
+    def test_create_or_update_avis_succes_avec_note_seulement() -> None:
+        """Teste la création/mise à jour d'un avis avec seulement une note."""
         # GIVEN
         id_utilisateur = 1
         nom_cocktail = "margarita"
@@ -144,13 +175,27 @@ class TestAvisService:
         service = AvisService()
         service.avis_dao = avis_dao_mock
         service.cocktail_dao = cocktail_dao_mock
-        resultat = service.create_or_update_avis(id_utilisateur, nom_cocktail, note, commentaire)
+        resultat = service.create_or_update_avis(
+            id_utilisateur,
+            nom_cocktail,
+            note,
+            commentaire,
+        )
 
         # THEN
-        assert "Margarita" in resultat
-        assert "ajouté/modifié avec succès" in resultat
+        if "Margarita" not in resultat:
+            raise AssertionError(
+                message=f"'Margarita' devrait être dans le résultat: {resultat}",
+            )
+        if "ajouté/modifié avec succès" not in resultat:
+            raise AssertionError(
+                message=f"'ajouté/modifié avec succès' devrait être dans le résultat:"
+                f"{resultat}",
+            )
 
-    def test_create_or_update_avis_note_et_commentaire_vides(self) -> None:
+    @staticmethod
+    def test_create_or_update_avis_note_et_commentaire_vides() -> None:
+        """Teste la création d'un avis sans note ni commentaire."""
         # GIVEN
         id_utilisateur = 1
         nom_cocktail = "margarita"
@@ -167,10 +212,23 @@ class TestAvisService:
 
         # THEN
         with pytest.raises(InvalidAvisError) as exc_info:
-            service.create_or_update_avis(id_utilisateur, nom_cocktail, note, commentaire)
-        assert "Au moins la note ou le commentaire" in str(exc_info.value)
+            service.create_or_update_avis(
+                id_utilisateur,
+                nom_cocktail,
+                note,
+                commentaire,
+            )
 
-    def test_create_or_update_avis_cocktail_inexistant(self) -> None:
+        error_message = str(exc_info.value)
+        if "Au moins la note ou le commentaire" not in error_message:
+            raise AssertionError(
+                message=f"'Au moins la note ou le commentaire' devrait être dans le"
+                f"message d'erreur: {error_message}",
+            )
+
+    @staticmethod
+    def test_create_or_update_avis_cocktail_inexistant() -> None:
+        """Teste la création d'un avis pour un cocktail inexistant."""
         # GIVEN
         id_utilisateur = 1
         nom_cocktail = "cocktailinconnu"
@@ -188,12 +246,18 @@ class TestAvisService:
         service.cocktail_dao = cocktail_dao_mock
 
         # THEN
-        with pytest.raises(IngredientNotFoundError):
-            service.create_or_update_avis(id_utilisateur, nom_cocktail, note, commentaire)
+        with pytest.raises(CocktailNotFoundError):
+            service.create_or_update_avis(
+                id_utilisateur,
+                nom_cocktail,
+                note,
+                commentaire,
+            )
 
     # ========== Tests pour get_avis_cocktail ==========
-
-    def test_get_avis_cocktail_succes(self) -> None:
+    @staticmethod
+    def test_get_avis_cocktail_succes() -> None:
+        """Teste la récupération des avis d'un cocktail avec succès."""
         # GIVEN
         nom_cocktail = "margarita"
         cocktail = Cocktail(
@@ -232,12 +296,29 @@ class TestAvisService:
         resultat = service.get_avis_cocktail(nom_cocktail)
 
         # THEN
-        assert len(resultat) == 1
-        assert isinstance(resultat[0], AvisResponse)
-        assert resultat[0].pseudo_utilisateur == "alice"
-        assert resultat[0].note == 8
+        if len(resultat) != 1:
+            raise AssertionError(
+                message=f"1 avis attendu, obtenu: {len(resultat)}",
+            )
+        if not isinstance(resultat[0], AvisResponse):
+            raise TypeError(
+                message=f"Le résultat devrait être de type AvisResponse, obtenu:"
+                f"{type(resultat[0])}",
+            )
+        if resultat[0].pseudo_utilisateur != "alice":
+            raise AssertionError(
+                message=f"Le pseudo devrait être 'alice', obtenu:"
+                f"{resultat[0].pseudo_utilisateur}",
+            )
+        note = 8
+        if resultat[0].note != note:
+            raise AssertionError(
+                message=f"La note devrait être 8, obtenu: {resultat[0].note}",
+            )
 
-    def test_get_avis_cocktail_aucun_avis(self) -> None:
+    @staticmethod
+    def test_get_avis_cocktail_aucun_avis() -> None:
+        """Teste la récupération des avis d'un cocktail sans avis."""
         # GIVEN
         nom_cocktail = "margarita"
         cocktail = Cocktail(
@@ -262,11 +343,15 @@ class TestAvisService:
         resultat = service.get_avis_cocktail(nom_cocktail)
 
         # THEN
-        assert len(resultat) == 0
+        if len(resultat) != 0:
+            raise AssertionError(
+                message=f"Aucun avis attendu, obtenu: {len(resultat)}",
+            )
 
     # ========== Tests pour get_mes_avis_simple ==========
-
-    def test_get_mes_avis_simple_succes(self) -> None:
+    @staticmethod
+    def test_get_mes_avis_simple_succes() -> None:
+        """Teste la récupération des avis d'un utilisateur avec succès."""
         # GIVEN
         id_utilisateur = 1
         pseudo = "alice"
@@ -296,11 +381,25 @@ class TestAvisService:
         resultat = service.get_mes_avis_simple(id_utilisateur, pseudo)
 
         # THEN
-        assert resultat["pseudo_utilisateur"] == "alice"
-        assert len(resultat["avis"]) == 2
-        assert resultat["avis"][0]["nom_cocktail"] == "Margarita"
+        if resultat["pseudo_utilisateur"] != "alice":
+            raise AssertionError(
+                message=f"Le pseudo devrait être 'alice', obtenu:"
+                f"{resultat['pseudo_utilisateur']}",
+            )
+        nb_avis = 2
+        if len(resultat["avis"]) != nb_avis:
+            raise AssertionError(
+                message=f"2 avis attendus, obtenu: {len(resultat['avis'])}",
+            )
+        if resultat["avis"][0]["nom_cocktail"] != "Margarita":
+            raise AssertionError(
+                message=f"Le premier cocktail devrait être 'Margarita', obtenu:"
+                f"{resultat['avis'][0]['nom_cocktail']}",
+            )
 
-    def test_get_mes_avis_simple_aucun_avis(self) -> None:
+    @staticmethod
+    def test_get_mes_avis_simple_aucun_avis() -> None:
+        """Teste la récupération des avis d'un utilisateur sans avis."""
         # GIVEN
         id_utilisateur = 1
         pseudo = "alice"
@@ -317,12 +416,20 @@ class TestAvisService:
         resultat = service.get_mes_avis_simple(id_utilisateur, pseudo)
 
         # THEN
-        assert resultat["pseudo_utilisateur"] == "alice"
-        assert len(resultat["avis"]) == 0
+        if resultat["pseudo_utilisateur"] != "alice":
+            raise AssertionError(
+                message=f"Le pseudo devrait être 'alice', obtenu:"
+                f"{resultat['pseudo_utilisateur']}",
+            )
+        if len(resultat["avis"]) != 0:
+            raise AssertionError(
+                message=f"Aucun avis attendu, obtenu: {len(resultat['avis'])}",
+            )
 
     # ========== Tests pour delete_avis ==========
-
-    def test_delete_avis_succes(self) -> None:
+    @staticmethod
+    def test_delete_avis_succes() -> None:
+        """Teste la suppression d'un avis avec succès."""
         # GIVEN
         id_utilisateur = 1
         nom_cocktail = "margarita"
@@ -349,10 +456,19 @@ class TestAvisService:
         resultat = service.delete_avis(id_utilisateur, nom_cocktail)
 
         # THEN
-        assert "supprimé avec succès" in resultat
-        assert "Margarita" in resultat
+        if "supprimé avec succès" not in resultat:
+            raise AssertionError(
+                message="'supprimé avec succès' devrait être dans le résultat:"
+                f"{resultat}",
+            )
+        if "Margarita" not in resultat:
+            raise AssertionError(
+                message=f"'Margarita' devrait être dans le résultat: {resultat}",
+            )
 
-    def test_delete_avis_non_trouve(self) -> None:
+    @staticmethod
+    def test_delete_avis_non_trouve() -> None:
+        """Teste la suppression d'un avis inexistant."""
         # GIVEN
         id_utilisateur = 1
         nom_cocktail = "margarita"
@@ -382,8 +498,9 @@ class TestAvisService:
             service.delete_avis(id_utilisateur, nom_cocktail)
 
     # ========== Tests pour add_favoris ==========
-
-    def test_add_favoris_succes_nouveau(self) -> None:
+    @staticmethod
+    def test_add_favoris_succes_nouveau() -> None:
+        """Teste l'ajout d'un nouveau cocktail aux favoris."""
         # GIVEN
         id_utilisateur = 1
         nom_cocktail = "margarita"
@@ -410,11 +527,24 @@ class TestAvisService:
         resultat = service.add_favoris(id_utilisateur, nom_cocktail)
 
         # THEN
-        assert resultat["favoris"] is True
-        assert resultat["deja_en_favoris"] is False
-        assert "ajouté aux favoris" in resultat["message"]
+        if resultat["favoris"] is not True:
+            raise AssertionError(
+                message=f"favoris devrait être True, obtenu: {resultat['favoris']}",
+            )
+        if resultat["deja_en_favoris"] is not False:
+            raise AssertionError(
+                message=f"deja_en_favoris devrait être False, obtenu:"
+                f"{resultat['deja_en_favoris']}",
+            )
+        if "ajouté aux favoris" not in resultat["message"]:
+            raise AssertionError(
+                message=f"'ajouté aux favoris' devrait être dans le message:"
+                f"{resultat['message']}",
+            )
 
-    def test_add_favoris_deja_en_favoris(self) -> None:
+    @staticmethod
+    def test_add_favoris_deja_en_favoris() -> None:
+        """Teste l'ajout d'un cocktail déjà en favoris."""
         # GIVEN
         id_utilisateur = 1
         nom_cocktail = "margarita"
@@ -441,13 +571,25 @@ class TestAvisService:
         resultat = service.add_favoris(id_utilisateur, nom_cocktail)
 
         # THEN
-        assert resultat["favoris"] is True
-        assert resultat["deja_en_favoris"] is True
-        assert "déjà dans vos favoris" in resultat["message"]
+        if resultat["favoris"] is not True:
+            raise AssertionError(
+                message=f"favoris devrait être True, obtenu: {resultat['favoris']}",
+            )
+        if resultat["deja_en_favoris"] is not True:
+            raise AssertionError(
+                message=f"deja_en_favoris devrait être True, obtenu:"
+                f"{resultat['deja_en_favoris']}",
+            )
+        if "déjà dans vos favoris" not in resultat["message"]:
+            raise AssertionError(
+                message=f"'déjà dans vos favoris' devrait être dans le message:"
+                f"{resultat['message']}",
+            )
 
     # ========== Tests pour remove_favoris ==========
-
-    def test_remove_favoris_succes(self) -> None:
+    @staticmethod
+    def test_remove_favoris_succes() -> None:
+        """Teste le retrait d'un cocktail des favoris avec succès."""
         # GIVEN
         id_utilisateur = 1
         nom_cocktail = "margarita"
@@ -474,10 +616,19 @@ class TestAvisService:
         resultat = service.remove_favoris(id_utilisateur, nom_cocktail)
 
         # THEN
-        assert "retiré des favoris" in resultat
-        assert "Margarita" in resultat
+        if "retiré des favoris" not in resultat:
+            raise AssertionError(
+                message=f"'retiré des favoris' devrait être dans le"
+                f"résultat: {resultat}",
+            )
+        if "Margarita" not in resultat:
+            raise AssertionError(
+                message=f"'Margarita' devrait être dans le résultat: {resultat}",
+            )
 
-    def test_remove_favoris_non_trouve(self) -> None:
+    @staticmethod
+    def test_remove_favoris_non_trouve() -> None:
+        """Teste le retrait d'un favori inexistant."""
         # GIVEN
         id_utilisateur = 1
         nom_cocktail = "margarita"
@@ -507,8 +658,9 @@ class TestAvisService:
             service.remove_favoris(id_utilisateur, nom_cocktail)
 
     # ========== Tests pour get_mes_favoris_simple ==========
-
-    def test_get_mes_favoris_simple_succes(self) -> None:
+    @staticmethod
+    def test_get_mes_favoris_simple_succes() -> None:
+        """Teste la récupération des favoris d'un utilisateur avec succès."""
         # GIVEN
         id_utilisateur = 1
         pseudo = "alice"
@@ -530,12 +682,31 @@ class TestAvisService:
         resultat = service.get_mes_favoris_simple(id_utilisateur, pseudo)
 
         # THEN
-        assert resultat["pseudo_utilisateur"] == "alice"
-        assert len(resultat["cocktails_favoris"]) == 2
-        assert "Margarita" in resultat["cocktails_favoris"]
-        assert "Mojito" in resultat["cocktails_favoris"]
+        if resultat["pseudo_utilisateur"] != "alice":
+            raise AssertionError(
+                message=f"Le pseudo devrait être 'alice', obtenu:"
+                f"{resultat['pseudo_utilisateur']}",
+            )
+        nb_fav = 2
+        if len(resultat["cocktails_favoris"]) != nb_fav:
+            raise AssertionError(
+                message=f"2 favoris attendus, obtenu:"
+                f"{len(resultat['cocktails_favoris'])}",
+            )
+        if "Margarita" not in resultat["cocktails_favoris"]:
+            raise AssertionError(
+                message=f"'Margarita' devrait être dans les favoris:"
+                f"{resultat['cocktails_favoris']}",
+            )
+        if "Mojito" not in resultat["cocktails_favoris"]:
+            raise AssertionError(
+                message=f"'Mojito' devrait être dans les favoris:"
+                f"{resultat['cocktails_favoris']}",
+            )
 
-    def test_get_mes_favoris_simple_aucun_favori(self) -> None:
+    @staticmethod
+    def test_get_mes_favoris_simple_aucun_favori() -> None:
+        """Teste la récupération des favoris d'un utilisateur sans favoris."""
         # GIVEN
         id_utilisateur = 1
         pseudo = "alice"
@@ -552,12 +723,21 @@ class TestAvisService:
         resultat = service.get_mes_favoris_simple(id_utilisateur, pseudo)
 
         # THEN
-        assert resultat["pseudo_utilisateur"] == "alice"
-        assert len(resultat["cocktails_favoris"]) == 0
+        if resultat["pseudo_utilisateur"] != "alice":
+            raise AssertionError(
+                message=f"Le pseudo devrait être 'alice', obtenu:"
+                f"{resultat['pseudo_utilisateur']}",
+            )
+        if len(resultat["cocktails_favoris"]) != 0:
+            raise AssertionError(
+                message=f"Aucun favori attendu, obtenu:"
+                f"{len(resultat['cocktails_favoris'])}",
+            )
 
     # ========== Tests pour get_avis_summary ==========
-
-    def test_get_avis_summary_succes(self) -> None:
+    @staticmethod
+    def test_get_avis_summary_succes() -> None:
+        """Teste la récupération du résumé des avis avec succès."""
         # GIVEN
         nom_cocktail = "margarita"
 
@@ -591,13 +771,38 @@ class TestAvisService:
         resultat = service.get_avis_summary(nom_cocktail)
 
         # THEN
-        assert isinstance(resultat, AvisSummary)
-        assert resultat.nom_cocktail == "Margarita"
-        assert resultat.nombre_avis == 10
-        assert resultat.note_moyenne == 8.5
-        assert resultat.nombre_favoris == 5
+        if not isinstance(resultat, AvisSummary):
+            raise TypeError(
+                message=f"Le résultat devrait être de type AvisSummary, obtenu:"
+                f"{type(resultat)}",
+            )
+        if resultat.nom_cocktail != "Margarita":
+            raise AssertionError(
+                message=f"Le nom du cocktail devrait être 'Margarita',"
+                f"obtenu: {resultat.nom_cocktail}",
+            )
+        nb_avis = 10
+        if resultat.nombre_avis != nb_avis:
+            raise AssertionError(
+                message=f"Le nombre d'avis devrait être 10, obtenu:"
+                f"{resultat.nombre_avis}",
+            )
+        note_moy = 8.5
+        if resultat.note_moyenne != note_moy:
+            raise AssertionError(
+                message=f"La note moyenne devrait être 8.5, obtenu:"
+                f"{resultat.note_moyenne}",
+            )
+        nb_fav = 5
+        if resultat.nombre_favoris != nb_fav:
+            raise AssertionError(
+                message=f"Le nombre de favoris devrait être 5, obtenu:"
+                f"{resultat.nombre_favoris}",
+            )
 
-    def test_get_avis_summary_echec(self) -> None:
+    @staticmethod
+    def test_get_avis_summary_echec() -> None:
+        """Teste l'échec de récupération du résumé des avis."""
         # GIVEN
         nom_cocktail = "margarita"
 
@@ -624,4 +829,10 @@ class TestAvisService:
         # THEN
         with pytest.raises(ServiceError) as exc_info:
             service.get_avis_summary(nom_cocktail)
-        assert "Impossible de récupérer le résumé" in str(exc_info.value)
+
+        error_message = str(exc_info.value)
+        if "Impossible de récupérer le résumé" not in error_message:
+            raise AssertionError(
+                message=f"'Impossible de récupérer le résumé' devrait être dans le"
+                f"message d'erreur: {error_message}",
+            )

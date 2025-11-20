@@ -47,9 +47,11 @@ class UtilisateurService:
         Raises
         ------
         EmptyFieldError
-            Si un champ obligatoire (pseudo, mail, mot de passe, date de naissance) est vide.
+            Si un champ obligatoire (pseudo, mail, mot de passe, date de naissance)
+            est vide.
         ServiceError
-            En cas d'erreur lors du hachage du mot de passe, de la validation du modèle ou de la création en base.
+            En cas d'erreur lors du hachage du mot de passe, de la validation du modèle
+            ou de la création en base.
 
         """
         # Validation des champs vides
@@ -72,7 +74,9 @@ class UtilisateurService:
         try:
             mot_de_passe_hashed = hacher_mot_de_passe(mot_de_passe)
         except Exception as e:
-            raise ServiceError(message=f"Erreur lors du hachage du mot de passe : {e}") from e
+            raise ServiceError(
+                message=f"Erreur lors du hachage du mot de passe : {e}",
+            ) from e
 
         # Préparer dict pour UserCreate
         compte = donnees.model_dump()
@@ -84,7 +88,9 @@ class UtilisateurService:
         try:
             user_create = UserCreate.model_validate(compte)
         except Exception as e:
-            raise ServiceError(message=f"Erreur lors de la validation du modèle : {e}") from e
+            raise ServiceError(
+                message=f"Erreur lors de la validation du modèle : {e}",
+            ) from e
 
         succes = self.utilisateur_dao.create_compte(user_create)
         if not succes:
@@ -119,7 +125,7 @@ class UtilisateurService:
         """
         db_utilisateur = self.utilisateur_dao.recuperer_par_pseudo(pseudo)
         if db_utilisateur is None:
-            raise UserNotFoundError(pseudo=pseudo)
+            raise UserNotFoundError(message=f"Utilisateur '{pseudo}' introuvable.")
         if not verifier_mot_de_passe(mot_de_passe, db_utilisateur.mot_de_passe_hashed):
             raise AuthError
         return db_utilisateur
@@ -127,7 +133,7 @@ class UtilisateurService:
     def supprimer_compte(self, donnees: UserDelete) -> str:
         """Supprimer un compte utilisateur après authentification.
 
-        Vérifie le mot de passe avant de supprimer le compte pour des raisons de sécurité.
+        Vérifie le mot de passe avant de supprimer le compte.
 
         Parameters
         ----------
@@ -160,10 +166,15 @@ class UtilisateurService:
         # Récupérer l'utilisateur pour vérifier le mot de passe
         utilisateur = self.utilisateur_dao.recuperer_par_pseudo(donnees.pseudo)
         if not utilisateur:
-            raise UserNotFoundError(pseudo=donnees.pseudo)
+            raise UserNotFoundError(
+                message=f"L'utilisateur '{donnees.pseudo}' est introuvable.",
+            )
 
         # Vérifier le mot de passe
-        if not verifier_mot_de_passe(donnees.mot_de_passe, utilisateur.mot_de_passe_hashed):
+        if not verifier_mot_de_passe(
+            donnees.mot_de_passe,
+            utilisateur.mot_de_passe_hashed,
+        ):
             raise AuthError
 
         # Supprimer le compte
@@ -210,22 +221,33 @@ class UtilisateurService:
 
         # Vérifier que les deux mots de passe ne sont pas identiques
         if donnees.mot_de_passe_actuel == donnees.mot_de_passe_nouveau:
-            raise ServiceError(message="Le nouveau mot de passe doit être différent de l'ancien")
+            raise ServiceError(
+                message="Le nouveau mot de passe doit être différent de l'ancien",
+            )
 
         # Récupérer l'utilisateur pour vérifier le mot de passe actuel
         utilisateur = self.utilisateur_dao.recuperer_par_pseudo(donnees.pseudo)
         if not utilisateur:
-            raise UserNotFoundError(pseudo=donnees.pseudo)
+            raise UserNotFoundError(
+                message=f"L'utilisateur '{donnees.pseudo}' est introuvable.",
+            )
 
         # Vérifier le mot de passe actuel
-        if not verifier_mot_de_passe(donnees.mot_de_passe_actuel, utilisateur.mot_de_passe_hashed):
+        if not verifier_mot_de_passe(
+            donnees.mot_de_passe_actuel,
+            utilisateur.mot_de_passe_hashed,
+        ):
             raise AuthError
 
         # Hacher le nouveau mot de passe
         try:
-            mot_de_passe_nouveau_hashed = hacher_mot_de_passe(donnees.mot_de_passe_nouveau)
+            mot_de_passe_nouveau_hashed = hacher_mot_de_passe(
+                donnees.mot_de_passe_nouveau,
+            )
         except Exception as e:
-            raise ServiceError(message=f"Erreur lors du hachage du mot de passe : {e}") from e
+            raise ServiceError(
+                message=f"Erreur lors du hachage du mot de passe : {e}",
+            ) from e
 
         # Préparer l'objet pour la DAO
         mdps_update = UserUpdatePassword(
@@ -270,12 +292,18 @@ class UtilisateurService:
                 birth_date = date.fromisoformat(birth_date_input)
             except ValueError as e:
                 raise InvalidBirthDateError(
-                    message="Date de naissance invalide. Format attendu : AAAA-MM-JJ (ex: 2000-12-25). "
-                    "Vérifiez que le mois (1-12) et le jour sont valides pour ce mois.",
+                    message=(
+                        "Date de naissance invalide. Format attendu : AAAA-MM-JJ"
+                        "(ex: 2000-12-25). Vérifiez que le mois (1-12) et le jour"
+                        "sont valides pour ce mois."
+                    ),
                 ) from e
         else:
             raise InvalidBirthDateError(
-                message="Date de naissance doit être une chaîne de caractères ou un objet date",
+                message=(
+                    "Date de naissance doit être une chaîne de caractères ou un objet"
+                    "date",
+                ),
             )
 
         # Validation de la logique métier
@@ -328,15 +356,24 @@ class UtilisateurService:
         """
         # Vérifier si le pseudo existe déjà
         if self.utilisateur_dao.pseudo_existe(nouveau_pseudo):
-            raise PseudoChangingError(ancien_pseudo=None, nouveau_pseudo=nouveau_pseudo)
+            raise PseudoChangingError(
+                message=(
+                    f"Le pseudo '{nouveau_pseudo}' est déjà utilisé. Choisissez un"
+                    "nouveau pseudo.",
+                ),
+            )
 
         try:
             succes = self.utilisateur_dao.update_pseudo(ancien_pseudo, nouveau_pseudo)
 
         except Exception as e:
             raise ServiceError from e
+        if ancien_pseudo == nouveau_pseudo:
+            raise PseudoChangingError(
+                message="Veuillez choisir un pseudo différent de l'ancien.",
+            )
         if not succes:
-            raise ServiceError(message="Impossible de changer le pseudo")
+            raise PseudoChangingError(message="Impossible de changer le pseudo")
         return f"Pseudo changé avec succès de '{ancien_pseudo}' vers '{nouveau_pseudo}'"
 
     def read(self, id_utilisateur: int) -> User:
@@ -362,7 +399,7 @@ class UtilisateurService:
         """
         utilisateur = self.utilisateur_dao.read(id_utilisateur)
         if utilisateur is None:
-            raise UserNotFoundError(id_utilisateur=id_utilisateur)
+            raise UserNotFoundError(message="L'utilisateur est introuvable")
         return utilisateur
 
     def obtenir_date_inscription(self, pseudo: str) -> DateInscriptionResponse:
@@ -388,10 +425,6 @@ class UtilisateurService:
             En cas d'erreur générale
 
         """
-        # Validation du pseudo
-        if not pseudo or not pseudo.strip():
-            raise EmptyFieldError(pseudo)
-
         # Récupérer la date d'inscription
         date_inscription = self.utilisateur_dao.get_date_inscription(pseudo)
 

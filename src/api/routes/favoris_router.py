@@ -19,8 +19,8 @@ Ajoute un cocktail aux favoris.
 🔒 Authentification requise
 
 **Comportement :**
-- Si le cocktail n'est pas encore en favoris → Ajoute aux favoris
-- Si le cocktail est déjà en favoris → Message "déjà en favoris"
+- Si le cocktail n'est pas encore en favoris : Ajoute aux favoris
+- Si le cocktail est déjà en favoris : Message "déjà en favoris"
 
 **Note :** Cette action peut créer un avis avec note et commentaire NULL.
 Vous pourrez ajouter note/commentaire plus tard avec POST /add.
@@ -95,7 +95,7 @@ Récupère la liste de mes cocktails favoris (format simplifié).
 """,
 )
 def get_mes_favoris(current_user: CurrentUser) -> dict:
-    """Récupère la liste des cocktails favoris de l'utilisateur connecté au format simplifié.
+    """Récupère la liste des cocktails favoris de l'utilisateur connecté.
 
     L'utilisateur est automatiquement récupéré depuis le token JWT.
 
@@ -137,8 +137,8 @@ Retire un cocktail des favoris.
 🔒 Authentification requise
 
 **Comportement :**
-- Si le cocktail est en favoris → Retire des favoris
-- Si le cocktail n'est pas en favoris → Erreur 404
+- Si le cocktail est en favoris : Retire des favoris
+- Si le cocktail n'est pas en favoris : Erreur 404
 """,
 )
 def remove_favoris(

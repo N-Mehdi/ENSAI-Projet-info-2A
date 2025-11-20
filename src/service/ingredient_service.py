@@ -1,6 +1,9 @@
 """Couche service pour les opérations sur les ingrédients."""
 
 from src.dao.ingredient_dao import IngredientDAO
+from src.utils.exceptions import IngredientNotFoundError
+from src.utils.log_decorator import log
+from src.utils.text_utils import normalize_ingredient_name
 
 
 class IngredientService:
@@ -28,19 +31,23 @@ class IngredientService:
 
         Raises
         ------
-        ValueError
+        IngredientNotFoundError
             Si l'ingrédient n'existe pas
 
         """
         is_alcoholic = self.dao.is_alcoholic(ingredient_id)
 
         if is_alcoholic is None:
-            raise ValueError(message=f"Ingrédient avec l'ID {ingredient_id} introuvable")
+            raise IngredientNotFoundError(
+                message=f"Ingrédient avec l'ID {ingredient_id} introuvable",
+            )
 
         return {
             "ingredient_id": ingredient_id,
             "is_alcoholic": is_alcoholic,
-            "message": "Cet ingrédient contient de l'alcool" if is_alcoholic else "Cet ingrédient ne contient pas d'alcool",
+            "message": "Cet ingrédient contient de l'alcool"
+            if is_alcoholic
+            else "Cet ingrédient ne contient pas d'alcool",
         }
 
     def check_if_alcoholic_by_name(self, ingredient_name: str) -> dict:
@@ -61,17 +68,64 @@ class IngredientService:
 
         Raises
         ------
-        ValueError
+        IngredientNotFoundError
             Si l'ingrédient n'existe pas
 
         """
         is_alcoholic = self.dao.is_alcoholic_by_name(ingredient_name)
 
         if is_alcoholic is None:
-            raise ValueError(message=f"Ingrédient '{ingredient_name}' introuvable")
+            raise IngredientNotFoundError(
+                message=f"Ingrédient '{ingredient_name}' introuvable",
+            )
 
         return {
             "ingredient_name": ingredient_name,
             "is_alcoholic": is_alcoholic,
-            "message": "Cet ingrédient contient de l'alcool" if is_alcoholic else "Cet ingrédient ne contient pas d'alcool",
+            "message": "Cet ingrédient contient de l'alcool"
+            if is_alcoholic
+            else "Cet ingrédient ne contient pas d'alcool",
         }
+
+    @log
+    def get_by_name_with_suggestions(self, nom: str) -> dict:
+        """Cherche un ingrédient par son nom exact.
+        Si non trouvé, lève une exception avec des suggestions.
+
+        Parameters
+        ----------
+        nom : str
+            Nom de l'ingrédient (doit être normalisé au format Title Case)
+
+        Returns
+        -------
+        dict
+            L'ingrédient trouvé
+
+        Raises
+        ------
+        IngredientNotFoundError
+            Si l'ingrédient n'existe pas (avec suggestions)
+
+        """
+        # Normaliser le nom
+        nom_normalized = normalize_ingredient_name(nom)
+
+        # Chercher l'ingrédient
+        ingredient = self.get_by_name(nom_normalized)
+        nb_sugg = 3
+        if not ingredient:
+            # Chercher des suggestions
+            suggestions_data = self.rechercher_ingredient_par_sequence_debut(
+                sequence=nom_normalized[:nb_sugg]
+                if len(nom_normalized) >= nb_sugg
+                else nom_normalized,
+                max_resultats=5,
+            )
+            suggestions = [ing.nom for ing in suggestions_data]
+            raise IngredientNotFoundError(
+                message=f"Ingrédient '{nom_normalized}'"
+                f"introuvable. Vouliez-vous dire : {', '.join(suggestions[:3])} ?",
+            )
+
+        return ingredient

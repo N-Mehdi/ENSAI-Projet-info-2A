@@ -4,12 +4,18 @@ from fastapi import APIRouter, HTTPException, status
 
 from src.api.deps import CurrentUser
 from src.dao.utilisateur_dao import UtilisateurDAO
-from src.models.utilisateurs import DateInscriptionResponse, UserChangePassword, UserDelete, UserUpdatePseudo
+from src.models.utilisateurs import (
+    DateInscriptionResponse,
+    UserChangePassword,
+    UserDelete,
+    UserUpdatePseudo,
+)
 from src.service.utilisateur_service import UtilisateurService
 from src.utils.exceptions import (
     AuthError,
     DAOError,
     EmptyFieldError,
+    PseudoChangingError,
     ServiceError,
     UserAlreadyExistsError,
     UserNotFoundError,
@@ -41,11 +47,17 @@ service = UtilisateurService(utilisateur_dao=UtilisateurDAO())
                     "examples": {
                         "empty_field": {
                             "summary": "Champ vide",
-                            "value": {"detail": "Le champ 'nouveau_pseudo' ne peut pas être vide"},
+                            "value": {
+                                "detail": "Le champ 'nouveau_pseudo' ne peut pas être"
+                                "vide",
+                            },
                         },
                         "same_pseudo": {
                             "summary": "Pseudos identiques",
-                            "value": {"detail": "Le nouveau pseudo doit être différent de l'ancien"},
+                            "value": {
+                                "detail": "Le nouveau pseudo doit être différent de"
+                                "l'ancien",
+                            },
                         },
                         "pseudo_exists": {
                             "summary": "Pseudo déjà utilisé",
@@ -89,7 +101,7 @@ def changer_pseudo(
     """Changer le pseudo de l'utilisateur connecté.
 
     L'utilisateur fournit uniquement son nouveau pseudo.
-    Son identité actuelle est automatiquement récupérée via son token d'authentification.
+    Son identité actuelle est récupérée via son token d'authentification.
 
     **Note** : Le nouveau pseudo doit être différent de l'ancien et ne pas déjà exister.
 
@@ -125,6 +137,11 @@ def changer_pseudo(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Could not update pseudo.",
         ) from None
+    except PseudoChangingError as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=str(e),
+        ) from None
 
 
 @router.put(
@@ -148,11 +165,16 @@ def changer_pseudo(
                     "examples": {
                         "empty_field": {
                             "summary": "Champ vide",
-                            "value": {"detail": "Le champ 'pseudo' ne peut pas être vide"},
+                            "value": {
+                                "detail": "Le champ 'pseudo' ne peut pas être vide",
+                            },
                         },
                         "same_password": {
                             "summary": "Mots de passe identiques",
-                            "value": {"detail": "Le nouveau mot de passe doit être différent de l'ancien"},
+                            "value": {
+                                "detail": "Le nouveau mot de passe doit être différent"
+                                "de l'ancien",
+                            },
                         },
                     },
                 },
@@ -185,7 +207,10 @@ def changer_pseudo(
     },
     tags=["Compte"],
 )
-def changer_mot_de_passe(donnees: UserChangePassword, _current_user: CurrentUser) -> str:
+def changer_mot_de_passe(
+    donnees: UserChangePassword,
+    _current_user: CurrentUser,
+) -> str:
     """Changer le mot de passe d'un utilisateur.
 
     L'utilisateur doit fournir :

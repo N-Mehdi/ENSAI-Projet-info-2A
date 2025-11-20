@@ -25,7 +25,7 @@ dependencies = [
 
 
 [tool.ruff]
-line-length = 127
+line-length = 88
 namespace-packages = ["src"]
 
 [tool.ruff.lint]
@@ -54,3 +54,8 @@ exclude = [
 
 [tool.mypy]
 plugins = ['pydantic.mypy'] 
+
+[dependency-groups]
+dev = [
+    "ruff>=0.14.3",
+]

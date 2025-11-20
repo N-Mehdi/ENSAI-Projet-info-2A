@@ -40,8 +40,10 @@ class AvisDAO(metaclass=Singleton):
         with DBConnection().connection as connection, connection.cursor() as cursor:
             cursor.execute(
                 """
-                INSERT INTO avis (id_utilisateur, id_cocktail, note, commentaire, favoris)
-                VALUES (%(id_utilisateur)s, %(id_cocktail)s, %(note)s, %(commentaire)s, FALSE)
+                INSERT INTO avis (id_utilisateur, id_cocktail, note, commentaire,
+                favoris)
+                VALUES (%(id_utilisateur)s, %(id_cocktail)s, %(note)s, %(commentaire)s,
+                FALSE)
                 ON CONFLICT (id_utilisateur, id_cocktail)
                 DO UPDATE SET
                     note = EXCLUDED.note,
@@ -123,7 +125,8 @@ class AvisDAO(metaclass=Singleton):
     def get_avis_by_cocktail(self, id_cocktail: int) -> list[dict]:
         """Récupère tous les avis d'un cocktail.
 
-        Les avis sont triés par date de création décroissante (du plus récent au plus ancien).
+        Les avis sont triés par date de création décroissante
+        (du plus récent au plus ancien).
 
         Parameters
         ----------
@@ -170,7 +173,8 @@ class AvisDAO(metaclass=Singleton):
     def get_avis_by_user(self, id_utilisateur: int) -> list[dict]:
         """Récupère tous les avis d'un utilisateur.
 
-        Les avis sont triés par date de création décroissante (du plus récent au plus ancien).
+        Les avis sont triés par date de création décroissante
+        (du plus récent au plus ancien).
 
         Parameters
         ----------
@@ -262,7 +266,8 @@ class AvisDAO(metaclass=Singleton):
         -------
         dict | None
             Dictionnaire contenant les statistiques si le cocktail existe, None sinon.
-            Contient : id_cocktail, nom_cocktail, nombre_avis, note_moyenne, nombre_favoris
+            Contient : id_cocktail, nom_cocktail, nombre_avis, note_moyenne,
+            nombre_favoris
 
         Raises
         ------
@@ -291,9 +296,15 @@ class AvisDAO(metaclass=Singleton):
                 return {
                     "id_cocktail": result["id_cocktail"],
                     "nom_cocktail": result["nom_cocktail"],
-                    "nombre_avis": int(result["nombre_avis"]) if result["nombre_avis"] else 0,
-                    "note_moyenne": float(result["note_moyenne"]) if result["note_moyenne"] else None,
-                    "nombre_favoris": int(result["nombre_favoris"]) if result["nombre_favoris"] else 0,
+                    "nombre_avis": int(result["nombre_avis"])
+                    if result["nombre_avis"]
+                    else 0,
+                    "note_moyenne": float(result["note_moyenne"])
+                    if result["note_moyenne"]
+                    else None,
+                    "nombre_favoris": int(result["nombre_favoris"])
+                    if result["nombre_favoris"]
+                    else 0,
                 }
             return None
 
@@ -387,7 +398,8 @@ class AvisDAO(metaclass=Singleton):
             # Ajouter aux favoris (créer ou mettre à jour)
             cursor.execute(
                 """
-                INSERT INTO avis (id_utilisateur, id_cocktail, note, commentaire, favoris)
+                INSERT INTO avis (id_utilisateur, id_cocktail, note, commentaire,
+                favoris)
                 VALUES (%(id_utilisateur)s, %(id_cocktail)s, NULL, NULL, TRUE)
                 ON CONFLICT (id_utilisateur, id_cocktail)
                 DO UPDATE SET

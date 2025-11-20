@@ -47,7 +47,8 @@ class StockItemAddByName(BaseModel):
 
     nom_ingredient: str = Field(
         ...,
-        description="Nom de l'ingrédient (insensible à la casse, sera normalisé automatiquement)",
+        description="Nom de l'ingrédient (insensible à la casse, sera normalisé"
+        "automatiquement)",
         min_length=2,
         json_schema_extra={"example": "Vodka"},
     )

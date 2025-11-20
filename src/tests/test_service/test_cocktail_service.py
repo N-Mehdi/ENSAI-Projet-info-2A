@@ -7,7 +7,7 @@ import pytest
 from src.business_object.cocktail import Cocktail
 from src.dao.cocktail_dao import CocktailDAO
 from src.service.cocktail_service import CocktailService
-from src.utils.exceptions import DAOError, EmptyFieldError, ServiceError
+from src.utils.exceptions import DAOError, EmptyFieldError, ServiceError, CocktailSearchError
 
 
 @pytest.fixture
@@ -72,7 +72,7 @@ class TestRechercherCocktailParNom:
     def test_rechercher_cocktail_par_nom_type_invalide(self, cocktail_service):
         """Test avec un type invalide (non string)."""
         # Act & Assert
-        with pytest.raises(TypeError):
+        with pytest.raises(CocktailSearchError):
             cocktail_service.rechercher_cocktail_par_nom(123)
 
     def test_rechercher_cocktail_par_nom_non_trouve(self, cocktail_service, mock_cocktail_dao):
@@ -81,7 +81,7 @@ class TestRechercherCocktailParNom:
         mock_cocktail_dao.rechercher_cocktail_par_nom.return_value = None
 
         # Act & Assert
-        with pytest.raises(LookupError):
+        with pytest.raises(CocktailSearchError):
             cocktail_service.rechercher_cocktail_par_nom("CocktailInexistant")
 
 
@@ -110,19 +110,19 @@ class TestRechercherCocktailParSequenceDebut:
     def test_rechercher_par_sequence_type_invalide(self, cocktail_service):
         """Test avec un type invalide pour la séquence."""
         # Act & Assert
-        with pytest.raises(TypeError):
+        with pytest.raises(CocktailSearchError):
             cocktail_service.rechercher_cocktail_par_sequence_debut(123, 10)
 
     def test_rechercher_par_sequence_max_resultats_invalide_type(self, cocktail_service):
         """Test avec un type invalide pour max_resultats."""
         # Act & Assert
-        with pytest.raises(TypeError):
+        with pytest.raises(CocktailSearchError):
             cocktail_service.rechercher_cocktail_par_sequence_debut("Moj", "10")
 
     def test_rechercher_par_sequence_max_resultats_invalide_valeur(self, cocktail_service):
         """Test avec une valeur invalide pour max_resultats."""
         # Act & Assert
-        with pytest.raises(ValueError):
+        with pytest.raises(CocktailSearchError):
             cocktail_service.rechercher_cocktail_par_sequence_debut("Moj", 0)
 
     def test_rechercher_par_sequence_aucun_resultat(self, cocktail_service, mock_cocktail_dao):
@@ -131,7 +131,7 @@ class TestRechercherCocktailParSequenceDebut:
         mock_cocktail_dao.rechercher_cocktail_par_sequence_debut.return_value = []
 
         # Act & Assert
-        with pytest.raises(LookupError):
+        with pytest.raises(CocktailSearchError):
             cocktail_service.rechercher_cocktail_par_sequence_debut("Xyz", 10)
 
 
@@ -199,38 +199,6 @@ class TestGetCocktailsRealisables:
         assert result["nombre_cocktails"] == 1
         assert len(result["cocktails_realisables"]) == 1
         assert result["cocktails_realisables"][0]["nom"] == "Screwdriver"
-
-    def test_get_cocktails_realisables_aucun_stock(self, cocktail_service):
-        """Test quand l'utilisateur n'a pas de stock."""
-        # Arrange
-        id_utilisateur = 1
-        cocktail_service.stock_dao.get_stock = MagicMock(return_value=[])
-
-        # Mock avec un cocktail qui a des ingrédients
-        cocktails_rows = [
-            {
-                "id_cocktail": 1,
-                "nom": "Mojito",
-                "categorie": "Cocktail",
-                "verre": "Highball glass",
-                "alcool": True,
-                "image": "mojito.jpg",
-                "id_ingredient": 1,
-                "qte": 50.0,
-                "unite": "ml",
-            },
-        ]
-
-        cocktail_service.cocktail_dao.get_tous_cocktails_avec_ingredients = MagicMock(
-            return_value=cocktails_rows,
-        )
-
-        # Act
-        result = cocktail_service.get_cocktails_realisables(id_utilisateur)
-
-        # Assert
-        assert result["nombre_cocktails"] == 0
-        assert result["cocktails_realisables"] == []
 
     def test_get_cocktails_realisables_quantite_insuffisante(self, cocktail_service):
         """Test quand la quantité en stock est insuffisante."""

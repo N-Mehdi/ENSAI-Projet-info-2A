@@ -31,8 +31,8 @@ Ajoute ou modifie un avis sur un cocktail.
 - Si un avis existe déjà pour ce cocktail, il est mis à jour
 
 **Comportement UPSERT :**
-- Première fois → Crée l'avis
-- Déjà un avis → Met à jour note et commentaire
+- Première fois : Crée l'avis
+- Déjà un avis : Met à jour note et commentaire
 """,
 )
 def add_avis(

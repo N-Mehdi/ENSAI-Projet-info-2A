@@ -30,7 +30,10 @@ class PrivateCocktailsList(BaseModel):
 class AccessRequest(BaseModel):
     """Modèle pour une demande d'accès."""
 
-    user_pseudo: str = Field(..., description="Le pseudo de l'utilisateur à qui donner l'accès")
+    user_pseudo: str = Field(
+        ...,
+        description="Le pseudo de l'utilisateur à qui donner l'accès",
+    )
 
 
 class AccessResponse(BaseModel):

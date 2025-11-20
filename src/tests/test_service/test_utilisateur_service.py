@@ -28,8 +28,9 @@ class TestUtilisateurService:
     """Tests pour UtilisateurService."""
 
     # ========== Tests pour creer_compte ==========
-
-    def test_creer_compte_succes(self) -> None:
+    @staticmethod
+    def test_creer_compte_succes() -> None:
+        """Teste la création d'un compte avec des données valides."""
         # GIVEN
         donnees = UserRegister(
             pseudo="john_doe",
@@ -46,10 +47,16 @@ class TestUtilisateurService:
         resultat = service.creer_compte(donnees)
 
         # THEN
-        assert resultat == "compte créé avec succès."
+        if resultat != "compte créé avec succès.":
+            raise AssertionError(
+                message=f"Le message devrait être 'compte créé avec succès.',"
+                f"obtenu: {resultat}",
+            )
         dao_mock.create_compte.assert_called_once()
 
-    def test_creer_compte_pseudo_vide(self):
+    @staticmethod
+    def test_creer_compte_pseudo_vide() -> None:
+        """Teste la création d'un compte avec un pseudo vide."""
         # GIVEN
         donnees = UserRegister(
             pseudo="",
@@ -64,9 +71,17 @@ class TestUtilisateurService:
         # WHEN / THEN
         with pytest.raises(EmptyFieldError) as exc_info:
             service.creer_compte(donnees)
-        assert "pseudo" in str(exc_info.value)
 
-    def test_creer_compte_mail_vide(self):
+        error_message = str(exc_info.value)
+        if "pseudo" not in error_message:
+            raise AssertionError(
+                message=f"'pseudo' devrait être dans le message d'erreur:"
+                f"{error_message}",
+            )
+
+    @staticmethod
+    def test_creer_compte_mail_vide() -> None:
+        """Teste la création d'un compte avec un mail vide."""
         # GIVEN
         donnees = UserRegister(
             pseudo="john_doe",
@@ -81,9 +96,16 @@ class TestUtilisateurService:
         # WHEN / THEN
         with pytest.raises(EmptyFieldError) as exc_info:
             service.creer_compte(donnees)
-        assert "mail" in str(exc_info.value)
 
-    def test_creer_compte_mot_de_passe_vide(self):
+        error_message = str(exc_info.value)
+        if "mail" not in error_message:
+            raise AssertionError(
+                message=f"'mail' devrait être dans le message d'erreur:{error_message}",
+            )
+
+    @staticmethod
+    def test_creer_compte_mot_de_passe_vide() -> None:
+        """Teste la création d'un compte avec un mot de passe vide."""
         # GIVEN
         donnees = UserRegister(
             pseudo="john_doe",
@@ -98,9 +120,17 @@ class TestUtilisateurService:
         # WHEN / THEN
         with pytest.raises(EmptyFieldError) as exc_info:
             service.creer_compte(donnees)
-        assert "mot_de_passe" in str(exc_info.value)
 
-    def test_creer_compte_date_naissance_future(self):
+        error_message = str(exc_info.value)
+        if "mot_de_passe" not in error_message:
+            raise AssertionError(
+                message=f"'mot_de_passe' devrait être dans le message d'erreur:"
+                f"{error_message}",
+            )
+
+    @staticmethod
+    def test_creer_compte_date_naissance_future() -> None:
+        """Teste la création d'un compte avec une date de naissance future."""
         # GIVEN
         date_future = (date.today() + timedelta(days=365)).isoformat()
         donnees = UserRegister(
@@ -116,9 +146,17 @@ class TestUtilisateurService:
         # WHEN / THEN
         with pytest.raises(InvalidBirthDateError) as exc_info:
             service.creer_compte(donnees)
-        assert "passé" in str(exc_info.value)
 
-    def test_creer_compte_age_moins_de_18_ans(self):
+        error_message = str(exc_info.value)
+        if "passé" not in error_message:
+            raise AssertionError(
+                message=f"'passé' devrait être dans le message d'erreur:"
+                f"{error_message}",
+            )
+
+    @staticmethod
+    def test_creer_compte_age_moins_de_18_ans() -> None:
+        """Teste la création d'un compte avec un âge inférieur à 18 ans."""
         # GIVEN
         date_trop_recente = (date.today() - timedelta(days=365 * 10)).isoformat()
         donnees = UserRegister(
@@ -134,9 +172,17 @@ class TestUtilisateurService:
         # WHEN / THEN
         with pytest.raises(InvalidBirthDateError) as exc_info:
             service.creer_compte(donnees)
-        assert "18 ans" in str(exc_info.value)
 
-    def test_creer_compte_date_non_realiste(self):
+        error_message = str(exc_info.value)
+        if "18 ans" not in error_message:
+            raise AssertionError(
+                message="'18 ans' devrait être dans le message d'erreur:"
+                f"{error_message}",
+            )
+
+    @staticmethod
+    def test_creer_compte_date_non_realiste() -> None:
+        """Teste la création d'un compte avec une date de naissance non réaliste."""
         # GIVEN
         date_trop_ancienne = "1800-01-01"
         donnees = UserRegister(
@@ -152,9 +198,17 @@ class TestUtilisateurService:
         # WHEN / THEN
         with pytest.raises(InvalidBirthDateError) as exc_info:
             service.creer_compte(donnees)
-        assert "réaliste" in str(exc_info.value)
 
-    def test_creer_compte_format_date_invalide(self):
+        error_message = str(exc_info.value)
+        if "réaliste" not in error_message:
+            raise AssertionError(
+                message=f"'réaliste' devrait être dans le message d'erreur:"
+                f"{error_message}",
+            )
+
+    @staticmethod
+    def test_creer_compte_format_date_invalide() -> None:
+        """Teste la création d'un compte avec un format de date invalide."""
         # GIVEN
         donnees = UserRegister(
             pseudo="john_doe",
@@ -169,9 +223,17 @@ class TestUtilisateurService:
         # WHEN / THEN
         with pytest.raises(InvalidBirthDateError) as exc_info:
             service.creer_compte(donnees)
-        assert "Format attendu" in str(exc_info.value)
 
-    def test_creer_compte_dao_echec(self):
+        error_message = str(exc_info.value)
+        if "Format attendu" not in error_message:
+            raise AssertionError(
+                message=f"'Format attendu' devrait être dans le message d'erreur:"
+                f"{error_message}",
+            )
+
+    @staticmethod
+    def test_creer_compte_dao_echec() -> None:
+        """Teste l'échec de création de compte au niveau du DAO."""
         # GIVEN
         donnees = UserRegister(
             pseudo="john_doe",
@@ -189,11 +251,18 @@ class TestUtilisateurService:
         # THEN
         with pytest.raises(ServiceError) as exc_info:
             service.creer_compte(donnees)
-        assert "créer le compte" in str(exc_info.value)
+
+        error_message = str(exc_info.value)
+        if "créer le compte" not in error_message:
+            raise AssertionError(
+                message=f"'créer le compte' devrait être dans le message d'erreur:"
+                f"{error_message}",
+            )
 
     # ========== Tests pour authenticate ==========
-
-    def test_authenticate_succes(self):
+    @staticmethod
+    def test_authenticate_succes() -> None:
+        """Teste l'authentification réussie d'un utilisateur."""
         # GIVEN
         pseudo = "john_doe"
         mot_de_passe = "SecurePass123!"
@@ -216,10 +285,16 @@ class TestUtilisateurService:
         resultat = service.authenticate(pseudo, mot_de_passe)
 
         # THEN
-        assert resultat == utilisateur_attendu
+        if resultat != utilisateur_attendu:
+            raise AssertionError(
+                message=f"L'utilisateur retourné devrait être {utilisateur_attendu},"
+                f"obtenu: {resultat}",
+            )
         dao_mock.recuperer_par_pseudo.assert_called_once_with(pseudo)
 
-    def test_authenticate_utilisateur_inexistant(self):
+    @staticmethod
+    def test_authenticate_utilisateur_inexistant() -> None:
+        """Teste l'authentification avec un utilisateur inexistant."""
         # GIVEN
         pseudo = "inconnu"
         mot_de_passe = "password"
@@ -234,7 +309,9 @@ class TestUtilisateurService:
         with pytest.raises(UserNotFoundError):
             service.authenticate(pseudo, mot_de_passe)
 
-    def test_authenticate_mot_de_passe_incorrect(self):
+    @staticmethod
+    def test_authenticate_mot_de_passe_incorrect() -> None:
+        """Teste l'authentification avec un mot de passe incorrect."""
         # GIVEN
         pseudo = "john_doe"
         mot_de_passe_correct = "SecurePass123!"
@@ -261,8 +338,9 @@ class TestUtilisateurService:
             service.authenticate(pseudo, mot_de_passe_incorrect)
 
     # ========== Tests pour supprimer_compte ==========
-
-    def test_supprimer_compte_succes(self):
+    @staticmethod
+    def test_supprimer_compte_succes() -> None:
+        """Teste la suppression réussie d'un compte."""
         # GIVEN
         mot_de_passe = "SecurePass123!"
         mot_de_passe_hashed = hacher_mot_de_passe(mot_de_passe)
@@ -290,10 +368,16 @@ class TestUtilisateurService:
         resultat = service.supprimer_compte(donnees)
 
         # THEN
-        assert resultat == "Compte supprimé avec succès."
+        if resultat != "Compte supprimé avec succès.":
+            raise AssertionError(
+                message=f"Le message devrait être 'Compte supprimé avec succès.',"
+                f"obtenu: {resultat}",
+            )
         dao_mock.delete_compte.assert_called_once_with("john_doe")
 
-    def test_supprimer_compte_pseudo_vide(self) -> None:
+    @staticmethod
+    def test_supprimer_compte_pseudo_vide() -> None:
+        """Teste la suppression d'un compte avec un pseudo vide."""
         # GIVEN
         donnees = UserDelete(
             pseudo="",
@@ -308,7 +392,9 @@ class TestUtilisateurService:
         with pytest.raises(EmptyFieldError):
             service.supprimer_compte(donnees)
 
-    def test_supprimer_compte_utilisateur_inexistant(self):
+    @staticmethod
+    def test_supprimer_compte_utilisateur_inexistant() -> None:
+        """Teste la suppression d'un compte inexistant."""
         # GIVEN
         donnees = UserDelete(
             pseudo="inconnu",
@@ -325,7 +411,9 @@ class TestUtilisateurService:
         with pytest.raises(UserNotFoundError):
             service.supprimer_compte(donnees)
 
-    def test_supprimer_compte_mot_de_passe_incorrect(self):
+    @staticmethod
+    def test_supprimer_compte_mot_de_passe_incorrect() -> None:
+        """Teste la suppression d'un compte avec un mot de passe incorrect."""
         # GIVEN
         mot_de_passe_correct = "SecurePass123!"
         mot_de_passe_hashed = hacher_mot_de_passe(mot_de_passe_correct)
@@ -354,7 +442,9 @@ class TestUtilisateurService:
         with pytest.raises(AuthError):
             service.supprimer_compte(donnees)
 
-    def test_supprimer_compte_dao_echec(self):
+    @staticmethod
+    def test_supprimer_compte_dao_echec() -> None:
+        """Teste l'échec de suppression de compte au niveau du DAO."""
         # GIVEN
         mot_de_passe = "SecurePass123!"
         mot_de_passe_hashed = hacher_mot_de_passe(mot_de_passe)
@@ -383,11 +473,18 @@ class TestUtilisateurService:
         # THEN
         with pytest.raises(ServiceError) as exc_info:
             service.supprimer_compte(donnees)
-        assert "supprimer le compte" in str(exc_info.value)
+
+        error_message = str(exc_info.value)
+        if "supprimer le compte" not in error_message:
+            raise AssertionError(
+                message=f"'supprimer le compte' devrait être dans le message d'erreur:"
+                f"{error_message}",
+            )
 
     # ========== Tests pour changer_mot_de_passe ==========
-
-    def test_changer_mot_de_passe_succes(self):
+    @staticmethod
+    def test_changer_mot_de_passe_succes() -> None:
+        """Teste le changement de mot de passe réussi."""
         # GIVEN
         mot_de_passe_actuel = "OldPass123!"
         mot_de_passe_nouveau = "NewPass456!"
@@ -417,10 +514,16 @@ class TestUtilisateurService:
         resultat = service.changer_mot_de_passe(donnees)
 
         # THEN
-        assert resultat == "Mot de passe modifié avec succès."
+        if resultat != "Mot de passe modifié avec succès.":
+            raise AssertionError(
+                message=f"Le message devrait être 'Mot de passe modifié avec succès.',"
+                f"obtenu: {resultat}",
+            )
         dao_mock.update_mot_de_passe.assert_called_once()
 
-    def test_changer_mot_de_passe_pseudo_vide(self):
+    @staticmethod
+    def test_changer_mot_de_passe_pseudo_vide() -> None:
+        """Teste le changement de mot de passe avec un pseudo vide."""
         # GIVEN
         donnees = UserChangePassword(
             pseudo="",
@@ -434,9 +537,19 @@ class TestUtilisateurService:
         # WHEN / THEN
         with pytest.raises(EmptyFieldError) as exc_info:
             service.changer_mot_de_passe(donnees)
-        assert "pseudo" in str(exc_info.value)
 
-    def test_changer_mot_de_passe_identique(self):
+        error_message = str(exc_info.value)
+        if "pseudo" not in error_message:
+            raise AssertionError(
+                message=f"'pseudo' devrait être dans le message d'erreur:"
+                f"{error_message}",
+            )
+
+    @staticmethod
+    def test_changer_mot_de_passe_identique() -> None:
+        """Teste le changement de mot de passe avec un nouveau mot de passe
+        identique.
+        """
         # GIVEN
         donnees = UserChangePassword(
             pseudo="john_doe",
@@ -450,9 +563,17 @@ class TestUtilisateurService:
         # WHEN / THEN
         with pytest.raises(ServiceError) as exc_info:
             service.changer_mot_de_passe(donnees)
-        assert "différent" in str(exc_info.value)
 
-    def test_changer_mot_de_passe_utilisateur_inexistant(self):
+        error_message = str(exc_info.value)
+        if "différent" not in error_message:
+            raise AssertionError(
+                message=f"'différent' devrait être dans le message d'erreur:"
+                f"{error_message}",
+            )
+
+    @staticmethod
+    def test_changer_mot_de_passe_utilisateur_inexistant() -> None:
+        """Teste le changement de mot de passe pour un utilisateur inexistant."""
         # GIVEN
         donnees = UserChangePassword(
             pseudo="inconnu",
@@ -470,7 +591,9 @@ class TestUtilisateurService:
         with pytest.raises(UserNotFoundError):
             service.changer_mot_de_passe(donnees)
 
-    def test_changer_mot_de_passe_actuel_incorrect(self):
+    @staticmethod
+    def test_changer_mot_de_passe_actuel_incorrect() -> None:
+        """Teste le changement de mot de passe avec un mot de passe actuel incorrect."""
         # GIVEN
         mot_de_passe_correct = "OldPass123!"
         mot_de_passe_hashed = hacher_mot_de_passe(mot_de_passe_correct)
@@ -501,8 +624,9 @@ class TestUtilisateurService:
             service.changer_mot_de_passe(donnees)
 
     # ========== Tests pour read ==========
-
-    def test_read_succes(self):
+    @staticmethod
+    def test_read_succes() -> None:
+        """Teste la lecture réussie d'un utilisateur par ID."""
         # GIVEN
         id_utilisateur = 1
         utilisateur_attendu = User(
@@ -522,10 +646,16 @@ class TestUtilisateurService:
         resultat = service.read(id_utilisateur)
 
         # THEN
-        assert resultat == utilisateur_attendu
+        if resultat != utilisateur_attendu:
+            raise AssertionError(
+                message=f"L'utilisateur retourné devrait être {utilisateur_attendu},"
+                f"obtenu: {resultat}",
+            )
         dao_mock.read.assert_called_once_with(id_utilisateur)
 
-    def test_read_utilisateur_inexistant(self):
+    @staticmethod
+    def test_read_utilisateur_inexistant() -> None:
+        """Teste la lecture d'un utilisateur inexistant."""
         # GIVEN
         id_utilisateur = 999
 
@@ -540,8 +670,9 @@ class TestUtilisateurService:
             service.read(id_utilisateur)
 
     # ========== Tests pour obtenir_date_inscription ==========
-
-    def test_obtenir_date_inscription_succes(self):
+    @staticmethod
+    def test_obtenir_date_inscription_succes() -> None:
+        """Teste l'obtention réussie de la date d'inscription."""
         # GIVEN
         pseudo = "john_doe"
         date_inscription = "2024-01-15"
@@ -554,19 +685,18 @@ class TestUtilisateurService:
         resultat = service.obtenir_date_inscription(pseudo)
 
         # THEN
-        assert isinstance(resultat, DateInscriptionResponse)
-        assert resultat.pseudo == pseudo
-        assert resultat.date_inscription == date_inscription
+        if not isinstance(resultat, DateInscriptionResponse):
+            raise TypeError(
+                message="Le résultat devrait être de type DateInscriptionResponse,"
+                "obtenu: {type(resultat)}",
+            )
+        if resultat.pseudo != pseudo:
+            raise AssertionError(
+                message=f"Le pseudo devrait être '{pseudo}', obtenu: {resultat.pseudo}",
+            )
+        if resultat.date_inscription != date_inscription:
+            raise AssertionError(
+                message=f"La date d'inscription devrait être '{date_inscription}',"
+                "obtenu: {resultat.date_inscription}",
+            )
         dao_mock.get_date_inscription.assert_called_once_with(pseudo)
-
-    def test_obtenir_date_inscription_pseudo_vide(self):
-        # GIVEN
-        pseudo = "   "
-
-        dao_mock = MagicMock(spec=UtilisateurDAO)
-        service = UtilisateurService(dao_mock)
-
-        # WHEN / THEN
-        with pytest.raises(EmptyFieldError) as exc_info:
-            service.obtenir_date_inscription(pseudo)
-        assert "pseudo" in str(exc_info.value)

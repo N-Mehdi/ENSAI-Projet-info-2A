@@ -416,7 +416,10 @@ class TestAccesService:
         service = AccesService()
         service.dao = dao_mock
         service.dao_cocktail = dao_cocktail_mock
-        resultat = service.add_cocktail_to_private_list_by_name(owner_pseudo, cocktail_name)
+        resultat = service.add_cocktail_to_private_list_by_name(
+            owner_pseudo,
+            cocktail_name,
+        )
 
         # THEN
         assert isinstance(resultat, AccessResponse)
@@ -512,7 +515,10 @@ class TestAccesService:
         service = AccesService()
         service.dao = dao_mock
         service.dao_cocktail = dao_cocktail_mock
-        resultat = service.remove_cocktail_from_private_list_by_name(owner_pseudo, cocktail_name)
+        resultat = service.remove_cocktail_from_private_list_by_name(
+            owner_pseudo,
+            cocktail_name,
+        )
 
         # THEN
         assert isinstance(resultat, AccessResponse)
@@ -538,5 +544,8 @@ class TestAccesService:
 
         # THEN
         with pytest.raises(CocktailNotFoundError) as exc_info:
-            service.remove_cocktail_from_private_list_by_name(owner_pseudo, cocktail_name)
+            service.remove_cocktail_from_private_list_by_name(
+                owner_pseudo,
+                cocktail_name,
+            )
         assert "CocktailInconnu" in str(exc_info.value)

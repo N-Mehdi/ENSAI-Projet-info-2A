@@ -4,8 +4,13 @@ from src.dao.ingredient_dao import IngredientDAO
 from src.dao.liste_course_dao import ListeCourseDAO
 from src.dao.stock_course_dao import StockCourseDAO
 from src.models.liste_course import ListeCourse, ListeCourseItem
+from src.service.ingredient_service import IngredientService
 from src.utils.conversion_unite import UnitConverter
-from src.utils.exceptions import ServiceError, UniteNotFoundError
+from src.utils.exceptions import (
+    IngredientNotFoundError,
+    ServiceError,
+    UniteNotFoundError,
+)
 
 
 class ListeCourseService:
@@ -16,6 +21,7 @@ class ListeCourseService:
         self.liste_course_dao = ListeCourseDAO()
         self.stock_dao = StockCourseDAO()
         self.ingredient_dao = IngredientDAO()
+        self.ingredient_svc = IngredientService()
 
     def get_liste_course(self, id_utilisateur: int) -> ListeCourse:
         """Récupère la liste de course complète d'un utilisateur.
@@ -65,7 +71,9 @@ class ListeCourseService:
                 nombre_effectues=nombre_effectues,
             )
         except Exception as e:
-            raise ServiceError(message=f"Erreur lors de la récupération de la liste de course : {e}") from e
+            raise ServiceError(
+                message=f"Erreur lors de la récupération de la liste de course : {e}",
+            ) from e
 
     def add_to_liste_course(
         self,
@@ -103,17 +111,19 @@ class ListeCourseService:
 
         """
         # Utiliser la méthode du DAO qui gère les suggestions
-        ingredient = self.ingredient_dao.get_by_name_with_suggestions(nom_ingredient)
+        ingredient = self.ingredient_svc.get_by_name_with_suggestions(nom_ingredient)
 
         # Récupérer l'ID de l'unité via son abréviation
         try:
             stock_dao = StockCourseDAO()
             id_unite = stock_dao.get_unite_id_by_abbreviation(abbreviation_unite)
 
-        except UniteNotFoundError:
-            raise
-        except Exception as e:
-            raise ServiceError(message=f"Erreur lors de la récupération de l'unité : {e}") from e
+        except IngredientNotFoundError as e:
+            raise IngredientNotFoundError(message="L'ingrédient n'existe pas") from e
+        except ServiceError as e:
+            raise ServiceError(
+                message=f"Erreur lors de la récupération del'unité : {e}",
+            ) from e
 
         if id_unite is None:
             raise UniteNotFoundError(abbreviation_unite)
@@ -126,10 +136,14 @@ class ListeCourseService:
                 id_unite=id_unite,
             )
 
-            return f"Ingrédient '{ingredient['nom']}' ajouté à la liste de course ({quantite} {abbreviation_unite})"
-
         except Exception as e:
-            raise ServiceError(message=f"Erreur lors de l'ajout à la liste de course : {e}") from e
+            raise ServiceError(
+                message=f"Erreur lors de l'ajout à la liste de course : {e}",
+            ) from e
+        return (
+            f"Ingrédient '{ingredient['nom']}' ajouté à la liste de course "
+            f"({quantite} {abbreviation_unite})"
+        )
 
     def remove_from_liste_course_and_add_to_stock(
         self,
@@ -139,10 +153,10 @@ class ListeCourseService:
         """Retire un ingrédient de la liste de course et l'ajoute au stock.
 
         Gère intelligemment les conversions d'unités lors de l'ajout au stock :
-        - Même unité → additionne directement les quantités
-        - Unités liquides différentes → convertit en ml, additionne et reconvertit
-        - Unités solides différentes → convertit en g, additionne et reconvertit
-        - Types incompatibles → remplace par la nouvelle quantité
+        - Même unité : additionne directement les quantités
+        - Unités liquides différentes : convertit en ml, additionne et reconvertit
+        - Unités solides différentes : convertit en g, additionne et reconvertit
+        - Types incompatibles : remplace par la nouvelle quantité
 
         Parameters
         ----------
@@ -165,7 +179,9 @@ class ListeCourseService:
             lors du transfert
 
         """
-        ingredient = self.ingredient_dao.get_by_name_with_suggestions(nom_ingredient)
+        ingredient = self.ingredient_svc.get_by_name_with_suggestions(
+            nom_ingredient,
+        )
 
         try:
             # Récupérer l'item de la liste de course
@@ -174,11 +190,14 @@ class ListeCourseService:
                 id_ingredient=ingredient["id_ingredient"],
             )
         except Exception as e:
-            raise ServiceError(message=f"Erreur lors de la récupération de la liste de course : {e}") from e
+            raise ServiceError(
+                message=f"Erreur lors de la récupération de la liste de course : {e}",
+            ) from e
 
         if not liste_item:
             raise ServiceError(
-                message=f"L'ingrédient '{ingredient['nom']}' n'est pas dans votre liste de course",
+                message=f"L'ingrédient '{ingredient['nom']}' n'est pas dans votre liste"
+                f"de course",
             )
 
         quantite_liste = float(liste_item["quantite"])
@@ -192,7 +211,9 @@ class ListeCourseService:
                 id_ingredient=ingredient["id_ingredient"],
             )
         except Exception as e:
-            raise ServiceError(message=f"Erreur lors de la récupération du stock : {e}") from e
+            raise ServiceError(
+                message=f"Erreur lors de la récupération du stock : {e}",
+            ) from e
 
         # Initialiser les variables par défaut
         nouvelle_quantite = quantite_liste
@@ -205,7 +226,9 @@ class ListeCourseService:
 
             # Récupérer l'info de l'unité du stock
             stock_unite_info = self.stock_dao.get_unite_info(id_unite_stock)
-            code_unite_stock = stock_unite_info["abbreviation"] if stock_unite_info else None
+            code_unite_stock = (
+                stock_unite_info["abbreviation"] if stock_unite_info else None
+            )
 
             if id_unite_liste == id_unite_stock:
                 # Même unité : additionner directement
@@ -221,27 +244,45 @@ class ListeCourseService:
 
                 if is_liquid_liste and is_liquid_stock:
                     # Les deux sont liquides : convertir en ml
-                    ml_stock = UnitConverter.convert_to_ml(quantite_stock, code_unite_stock)
-                    ml_liste = UnitConverter.convert_to_ml(quantite_liste, code_unite_liste)
+                    ml_stock = UnitConverter.convert_to_ml(
+                        quantite_stock,
+                        code_unite_stock,
+                    )
+                    ml_liste = UnitConverter.convert_to_ml(
+                        quantite_liste,
+                        code_unite_liste,
+                    )
 
                     if ml_stock is not None and ml_liste is not None:
                         total_ml = ml_stock + ml_liste
 
                         # Convertir le total dans l'unité du stock
-                        facteur_stock = UnitConverter.LIQUID_TO_ML.get(code_unite_stock.lower(), 1)
+                        facteur_stock = UnitConverter.LIQUID_TO_ML.get(
+                            code_unite_stock.lower(),
+                            1,
+                        )
                         nouvelle_quantite = total_ml / facteur_stock
                         id_unite_finale = id_unite_stock
 
                 elif is_solid_liste and is_solid_stock:
                     # Les deux sont solides : convertir en g
-                    g_stock = UnitConverter.convert_to_g(quantite_stock, code_unite_stock)
-                    g_liste = UnitConverter.convert_to_g(quantite_liste, code_unite_liste)
+                    g_stock = UnitConverter.convert_to_g(
+                        quantite_stock,
+                        code_unite_stock,
+                    )
+                    g_liste = UnitConverter.convert_to_g(
+                        quantite_liste,
+                        code_unite_liste,
+                    )
 
                     if g_stock is not None and g_liste is not None:
                         total_g = g_stock + g_liste
 
                         # Convertir le total dans l'unité du stock
-                        facteur_stock = UnitConverter.SOLID_TO_G.get(code_unite_stock.lower(), 1)
+                        facteur_stock = UnitConverter.SOLID_TO_G.get(
+                            code_unite_stock.lower(),
+                            1,
+                        )
                         nouvelle_quantite = total_g / facteur_stock
                         id_unite_finale = id_unite_stock
 
@@ -260,7 +301,9 @@ class ListeCourseService:
                 id_ingredient=ingredient["id_ingredient"],
             )
         except Exception as e:
-            raise ServiceError(message=f"Erreur lors du transfert vers le stock : {e}") from e
+            raise ServiceError(
+                message=f"Erreur lors du transfert vers le stock : {e}",
+            ) from e
 
         # Récupérer l'unité finale pour le message
         unite_info = self.stock_dao.get_unite_info(id_unite_finale)
@@ -281,7 +324,8 @@ class ListeCourseService:
         Parameters
         ----------
         id_utilisateur : int
-            Identifiant unique de l'utilisateur dont on souhaite modifier la liste de course.
+            Identifiant unique de l'utilisateur dont on souhaite modifier
+            la liste de course.
         nom_ingredient : str
             Nom de l'ingrédient à retirer.
 
@@ -293,10 +337,11 @@ class ListeCourseService:
         Raises
         ------
         ServiceError
-            Si l'ingrédient n'est pas présent dans la liste de course ou en cas d'erreur lors de l'accès à la base de données.
+            Si l'ingrédient n'est pas présent dans la liste de course ou en cas d'erreur
+            lors de l'accès à la base de données.
 
         """
-        ingredient = self.ingredient_dao.get_by_name_with_suggestions(nom_ingredient)
+        ingredient = self.ingredient_svc.get_by_name_with_suggestions(nom_ingredient)
 
         try:
             success = self.liste_course_dao.remove_from_liste_course(
@@ -307,11 +352,14 @@ class ListeCourseService:
         except ServiceError:
             raise
         except Exception as e:
-            raise ServiceError(message=f"Erreur lors du retrait de la liste de course : {e}") from e
+            raise ServiceError(
+                message=f"Erreur lors du retrait de la liste de course : {e}",
+            ) from e
 
         if not success:
             raise ServiceError(
-                message=f"L'ingrédient '{ingredient['nom']}' n'est pas dans votre liste de course",
+                message=f"L'ingrédient '{ingredient['nom']}' n'est pas dans votre liste"
+                "de course",
             )
 
         return f"Ingrédient '{ingredient['nom']}' retiré de la liste de course"
@@ -327,7 +375,8 @@ class ListeCourseService:
         Returns
         -------
         str
-            Message confirmant le vidage de la liste, avec le nombre d'ingrédients supprimés
+            Message confirmant le vidage de la liste, avec le nombre d'ingrédients
+            supprimés
             ou indiquant que la liste était déjà vide.
 
         Raises
@@ -343,9 +392,14 @@ class ListeCourseService:
                 return "La liste de course est déjà vide"
 
         except Exception as e:
-            raise ServiceError(message=f"Erreur lors du vidage de la liste de course : {e}") from e
+            raise ServiceError(
+                message=f"Erreur lors du vidage de la liste de course : {e}",
+            ) from e
 
-        return f"Liste de course vidée ({count} ingrédient{'s' if count > 1 else ''} supprimé{'s' if count > 1 else ''})"
+        return (
+            f"Liste de course vidée ({count} ingrédient{'s' if count > 1 else ''}"
+            f"supprimé{'s' if count > 1 else ''})"
+        )
 
     def toggle_effectue(
         self,
@@ -379,7 +433,7 @@ class ListeCourseService:
 
         """
         # Utiliser la méthode du DAO
-        ingredient = self.ingredient_dao.get_by_name_with_suggestions(nom_ingredient)
+        ingredient = self.ingredient_svc.get_by_name_with_suggestions(nom_ingredient)
 
         try:
             effectue = self.liste_course_dao.toggle_effectue(
@@ -395,4 +449,6 @@ class ListeCourseService:
             }
 
         except Exception as e:
-            raise ServiceError(message=f"Erreur lors de la modification du statut : {e}") from e
+            raise ServiceError(
+                message=f"Erreur lors de la modification du statut : {e}",
+            ) from e

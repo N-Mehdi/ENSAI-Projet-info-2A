@@ -7,6 +7,7 @@ from fastapi import APIRouter, HTTPException, Path, Query, status
 from src.api.deps import CurrentUser
 from src.dao.ingredient_dao import IngredientDAO
 from src.service.ingredient_service import IngredientService
+from src.utils.exceptions import IngredientNotFoundError
 from src.utils.text_utils import normalize_ingredient_name
 
 router = APIRouter(prefix="/ingredients", tags=["Ingredients"])
@@ -28,8 +29,8 @@ Utile pour :
 - Auto-complétion
 
 **Exemple :**
-- Recherche "rum" → retourne "151 Proof Rum", "Dark Rum", "Light Rum", etc.
-- Recherche "juice" → retourne "Apple Juice", "Orange Juice", "Cranberry Juice", etc.
+- Recherche "rum" : retourne "151 Proof Rum", "Dark Rum", "Light Rum", etc.
+- Recherche "juice" : retourne "Apple Juice", "Orange Juice", "Cranberry Juice", etc.
 """,
 )
 def search_ingredient(
@@ -97,7 +98,10 @@ def search_ingredient(
         ) from e
 
 
-@router.get("/vérifier-alcool", summary="Vérifier si un ingrédient contient de l'alcool (par nom)")
+@router.get(
+    "/vérifier-alcool",
+    summary="Vérifier si un ingrédient contient de l'alcool (par nom)",
+)
 def check_ingredient_alcohol_by_name(
     _current_user: CurrentUser,
     name: Annotated[
@@ -139,7 +143,7 @@ def check_ingredient_alcohol_by_name(
     try:
         result = service.check_if_alcoholic_by_name(name)
 
-    except ValueError as e:
+    except IngredientNotFoundError as e:
         raise HTTPException(status_code=404, detail=str(e)) from e
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Erreur serveur: {e!s}") from e

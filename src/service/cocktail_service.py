@@ -4,7 +4,12 @@ from src.business_object.cocktail import Cocktail
 from src.dao.cocktail_dao import CocktailDAO
 from src.dao.stock_course_dao import StockCourseDAO
 from src.utils.conversion_unite import UnitConverter
-from src.utils.exceptions import DAOError, EmptyFieldError, ServiceError
+from src.utils.exceptions import (
+    CocktailSearchError,
+    DAOError,
+    EmptyFieldError,
+    ServiceError,
+)
 
 
 class CocktailService:
@@ -25,11 +30,11 @@ class CocktailService:
 
         Raises
         ------
-        TypeError
+        CocktailSearchError
             Si le nom n'est pas une chaîne de caractères.
-        ValueError
+        CocktailSearchError
             Si le nom est vide ou None.
-        LookupError
+        CocktailSearchError
             Si aucun cocktail n'est trouvé pour le nom donné.
 
         Returns
@@ -42,12 +47,16 @@ class CocktailService:
             raise EmptyFieldError(nom)
 
         if not isinstance(nom, str):
-            raise TypeError(message="Le nom du cocktail doit être une chaîne de caractères.")
+            raise CocktailSearchError(
+                message="Le nom du cocktail doit être une chaîne de caractères.",
+            )
 
         cocktail = self.cocktail_dao.rechercher_cocktail_par_nom(nom)
 
         if cocktail is None:
-            raise LookupError(message=f"Aucun cocktail trouvé pour le nom '{nom}'")
+            raise CocktailSearchError(
+                message=f"Aucun cocktail trouvé pour le nom '{nom}'",
+            )
 
         return cocktail
 
@@ -67,13 +76,13 @@ class CocktailService:
 
         Raises
         ------
-        TypeError
+        CocktailSearchError
             Si séquence n'est pas une chaîne de caractères.
             Si max_resultats n'est pas un entier.
-        ValueError
+        CocktailSearchError
             Si la séquence est vide ou None.
             Si le nombre max_resultats n'est pas supérieur ou égal à 1.
-        LookupError
+        CocktailSearchError
             Si aucun cocktail n'est trouvé pour le nom donné.
 
         Returns
@@ -86,13 +95,19 @@ class CocktailService:
             raise EmptyFieldError(sequence)
 
         if not isinstance(sequence, str):
-            raise TypeError(message="L'argument 'sequence' doit être une chaîne de caractères.")
+            raise CocktailSearchError(
+                message="L'argument 'sequence' doit être une chaîne de caractères.",
+            )
 
         if not isinstance(max_resultats, int):
-            raise TypeError(message="L'argument 'max_resultats' doit être un entier.")
+            raise CocktailSearchError(
+                message="L'argument 'max_resultats' doit être un entier.",
+            )
 
         if max_resultats < 1:
-            raise ValueError(message="L'argument 'max_resultats' doit être supérieur ou égal à 1.")
+            raise CocktailSearchError(
+                message="L'argument 'max_resultats' doit être supérieur ou égal à 1.",
+            )
 
         cocktails = self.cocktail_dao.rechercher_cocktail_par_sequence_debut(
             sequence,
@@ -100,7 +115,7 @@ class CocktailService:
         )
 
         if not cocktails:
-            raise LookupError(
+            raise CocktailSearchError(
                 message=f"Aucun cocktail trouvé pour la séquence '{sequence}'",
             )
 
@@ -149,9 +164,15 @@ class CocktailService:
 
                 # Déterminer le type d'unité via UnitConverter
                 if UnitConverter.is_liquid_unit(code_unite):
-                    quantite_normalisee = UnitConverter.convert_to_ml(quantite, code_unite)
+                    quantite_normalisee = UnitConverter.convert_to_ml(
+                        quantite,
+                        code_unite,
+                    )
                 elif UnitConverter.is_solid_unit(code_unite):
-                    quantite_normalisee = UnitConverter.convert_to_g(quantite, code_unite)
+                    quantite_normalisee = UnitConverter.convert_to_g(
+                        quantite,
+                        code_unite,
+                    )
                 else:
                     # Unité spéciale ou inconnue
                     quantite_normalisee = quantite
@@ -190,9 +211,15 @@ class CocktailService:
                     # Convertir la quantité requise
                     if unite_requise:
                         if UnitConverter.is_liquid_unit(unite_requise):
-                            qte_requise_normalisee = UnitConverter.convert_to_ml(qte_requise, unite_requise)
+                            qte_requise_normalisee = UnitConverter.convert_to_ml(
+                                qte_requise,
+                                unite_requise,
+                            )
                         elif UnitConverter.is_solid_unit(unite_requise):
-                            qte_requise_normalisee = UnitConverter.convert_to_g(qte_requise, unite_requise)
+                            qte_requise_normalisee = UnitConverter.convert_to_g(
+                                qte_requise,
+                                unite_requise,
+                            )
                         else:
                             # Unité spéciale
                             qte_requise_normalisee = qte_requise
@@ -204,11 +231,16 @@ class CocktailService:
                         # Ingrédient manquant dans le stock
                         cocktails_dict[id_cocktail]["realisable"] = False
                         # Vérifier la quantité
-                    if stock_normalise[id_ingredient] < qte_requise_normalisee and qte_requise_normalisee is not None:
+                    elif (
+                        qte_requise_normalisee is not None
+                        and stock_normalise[id_ingredient] < qte_requise_normalisee
+                    ):
                         cocktails_dict[id_cocktail]["realisable"] = False
 
             # Étape 5 : Filtrer et formater les cocktails réalisables
-            cocktails_realisables = [data["info"] for data in cocktails_dict.values() if data["realisable"]]
+            cocktails_realisables = [
+                data["info"] for data in cocktails_dict.values() if data["realisable"]
+            ]
 
             return {
                 "cocktails_realisables": cocktails_realisables,
@@ -216,7 +248,11 @@ class CocktailService:
             }
 
         except DAOError as e:
-            raise ServiceError(message=f"Erreur lors de la récupération des cocktails réalisables : {e}") from e
+            raise ServiceError(
+                message=(
+                    f"Erreur lors de la récupération des cocktails réalisables : {e}"
+                ),
+            ) from e
         except Exception as e:
             raise ServiceError(message=f"Erreur inattendue : {e}") from e
 
@@ -266,7 +302,12 @@ class CocktailService:
             }
 
         except DAOError as e:
-            raise ServiceError(message=f"Erreur lors de la récupération des cocktails quasi-réalisables : {e}") from e
+            raise ServiceError(
+                message=(
+                    f"Erreur lors de la récupération des cocktails quasi-réalisables :"
+                    f"{e}",
+                ),
+            ) from e
         except Exception as e:
             raise ServiceError(message=f"Erreur inattendue : {e}") from e
 
@@ -316,7 +357,9 @@ class CocktailService:
                 cocktails_dict[id_cocktail]["total_ingredients"] += 1
 
                 if not self._is_ingredient_available(row):
-                    cocktails_dict[id_cocktail]["ingredients_manquants"].append(row["nom_ingredient"])
+                    cocktails_dict[id_cocktail]["ingredients_manquants"].append(
+                        row["nom_ingredient"],
+                    )
 
         return cocktails_dict
 
@@ -338,7 +381,9 @@ class CocktailService:
             True si l'ingrédient est disponible en quantité suffisante, False sinon
 
         """
-        quantite_requise = float(row["quantite_requise"]) if row["quantite_requise"] else 0
+        quantite_requise = (
+            float(row["quantite_requise"]) if row["quantite_requise"] else 0
+        )
         unite_requise = row["unite_requise"]
         quantite_stock = float(row["quantite_stock"]) if row["quantite_stock"] else None
         unite_stock = row["unite_stock"]
@@ -360,12 +405,26 @@ class CocktailService:
             return quantite_stock >= quantite_requise
 
         # Unités liquides
-        if UnitConverter.is_liquid_unit(unite_requise) and UnitConverter.is_liquid_unit(unite_stock):
-            return self._compare_liquid_quantities(quantite_requise, unite_requise, quantite_stock, unite_stock)
+        if UnitConverter.is_liquid_unit(unite_requise) and UnitConverter.is_liquid_unit(
+            unite_stock,
+        ):
+            return self._compare_liquid_quantities(
+                quantite_requise,
+                unite_requise,
+                quantite_stock,
+                unite_stock,
+            )
 
         # Unités solides
-        if UnitConverter.is_solid_unit(unite_requise) and UnitConverter.is_solid_unit(unite_stock):
-            return self._compare_solid_quantities(quantite_requise, unite_requise, quantite_stock, unite_stock)
+        if UnitConverter.is_solid_unit(unite_requise) and UnitConverter.is_solid_unit(
+            unite_stock,
+        ):
+            return self._compare_solid_quantities(
+                quantite_requise,
+                unite_requise,
+                quantite_stock,
+                unite_stock,
+            )
 
         # Types incompatibles
         return False

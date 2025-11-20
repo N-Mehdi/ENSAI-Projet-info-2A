@@ -43,7 +43,10 @@ class Avis:
         note_str = f"Note : {self.note}" if self.note is not None else "Aucune note"
         fav_str = "Favori" if self.favoris else ""
         test_str = "Testé" if self.teste else ""
-        return f"Avis(Utilisateur {self.id_utilisateur},Cocktail {self.id_cocktail},{note_str}) {fav_str} {test_str}".strip()
+        return (
+            f"Avis(Utilisateur {self.id_utilisateur},Cocktail {self.id_cocktail},"
+            f"{note_str}) {fav_str} {test_str}".strip()
+        )
 
     def as_list(self) -> list[str]:
         """Retourne les informations de l'avis sous forme de liste."""

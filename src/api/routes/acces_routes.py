@@ -31,7 +31,10 @@ acces_service = AccesService()
 )
 def add_cocktail_to_private_list_by_name(
     current_user: CurrentUser,
-    cocktail_name: Annotated[str, Query(..., description="Le nom du cocktail à ajouter", min_length=1)],
+    cocktail_name: Annotated[
+        str,
+        Query(..., description="Le nom du cocktail à ajouter", min_length=1),
+    ],
 ) -> AccessResponse:
     """Ajoute un cocktail à votre liste privée en utilisant son nom.
 
@@ -62,7 +65,10 @@ def add_cocktail_to_private_list_by_name(
 
     """
     try:
-        result = acces_service.add_cocktail_to_private_list_by_name(current_user.pseudo, cocktail_name)
+        result = acces_service.add_cocktail_to_private_list_by_name(
+            current_user.pseudo,
+            cocktail_name,
+        )
 
     except UserNotFoundError as e:
         raise HTTPException(status_code=404, detail=str(e)) from e
@@ -81,7 +87,10 @@ def add_cocktail_to_private_list_by_name(
 )
 def remove_cocktail_from_private_list_by_name(
     current_user: CurrentUser,
-    cocktail_name: Annotated[str, Query(..., description="Le nom du cocktail à retirer", min_length=1)],
+    cocktail_name: Annotated[
+        str,
+        Query(..., description="Le nom du cocktail à retirer", min_length=1),
+    ],
 ) -> AccessResponse:
     """Retire un cocktail de votre liste privée en utilisant son nom.
 
@@ -102,7 +111,8 @@ def remove_cocktail_from_private_list_by_name(
     Raises
     ------
     HTTPException(404)
-        Si l'utilisateur, le cocktail n'existe pas ou le cocktail n'est pas dans la liste privée
+        Si l'utilisateur, le cocktail n'existe pas ou le cocktail n'est pas dans la
+        liste privée
     HTTPException(401/403)
         Si non authentifié ou token invalide
     HTTPException(500)
@@ -110,7 +120,10 @@ def remove_cocktail_from_private_list_by_name(
 
     """
     try:
-        result = acces_service.remove_cocktail_from_private_list_by_name(current_user.pseudo, cocktail_name)
+        result = acces_service.remove_cocktail_from_private_list_by_name(
+            current_user.pseudo,
+            cocktail_name,
+        )
     except UserNotFoundError as e:
         raise HTTPException(status_code=404, detail=str(e)) from e
     except CocktailNotFoundError as e:
@@ -132,7 +145,10 @@ def remove_cocktail_from_private_list_by_name(
 )
 def grant_access(
     current_user: CurrentUser,
-    user_pseudo: Annotated[str, Query(..., description="Le pseudo de l'utilisateur à qui donner l'accès")],
+    user_pseudo: Annotated[
+        str,
+        Query(..., description="Le pseudo de l'utilisateur à qui donner l'accès"),
+    ],
 ) -> AccessResponse:
     """Donne l'accès à un autre utilisateur pour qu'il puisse voir vos cocktails privés.
 
@@ -185,7 +201,10 @@ def grant_access(
 )
 def revoke_access(
     current_user: CurrentUser,
-    user_pseudo: Annotated[str, Query(..., description="Le pseudo de l'utilisateur dont retirer l'accès")],
+    user_pseudo: Annotated[
+        str,
+        Query(..., description="Le pseudo de l'utilisateur dont retirer l'accès"),
+    ],
 ) -> AccessResponse:
     """Retire l'accès d'un utilisateur à vos cocktails privés.
 
@@ -276,9 +295,12 @@ def get_access_list(
 )
 def view_private_cocktails(
     current_user: CurrentUser,
-    owner_pseudo: Annotated[str, Path(description="Le pseudo du propriétaire des cocktails")],
+    owner_pseudo: Annotated[
+        str,
+        Path(description="Le pseudo du propriétaire des cocktails"),
+    ],
 ) -> PrivateCocktailsList:
-    """Permet de voir les cocktails privés d'un autre utilisateur (si vous avez l'accès).
+    """Permet de voir les cocktails privés d'un autre utilisateur, si vous avez l'accès.
 
     L'utilisateur qui consulte est automatiquement récupéré depuis le token JWT.
 

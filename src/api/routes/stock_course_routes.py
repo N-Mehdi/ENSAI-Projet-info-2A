@@ -28,10 +28,10 @@ Ajoute ou met à jour un ingrédient dans le stock de l'utilisateur connecté.
 🔒 Authentification requise
 
 **Normalisation automatique du nom :**
-- "vodka" → "Vodka"
-- "POMEGRANATE JUICE" → "Pomegranate Juice"
-- "  rhum   blanc  " → "Rhum Blanc"
-- "151 proof rum" → "151 Proof Rum"
+- "vodka" : "Vodka"
+- "POMEGRANATE JUICE" : "Pomegranate Juice"
+- "  rhum   blanc  " : "Rhum Blanc"
+- "151 proof rum" : "151 Proof Rum"
 
 **Unités acceptées :**
 - **Liquides** : ml, cl, l, dl, oz, fl oz, tsp, tbsp, cup, shot
@@ -39,8 +39,8 @@ Ajoute ou met à jour un ingrédient dans le stock de l'utilisateur connecté.
 - **Spéciales** : dash, drop, pinch, piece, slice, wedge, etc.
 
 **Comportement :**
-- Si l'ingrédient n'existe pas dans le stock → il est créé
-- Si l'ingrédient existe déjà → sa quantité et son unité sont mises à jour
+- Si l'ingrédient n'existe pas dans le stock : il est créé
+- Si l'ingrédient existe déjà : sa quantité et son unité sont mises à jour
 
 **En cas d'erreur :**
 - Si l'ingrédient n'est pas trouvé, l'API vous suggèrera des noms similaires
@@ -62,7 +62,8 @@ Pour voir la liste complète : `GET /api/ref/ingredients`
                 "application/json": {
                     "example": {
                         "status": "success",
-                        "message": "Ingrédient 'Vodka' ajouté/mis à jour avec succès (500.0 ml)",
+                        "message": "Ingrédient 'Vodka' ajouté/mis à jour avec succès"
+                        "(500.0 ml)",
                     },
                 },
             },
@@ -169,7 +170,8 @@ def add_to_stock(
     except UniteNotFoundError as e:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Unité '{e.abbreviation}' non trouvée. Unités valides : ml, cl, l, g, kg, oz, etc.",
+            detail=f"Unité '{e.abbreviation}' non trouvée. Unités valides : ml, cl, l,"
+            "g, kg, oz, etc.",
         ) from e
     except ServiceError as e:
         raise HTTPException(
@@ -258,12 +260,13 @@ def get_my_stock(
     "/ingredient/{nom_ingredient}",
     summary="🔍 Récupérer un ingrédient de mon stock",
     description="""
-Récupère un ingrédient spécifique du stock de l'utilisateur connecté en utilisant son nom.
+Récupère un ingrédient spécifique du stock de l'utilisateur connecté en utilisant
+son nom.
 
 🔒 Authentification requise
 
 **Normalisation automatique :**
-Le nom sera normalisé automatiquement (ex: "vodka" → "Vodka")
+Le nom sera normalisé automatiquement (ex: "vodka" : "Vodka")
 
 **Exemples :**
 - `/api/stock/ingredient/Vodka`
@@ -350,15 +353,15 @@ Retire une quantité spécifique d'un ingrédient du stock.
 🔒 Authentification requise
 
 **Comportement :**
-- Si la quantité retirée = quantité disponible → l'ingrédient est supprimé du stock
-- Si la quantité retirée < quantité disponible → la quantité est décrémentée
-- Si la quantité retirée > quantité disponible → erreur 400
+- Si la quantité retirée = quantité disponible : l'ingrédient est supprimé du stock
+- Si la quantité retirée < quantité disponible : la quantité est décrémentée
+- Si la quantité retirée > quantité disponible : erreur 400
 
 **Exemples :**
 - Stock : Vodka = 500ml
-- Retirer 100ml → Stock : Vodka = 400ml
-- Retirer 500ml → Vodka supprimé du stock
-- Retirer 600ml → ❌ Erreur (quantité insuffisante)
+- Retirer 100ml : Stock : Vodka = 400ml
+- Retirer 500ml : Vodka supprimé du stock
+- Retirer 600ml : ❌ Erreur (quantité insuffisante)
 
 **Note :** Pour supprimer complètement un ingrédient sans préciser la quantité,
 utilisez `DELETE /ingredient/{nom_ingredient}`
@@ -370,9 +373,9 @@ def remove_quantity_from_stock(
 ) -> dict[str, str]:
     """Retire une quantité spécifique d'un ingrédient du stock.
 
-    Si quantité retirée = quantité disponible → supprime l'ingrédient
-    Si quantité retirée < quantité disponible → décrémente la quantité
-    Si quantité retirée > quantité disponible → erreur
+    Si quantité retirée = quantité disponible : supprime l'ingrédient
+    Si quantité retirée < quantité disponible : décrémente la quantité
+    Si quantité retirée > quantité disponible : erreur
 
     L'utilisateur est automatiquement récupéré depuis le token JWT.
 
@@ -459,10 +462,10 @@ Supprime complètement un ingrédient du stock (quelle que soit la quantité).
 
 **Exemple :**
 - Stock : Vodka = 500ml
-- `DELETE /ingredient/Vodka` → Vodka supprimée complètement du stock
+- `DELETE /ingredient/Vodka` : Vodka supprimée complètement du stock
 
 **Normalisation automatique :**
-Le nom sera normalisé automatiquement (ex: "vodka" → "Vodka")
+Le nom sera normalisé automatiquement (ex: "vodka" : "Vodka")
 """,
 )
 def delete_ingredient_completely(

@@ -20,7 +20,7 @@ class DAOError(Exception):
 
 
 class ServiceError(Exception):
-    """doc."""
+    """Raised for general errors in the Service layer."""
 
     def __init__(self, message: str | None = None) -> None:
         """Initialize ServiceError.
@@ -34,22 +34,20 @@ class ServiceError(Exception):
 
 
 class PseudoChangingError(Exception):
-    """doc."""
+    """Raised for errors while changing pseudo."""
 
-    def __init__(self, ancien_pseudo: str, nouveau_pseudo: str) -> None:
-        """Doc."""
-        if ancien_pseudo is None:
-            f"Le pseudo '{nouveau_pseudo}' est déjà utilisé"
-        if ancien_pseudo and nouveau_pseudo:
-            message = f"Impossible de mettre à jour le pseudo {ancien_pseudo} en {nouveau_pseudo}."
+    def __init__(self, message: str) -> None:
+        """Itilializes an PseudoChangingError."""
+        if message is None:
+            message = "Modification du pseudo impossible."
         super().__init__(message)
 
 
 class AccountDeletionError(Exception):
-    """doc."""
+    """Raised for errors while changing password."""
 
     def __init__(self, pseudo: str | None = None) -> None:
-        """Itilializes an AccountDeletionError."""
+        """Itilialize an AccountDeletionError."""
         super().__init__(f"Impossible de supprimer le compte : {pseudo}")
 
 
@@ -90,20 +88,16 @@ class UserNotFoundError(Exception):
     :param pseudo: pseudo of the user (optional)
     """
 
-    def __init__(self, id_utilisateur: int | None = None, pseudo: str | None = None) -> None:
+    def __init__(self, message: str) -> None:
         """Initialize UserNotFoundError.
 
         :param id_utilisateur: ID of the user (optional)
         :param pseudo: pseudo of the user (optional)
         :return: None
         """
-        if id_utilisateur:
-            msg = f"No user found for id={id_utilisateur}"
-        elif pseudo:
-            msg = f"No user found for pseudo='{pseudo}'"
-        else:
-            msg = "No user found"
-        super().__init__(msg)
+        if message is None:
+            message = "Utilisateur introuvable"
+        super().__init__(message)
 
 
 class AuthError(Exception):
@@ -140,33 +134,27 @@ class StockError(ServiceError):
 class IngredientNotFoundError(Exception):
     """Exception levée quand un ingrédient n'est pas trouvé."""
 
-    def __init__(self, nom_ingredient: str, suggestions: list[str]) -> None:
+    def __init__(self, message: str) -> None:
         """Initialize IngredientNotFoundError."""
-        self.nom_ingredient = nom_ingredient
-        self.suggestions = suggestions or []
-
-        if not nom_ingredient and not suggestions:
-            message = "Ingrédient non trouvé dans le stock"
-        if self.nom_ingredient:
-            message = f"Ingrédient '{nom_ingredient}' non trouvé."
-        if self.suggestions:
-            message += f" Vouliez-vous dire : {', '.join(self.suggestions[:3])} ?"
+        if message is None:
+            message = "Ingrédient introuvable."
         super().__init__(message)
 
 
 class InvalidQuantityError(StockError):
     """Exception levée quand la quantité est invalide."""
 
-    def __init__(self, quantite: float, quantite_actuelle: float) -> None:
+    def __init__(self, message: str) -> None:
         """Initialize InvalidQuantityError."""
-        if not quantite_actuelle:
-            super().__init__(f"Quantité invalide : {quantite}. La quantité doit être > 0")
-        if quantite and quantite_actuelle:
-            super().__init__(f"Impossible de retirer {quantite} (quantité disponible : {quantite_actuelle})")
+        if message is None:
+            message = "Quantité non valide"
+        super().__init__(message)
 
 
 class InsufficientQuantityError(StockError):
-    """Exception levée quand la quantité à retirer est supérieure à la quantité disponible."""
+    """Exception levée quand la quantité à retirer est supérieure à la quantité
+    disponible.
+    """
 
     def __init__(self, quantite_demandee: float, quantite_disponible: float) -> None:
         """Initialize InsufficientQuantityError."""
@@ -188,7 +176,8 @@ class AvisNotFoundError(AvisError):
     def __init__(self, id_utilisateur: int, nom_cocktail: str) -> None:
         """Initialize AvisNotFoundError."""
         super().__init__(
-            f"Aucun avis de l'utilisateur {id_utilisateur} pour le cocktail '{nom_cocktail}'",
+            f"Aucun avis de l'utilisateur {id_utilisateur} pour le cocktail"
+            f"'{nom_cocktail}'",
         )
 
 
@@ -205,30 +194,63 @@ class InvalidAvisError(AvisError):
 class AccessDeniedError(Exception):
     """Exception levée quand l'accès est refusé."""
 
+    def __init__(self, message: str) -> None:
+        """Itilialize AccessDeniedError."""
+        if message is None:
+            message = "Accès refusé !"
+        super().__init__(message)
+
 
 class AccessAlreadyExistsError(Exception):
     """Exception levée quand un accès existe déjà."""
+
+    def __init__(self, message: str) -> None:
+        """Itilialize SelfAccessError."""
+        if message is None:
+            message = "Accès déjà existant !"
+        super().__init__(message)
 
 
 class AccessNotFoundError(Exception):
     """Exception levée quand un accès n'existe pas."""
 
+    def __init__(self, message: str) -> None:
+        """Itilialize AccessNotFoundError."""
+        if message is None:
+            message = "Accès non trouvé !"
+        super().__init__(message)
+
 
 class SelfAccessError(Exception):
     """Exception levée quand un utilisateur essaie de se donner accès à lui-même."""
+
+    def __init__(self, message: str) -> None:
+        """Itilialize SelfAccessError."""
+        if message is None:
+            message = "Accès donné à soit même !"
+        super().__init__(message)
 
 
 class CocktailNotFoundError(Exception):
     """Exception levée quand un cocktail n'est pas trouvé."""
 
-    def __init__(self, nom_cocktail: str, suggestions: list[str] | None = None) -> None:
+    def __init__(self, message: str) -> None:
         """Initialize CocktailNotFoundError."""
-        self.nom_cocktail = nom_cocktail
-        self.suggestions = suggestions or []
+        if message is None:
+            message = "Cocktail introuvable."
 
-        message = f"Cocktail '{nom_cocktail}' non trouvé."
-        if self.suggestions:
-            message += f" Vouliez-vous dire : {', '.join(self.suggestions[:3])} ?"
+        super().__init__(message)
+
+
+class CocktailSearchError(Exception):
+    """Erreur indiquant un problème dans la recherche du cocktail
+    par l'utilsateur.
+    """
+
+    def __init__(self, message: str | None = None) -> None:
+        """Initialize CocktailSearchError."""
+        if message is None:
+            message = "Problème dans la recherche du cocktail."
 
         super().__init__(message)
 

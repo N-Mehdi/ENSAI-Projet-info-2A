@@ -30,7 +30,8 @@ def root() -> dict:
         "message": "Bienvenue sur l'API Cocktails",
         "documentation": "/docs",
         "endpoints": {
-            "GET /api/cocktails/lettre/{lettre}": "Chercher des cocktails par première lettre",
+            "GET /api/cocktails/lettre/{lettre}": "Chercher des cocktails par première"
+            "lettre",
         },
     }
 
