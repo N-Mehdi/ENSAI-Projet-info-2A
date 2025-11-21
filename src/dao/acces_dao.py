@@ -43,7 +43,9 @@ class AccesDAO(metaclass=Singleton):
                 {"pseudo": pseudo},
             )
             result = cursor.fetchone()
-            return result["id_utilisateur"] if result else None
+            if result:
+                return result["id_utilisateur"]
+            return None
 
     @staticmethod
     def grant_access(owner_id: int, user_id: int) -> bool:

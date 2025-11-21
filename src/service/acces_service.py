@@ -1,6 +1,5 @@
 """Couche service pour les opérations d'accès aux cocktails privés."""
 
-from src.business_object.cocktail import Cocktail
 from src.dao.acces_dao import AccesDAO
 from src.dao.cocktail_dao import CocktailDAO
 from src.models.acces import (
@@ -10,8 +9,6 @@ from src.models.acces import (
     PrivateCocktailDetail,
     PrivateCocktailsList,
 )
-from src.models.cocktail import CocktailAvecInstructions
-from src.service.cocktail_service import CocktailService
 from src.utils.exceptions import (
     AccessAlreadyExistsError,
     AccessDeniedError,
@@ -466,134 +463,4 @@ class AccesService:
             success=True,
             message=f"Cocktail '{cocktail_name}' retiré de votre liste privée",
             owner_pseudo=owner_pseudo,
-        )
-
-    def creer_cocktail_prive(
-        self,
-        pseudo: str,
-        nom: str,
-        categorie: str,
-        verre: str,
-        alcool: bool,
-        image: str,
-        instructions: str | None = None,
-    ) -> CocktailAvecInstructions:
-        """Crée un nouveau cocktail privé pour un utilisateur.
-
-        Le cocktail est automatiquement ajouté avec is_owner=TRUE dans la table acces.
-
-        Parameters
-        ----------
-        pseudo : str
-            Le pseudo de l'utilisateur propriétaire
-        nom : str
-            Nom du cocktail
-        categorie : str
-            Catégorie du cocktail
-        verre : str
-            Type de verre
-        alcool : bool
-            Contient de l'alcool
-        image : str
-            URL de l'image
-        instructions : str | None, optional
-            Instructions de préparation
-
-        Returns
-        -------
-        CocktailAvecInstructions
-            Le cocktail créé avec ses instructions
-
-        Raises
-        ------
-        UserNotFoundError
-            Si l'utilisateur n'existe pas
-        DAOError
-            En cas d'erreur de base de données
-
-        """
-        # Récupérer l'ID de l'utilisateur
-        user_id = self.dao.get_user_id_by_pseudo(pseudo)
-        if user_id is None:
-            raise UserNotFoundError(message=f"Utilisateur '{pseudo}' introuvable")
-
-        # Créer l'objet Cocktail
-        cocktail = Cocktail(
-            id_cocktail=None,
-            nom=nom,
-            categorie=categorie,
-            verre=verre,
-            alcool=alcool,
-            image=image,
-        )
-
-        # Utiliser CocktailService pour ajouter le cocktail avec instructions
-        cocktail_service = CocktailService()
-        id_cocktail = cocktail_service.ajouter_cocktail_complet(
-            cocktail=cocktail,
-            instructions=instructions,
-        )
-
-        # Créer la relation d'accès (propriétaire)
-        self.dao.create_owner_access(user_id, id_cocktail)
-
-        return CocktailAvecInstructions(
-            id_cocktail=id_cocktail,
-            nom=nom,
-            categorie=categorie,
-            verre=verre,
-            alcool=alcool,
-            image=image,
-            instructions=instructions,
-        )
-
-    def supprimer_cocktail_prive(
-        self,
-        pseudo: str,
-        id_cocktail: int,
-    ) -> AccessResponse:
-        """Supprime un cocktail privé dont l'utilisateur est propriétaire.
-
-        Supprime également tous les accès associés (CASCADE) et les instructions.
-
-        Parameters
-        ----------
-        pseudo : str
-            Le pseudo du propriétaire
-        id_cocktail : int
-            L'identifiant du cocktail à supprimer
-
-        Returns
-        -------
-        AccessResponse
-            Message de confirmation
-
-        Raises
-        ------
-        UserNotFoundError
-            Si l'utilisateur n'existe pas
-        PermissionDeniedError
-            Si l'utilisateur n'est pas le propriétaire
-        DAOError
-            En cas d'erreur de base de données
-
-        """
-        # Récupérer l'ID de l'utilisateur
-        user_id = self.dao.get_user_id_by_pseudo(pseudo)
-        if user_id is None:
-            raise UserNotFoundError(message=f"Utilisateur '{pseudo}' introuvable")
-
-        # Vérifier que l'utilisateur est propriétaire
-        if not self.dao.is_owner(user_id, id_cocktail):
-            raise PermissionDeniedError(
-                message=f"Vous n'êtes pas le propriétaire du cocktail (ID: {id_cocktail})",
-            )
-
-        # Supprimer le cocktail (les accès seront supprimés en CASCADE)
-        self.dao_cocktail.supprimer_cocktail(id_cocktail)
-
-        return AccessResponse(
-            success=True,
-            message=f"Cocktail (ID: {id_cocktail}) supprimé avec succès",
-            owner_pseudo=pseudo,
         )

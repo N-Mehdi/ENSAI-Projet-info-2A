@@ -33,3 +33,39 @@ class DBConnection(metaclass=Singleton):
     @property
     def connection(self):
         return self.__connection
+
+
+# from psycopg2 import pool
+
+
+# class DBConnection:
+#     """Gère un pool de connexions à la base de données."""
+
+#     pool = None
+
+#     @classmethod
+#     def initialize_pool(cls, minconn=1, maxconn=5):
+#         """Initialise le pool de connexions."""
+#         if cls.pool is None:
+#             cls.pool = pool.SimpleConnectionPool(
+#                 minconn,
+#                 maxconn,
+#                 host=os.environ.get("DB_HOST"),
+#                 port=os.environ.get("DB_PORT"),
+#                 database=os.environ.get("DB_NAME"),
+#                 user=os.environ.get("DB_USER"),
+#                 password=os.environ.get("DB_PASSWORD"),
+#             )
+
+#     @classmethod
+#     def get_connection(cls):
+#         """Récupère une connexion du pool."""
+#         if cls._pool is None:
+#             cls.initialize_pool()
+#         return cls._pool.getconn()
+
+#     @classmethod
+#     def return_connection(cls, connection):
+#         """Retourne une connexion au pool."""
+#         if cls._pool:
+#             cls._pool.putconn(connection)

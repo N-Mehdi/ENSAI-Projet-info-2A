@@ -3,18 +3,15 @@
 from pydantic import BaseModel, Field
 
 
-class Cocktail(BaseModel):
-    """Représente un cocktail."""
+class CocktailWithoutId(BaseModel):
+    """Rprésente un cocktail sans id_cocktail."""
 
-    id_cocktail: int = Field(
-        description="ID unique du cocktail",
-        json_schema_extra={"example": 1},
-    )
     nom: str = Field(
         min_length=2,
         description="Nom du cocktail",
         json_schema_extra={"example": "Margarita"},
     )
+
     categorie: str = Field(
         description="Catégorie du cocktail",
         json_schema_extra={"example": "Ordinary Drink"},
@@ -30,6 +27,15 @@ class Cocktail(BaseModel):
     image: str = Field(
         description="URL de l'image du cocktail",
         json_schema_extra={"example": "https://example.com/margarita.jpg"},
+    )
+
+
+class Cocktail(CocktailWithoutId):
+    """Représente un cocktail."""
+
+    id_cocktail: int = Field(
+        description="ID unique du cocktail",
+        json_schema_extra={"example": 1},
     )
 
 

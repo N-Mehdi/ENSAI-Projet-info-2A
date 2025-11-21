@@ -271,9 +271,7 @@ class CocktailDAO(metaclass=Singleton):
         except DBError as e:
             raise DAOError(message=None) from e
 
-    @staticmethod
-    @log
-    def ajouter_cocktail(cocktail: Cocktail) -> int:
+    def ajouter_cocktail(self, cocktail: Cocktail) -> int:
         """Ajoute un cocktail dans la base de données.
 
         Parameters
@@ -318,7 +316,7 @@ class CocktailDAO(metaclass=Singleton):
 
         return id_cocktail
 
-    def supprimer_cocktail(id_cocktail: int) -> bool:
+    def supprimer_cocktail(self, id_cocktail: int) -> bool:
         """Supprime un cocktail de la base de données.
 
         Supprime également toutes les données liées grâce aux contraintes CASCADE :
@@ -351,5 +349,4 @@ class CocktailDAO(metaclass=Singleton):
                 """,
                 (id_cocktail,),
             )
-            # Vérifier si une ligne a été supprimée
             return cursor.rowcount > 0

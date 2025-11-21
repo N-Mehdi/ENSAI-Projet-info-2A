@@ -5,10 +5,12 @@ from typing import Annotated
 from fastapi import APIRouter, HTTPException, Path, Query
 
 from src.api.deps import CurrentUser
+from src.dao.cocktail_dao import CocktailDAO
 from src.models.acces import AccessList, AccessResponse, PrivateCocktailsList
-from src.models.cocktail import Cocktail, CocktailAvecInstructions
+from src.models.cocktail import CocktailWithoutId
 from src.models.cocktail_prive import CocktailPriveCreate
 from src.service.acces_service import AccesService
+from src.service.cocktail_service import CocktailService
 from utils.exceptions import (
     AccessAlreadyExistsError,
     AccessDeniedError,
@@ -21,7 +23,7 @@ from utils.exceptions import (
 router = APIRouter(prefix="/cocktails-prives", tags=["Cocktails Privés"])
 
 acces_service = AccesService()
-utilisateur
+cocktail_service = CocktailService(CocktailDAO())
 
 # GESTION DE LA LISTE PRIVÉE (AJOUT/SUPPRESSION DE COCKTAILS)
 
@@ -31,10 +33,10 @@ utilisateur
     summary="Ajouter un cocktail à ma liste privée (par nom)",
     status_code=201,
 )
-def creer_cocktail_prive(
+def add_cocktail_to_private_list_by_name(
     current_user: CurrentUser,
-    cocktail_data: CocktailPriveCreate,
-) -> CocktailAvecInstructions:
+    cocktail_prive: CocktailPriveCreate,
+) -> AccessResponse:
     """Crée un nouveau cocktail privé pour l'utilisateur connecté.
 
     Le cocktail est automatiquement ajouté à votre liste privée avec is_owner=TRUE.
@@ -61,56 +63,33 @@ def creer_cocktail_prive(
         En cas d'erreur serveur
 
     """
+    cocktail = CocktailWithoutId(
+        nom=cocktail_prive.nom,
+        categorie=cocktail_prive.categorie,
+        verre=cocktail_prive.verre,
+        alcool=cocktail_prive.alcool,
+        image=cocktail_prive.image,
+    )
+    instructions = cocktail_prive.instructions
     try:
-        # Vérifier que l'utilisateur existe
-        user = utilisateur_dao.recuperer_par_pseudo(current_user.pseudo)
-        if not user:
-            raise UserNotFoundError(
-                f"Utilisateur '{current_user.pseudo}' introuvable",
-            )
-
-        # Créer le cocktail
-        cocktail = Cocktail(
-            id_cocktail=None,
-            nom=cocktail_data.nom,
-            categorie=cocktail_data.categorie,
-            verre=cocktail_data.verre,
-            alcool=cocktail_data.alcool,
-            image=cocktail_data.image,
-        )
-
-        # Insérer le cocktail et créer la relation d'accès (propriétaire)
-        id_cocktail = cocktail_utilisateur_dao.insert_cocktail_prive(
-            user.id_utilisateur,
+        cocktail = cocktail_service.ajouter_cocktail_complet(
             cocktail,
+            instructions,
+            langue="en",
         )
-
-        # Ajouter les instructions si fournies
-        instructions = None
-        if cocktail_data.instructions:
-            instruction_dao.ajouter_instruction(
-                id_cocktail,
-                cocktail_data.instructions,
-            )
-            instructions = cocktail_data.instructions
-
-        return CocktailAvecInstructions(
-            id_cocktail=id_cocktail,
-            nom=cocktail_data.nom,
-            categorie=cocktail_data.categorie,
-            verre=cocktail_data.verre,
-            alcool=cocktail_data.alcool,
-            image=cocktail_data.image,
-            instructions=instructions,
+        result = acces_service.add_cocktail_to_private_list_by_name(
+            current_user.pseudo,
+            cocktail_prive.nom,
         )
-
     except UserNotFoundError as e:
         raise HTTPException(status_code=404, detail=str(e)) from e
+    except CocktailNotFoundError as e:
+        raise HTTPException(status_code=404, detail=str(e)) from e
+    except AccessAlreadyExistsError as e:
+        raise HTTPException(status_code=409, detail=str(e)) from e
     except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Erreur serveur: {e!s}",
-        ) from e
+        raise HTTPException(status_code=500, detail=f"Erreur serveur: {e!s}") from e
+    return result
 
 
 @router.delete(
