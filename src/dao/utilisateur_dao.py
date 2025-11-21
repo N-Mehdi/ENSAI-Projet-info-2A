@@ -80,6 +80,7 @@ class UtilisateurDAO(metaclass=Singleton):
             raise DAOError from None
 
         except Exception as e:
+            print("ERREUR SQL:", e)
             raise DAOError from e
 
         created = False

@@ -36,13 +36,13 @@ CREATE TABLE IF NOT EXISTS unite (
 -- TABLE utilisateur
 -- ================================
 CREATE TABLE IF NOT EXISTS utilisateur (
-    id_utilisateur INTEGER PRIMARY KEY,
-    mail VARCHAR(255),
-    mot_de_passe VARCHAR(255),
-    pseudo VARCHAR(50),
-    date_naissance DATE,
-    date_inscription TIMESTAMPTZ NOT NULL DEFAULT NOW()
-);
+id_utilisateur SERIAL PRIMARY KEY,
+mail VARCHAR(255) UNIQUE,
+mot_de_passe VARCHAR(255),
+pseudo VARCHAR(50) UNIQUE,
+date_naissance DATE,
+date_inscription TIMESTAMPTZ NOT NULL DEFAULT NOW());
+)
 
 -- ================================
 -- TABLE instruction

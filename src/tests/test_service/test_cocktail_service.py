@@ -7,7 +7,12 @@ import pytest
 from src.business_object.cocktail import Cocktail
 from src.dao.cocktail_dao import CocktailDAO
 from src.service.cocktail_service import CocktailService
-from src.utils.exceptions import DAOError, EmptyFieldError, ServiceError, CocktailSearchError
+from src.utils.exceptions import (
+    CocktailSearchError,
+    DAOError,
+    EmptyFieldError,
+    ServiceError,
+)
 
 
 @pytest.fixture
@@ -45,7 +50,9 @@ def sample_cocktail():
 class TestRechercherCocktailParNom:
     """Tests pour la méthode rechercher_cocktail_par_nom."""
 
-    def test_rechercher_cocktail_par_nom_success(self, cocktail_service, mock_cocktail_dao, sample_cocktail):
+    def test_rechercher_cocktail_par_nom_success(
+        self, cocktail_service, mock_cocktail_dao, sample_cocktail
+    ):
         """Test de recherche réussie d'un cocktail par nom."""
         # Arrange
         mock_cocktail_dao.rechercher_cocktail_par_nom.return_value = sample_cocktail
@@ -75,7 +82,9 @@ class TestRechercherCocktailParNom:
         with pytest.raises(CocktailSearchError):
             cocktail_service.rechercher_cocktail_par_nom(123)
 
-    def test_rechercher_cocktail_par_nom_non_trouve(self, cocktail_service, mock_cocktail_dao):
+    def test_rechercher_cocktail_par_nom_non_trouve(
+        self, cocktail_service, mock_cocktail_dao
+    ):
         """Test quand aucun cocktail n'est trouvé."""
         # Arrange
         mock_cocktail_dao.rechercher_cocktail_par_nom.return_value = None
@@ -88,18 +97,24 @@ class TestRechercherCocktailParNom:
 class TestRechercherCocktailParSequenceDebut:
     """Tests pour la méthode rechercher_cocktail_par_sequence_debut."""
 
-    def test_rechercher_par_sequence_success(self, cocktail_service, mock_cocktail_dao, sample_cocktail):
+    def test_rechercher_par_sequence_success(
+        self, cocktail_service, mock_cocktail_dao, sample_cocktail
+    ):
         """Test de recherche réussie par séquence."""
         # Arrange
         cocktails = [sample_cocktail]
-        mock_cocktail_dao.rechercher_cocktail_par_sequence_debut.return_value = cocktails
+        mock_cocktail_dao.rechercher_cocktail_par_sequence_debut.return_value = (
+            cocktails
+        )
 
         # Act
         result = cocktail_service.rechercher_cocktail_par_sequence_debut("Moj", 10)
 
         # Assert
         assert result == cocktails
-        mock_cocktail_dao.rechercher_cocktail_par_sequence_debut.assert_called_once_with("Moj", 10)
+        mock_cocktail_dao.rechercher_cocktail_par_sequence_debut.assert_called_once_with(
+            "Moj", 10
+        )
 
     def test_rechercher_par_sequence_vide(self, cocktail_service):
         """Test avec une séquence vide."""
@@ -113,19 +128,25 @@ class TestRechercherCocktailParSequenceDebut:
         with pytest.raises(CocktailSearchError):
             cocktail_service.rechercher_cocktail_par_sequence_debut(123, 10)
 
-    def test_rechercher_par_sequence_max_resultats_invalide_type(self, cocktail_service):
+    def test_rechercher_par_sequence_max_resultats_invalide_type(
+        self, cocktail_service
+    ):
         """Test avec un type invalide pour max_resultats."""
         # Act & Assert
         with pytest.raises(CocktailSearchError):
             cocktail_service.rechercher_cocktail_par_sequence_debut("Moj", "10")
 
-    def test_rechercher_par_sequence_max_resultats_invalide_valeur(self, cocktail_service):
+    def test_rechercher_par_sequence_max_resultats_invalide_valeur(
+        self, cocktail_service
+    ):
         """Test avec une valeur invalide pour max_resultats."""
         # Act & Assert
         with pytest.raises(CocktailSearchError):
             cocktail_service.rechercher_cocktail_par_sequence_debut("Moj", 0)
 
-    def test_rechercher_par_sequence_aucun_resultat(self, cocktail_service, mock_cocktail_dao):
+    def test_rechercher_par_sequence_aucun_resultat(
+        self, cocktail_service, mock_cocktail_dao
+    ):
         """Test quand aucun cocktail n'est trouvé."""
         # Arrange
         mock_cocktail_dao.rechercher_cocktail_par_sequence_debut.return_value = []
@@ -279,7 +300,9 @@ class TestGetCocktailsRealisables:
     def test_get_cocktails_realisables_dao_error(self, cocktail_service):
         """Test avec erreur DAO."""
         # Arrange
-        cocktail_service.stock_dao.get_stock = MagicMock(side_effect=DAOError("Erreur DAO"))
+        cocktail_service.stock_dao.get_stock = MagicMock(
+            side_effect=DAOError("Erreur DAO")
+        )
 
         # Act & Assert
         with pytest.raises(ServiceError):
@@ -289,7 +312,9 @@ class TestGetCocktailsRealisables:
 class TestGetCocktailsQuasiRealisables:
     """Tests pour la méthode get_cocktails_quasi_realisables."""
 
-    def test_get_cocktails_quasi_realisables_success(self, cocktail_service, mock_cocktail_dao):
+    def test_get_cocktails_quasi_realisables_success(
+        self, cocktail_service, mock_cocktail_dao
+    ):
         """Test de récupération réussie des cocktails quasi-réalisables."""
         # Arrange
         id_utilisateur = 1
@@ -327,7 +352,9 @@ class TestGetCocktailsQuasiRealisables:
         mock_cocktail_dao.get_cocktails_quasi_realisables.return_value = rows
 
         # Act
-        result = cocktail_service.get_cocktails_quasi_realisables(id_utilisateur, max_ingredients_manquants=1)
+        result = cocktail_service.get_cocktails_quasi_realisables(
+            id_utilisateur, max_ingredients_manquants=1
+        )
 
         # Assert
         assert "cocktails_quasi_realisables" in result
@@ -339,19 +366,25 @@ class TestGetCocktailsQuasiRealisables:
         assert cocktail["nombre_ingredients_manquants"] == 1
         assert "Rhum Blanc" in cocktail["ingredients_manquants"]
 
-    def test_get_cocktails_quasi_realisables_aucun_resultat(self, cocktail_service, mock_cocktail_dao):
+    def test_get_cocktails_quasi_realisables_aucun_resultat(
+        self, cocktail_service, mock_cocktail_dao
+    ):
         """Test quand aucun cocktail quasi-réalisable n'est trouvé."""
         # Arrange
         mock_cocktail_dao.get_cocktails_quasi_realisables.return_value = []
 
         # Act
-        result = cocktail_service.get_cocktails_quasi_realisables(1, max_ingredients_manquants=1)
+        result = cocktail_service.get_cocktails_quasi_realisables(
+            1, max_ingredients_manquants=1
+        )
 
         # Assert
         assert result["nombre_cocktails"] == 0
         assert result["cocktails_quasi_realisables"] == []
 
-    def test_get_cocktails_quasi_realisables_tri(self, cocktail_service, mock_cocktail_dao):
+    def test_get_cocktails_quasi_realisables_tri(
+        self, cocktail_service, mock_cocktail_dao
+    ):
         """Test du tri des cocktails quasi-réalisables."""
         # Arrange
         rows = [
@@ -432,7 +465,9 @@ class TestGetCocktailsQuasiRealisables:
         mock_cocktail_dao.get_cocktails_quasi_realisables.return_value = rows
 
         # Act
-        result = cocktail_service.get_cocktails_quasi_realisables(1, max_ingredients_manquants=2)
+        result = cocktail_service.get_cocktails_quasi_realisables(
+            1, max_ingredients_manquants=2
+        )
 
         # Assert
         cocktails = result["cocktails_quasi_realisables"]
@@ -441,10 +476,14 @@ class TestGetCocktailsQuasiRealisables:
         assert cocktails[0]["nom"] == "Cocktail B"
         assert cocktails[1]["nom"] == "Cocktail A"
 
-    def test_get_cocktails_quasi_realisables_dao_error(self, cocktail_service, mock_cocktail_dao):
+    def test_get_cocktails_quasi_realisables_dao_error(
+        self, cocktail_service, mock_cocktail_dao
+    ):
         """Test avec erreur DAO."""
         # Arrange
-        mock_cocktail_dao.get_cocktails_quasi_realisables.side_effect = DAOError("Erreur DAO")
+        mock_cocktail_dao.get_cocktails_quasi_realisables.side_effect = DAOError(
+            "Erreur DAO"
+        )
 
         # Act & Assert
         with pytest.raises(ServiceError):

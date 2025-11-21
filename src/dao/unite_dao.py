@@ -9,12 +9,12 @@ class UniteDAO:
     """DAO pour gérer les unités de mesure."""
 
     @log
-    def get_or_create_unit(self, nom_unite: str) -> int:
+    def get_or_create_unit(self, nom: str) -> int:
         """Récupère l'ID d'une unité ou la crée si elle n'existe pas.
 
         Parameters
         ----------
-        nom_unite : str
+        nom : str
             Nom de l'unité (ex: "ml", "g", "oz", "dash")
 
         Returns
@@ -29,9 +29,9 @@ class UniteDAO:
                 """
                 SELECT id_unite
                 FROM unite
-                WHERE LOWER(nom_unite) = LOWER(%(nom_unite)s)
+                WHERE LOWER(nom) = LOWER(%(nom)s)
                 """,
-                {"nom_unite": nom_unite},
+                {"nom": nom},
             )
 
             row = cursor.fetchone()
@@ -41,11 +41,11 @@ class UniteDAO:
             # Créer l'unité si elle n'existe pas
             cursor.execute(
                 """
-                INSERT INTO unite (nom_unite)
-                VALUES (%(nom_unite)s)
+                INSERT INTO unite (nom)
+                VALUES (%(nom)s)
                 RETURNING id_unite
                 """,
-                {"nom_unite": nom_unite},
+                {"nom": nom},
             )
 
             return cursor.fetchone()["id_unite"]
@@ -67,9 +67,9 @@ class UniteDAO:
         """
         with DBConnection().connection as connection, connection.cursor() as cursor:
             cursor.execute(
-                "SELECT nom_unite FROM unite WHERE id_unite = %(id_unite)s",
+                "SELECT nom FROM unite WHERE id_unite = %(id_unite)s",
                 {"id_unite": id_unite},
             )
 
             row = cursor.fetchone()
-            return row["nom_unite"] if row else None
+            return row["nom"] if row else None

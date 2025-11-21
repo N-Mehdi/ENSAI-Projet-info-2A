@@ -1,3 +1,4 @@
+"""Doc."""
 import logging.config
 import numbers
 from functools import wraps
@@ -83,7 +84,7 @@ def log(func):
             method_name,
             args_list,
         )
-
+        carac = 50
         # Reduction de l affichage de la sortie si trop longue
         if isinstance(result, list):
             result_str = str([str(item) for item in result[:3]])
@@ -91,7 +92,7 @@ def log(func):
         elif isinstance(result, dict):
             result_str = [(str(k), str(v)) for k, v in result.items()][:3]
             result_str += " ... (" + str(len(result)) + " elements)"
-        elif isinstance(result, str) and len(result) > 50:
+        elif isinstance(result, str) and len(result) > carac:
             result_str = result[:50]
             result_str += " ... (" + str(len(result)) + " caracteres)"
         else:

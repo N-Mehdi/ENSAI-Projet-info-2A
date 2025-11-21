@@ -1,51 +1,132 @@
-"""doc."""
+"""Configuration des tests d'intégration."""
 
-from collections.abc import Generator
-from pathlib import Path
-from typing import Any
+import os
+import subprocess
 
-import psycopg2
 import pytest
-from psycopg2.extensions import connection
-from psycopg2.extras import RealDictCursor
+from dotenv import load_dotenv
 
-PGUSER = "test_user"
-PGPASSWORD = "test_pass"
-PGHOST = "localhost"
-PGPORT = 5432
-DBNAME = "test_db"
-SCHEMA_PATH = "data/init.sql"
-TABLES_LIST = "users, items"
-
-
-@pytest.fixture(scope="session")
-def db_conn() -> Generator[connection, Any, Any]:
-    """Doc."""
-    conn = psycopg2.connect(
-        dbname=DBNAME,
-        user=PGUSER,
-        password=PGPASSWORD,
-        host=PGHOST,
-        port=PGPORT,
-    )
-    yield conn
-    with conn.cursor() as cur:
-        cur.execute(f"DROP TABLE IF EXISTS {TABLES_LIST};")
-    conn.commit()
-    conn.close()
+from src.dao.db_connection import DBConnection
+from src.utils.singleton import Singleton
 
 
 @pytest.fixture(scope="session", autouse=True)
-def setup_schema(db_conn: connection) -> None:
-    """Doc."""
-    with db_conn.cursor() as cur, Path(SCHEMA_PATH).open(encoding="utf8") as f:
-        cur.execute(f.read())
-    db_conn.commit()
+def load_test_env():
+    """Charge les variables d'environnement de test."""
+    load_dotenv(".env.test", override=True)
+
+    db_name = os.getenv("POSTGRES_DATABASE")
+
+    if not db_name or db_name != "bdd_test":
+        raise RuntimeError(
+            message=f"DANGER: Vous n'utilisez pas la base de test!\n"
+            f"POSTGRES_DATABASE actuel: {db_name}\n"
+            f"Attendu: 'bdd_test'\n"
+            f"Vérifiez votre fichier .env.test",
+        )
 
 
-@pytest.fixture
-def db_cursor(db_conn: connection) -> Generator[RealDictCursor, Any, Any]:
-    """Doc."""
-    with db_conn.cursor(cursor_factory=RealDictCursor) as cur:
-        yield cur
-    db_conn.rollback()
+@pytest.fixture(scope="session", autouse=True)
+def populate_test_database(load_test_env):
+    """Peuple la base de test avec les données de référence au début de la session."""
+    db_name = os.getenv("POSTGRES_DATABASE")
+    db_user = os.getenv("POSTGRES_USER")
+    db_host = os.getenv("POSTGRES_HOST")
+    db_port = os.getenv("POSTGRES_PORT")
+    db_password = os.getenv("POSTGRES_PASSWORD")
+    try:
+        env = os.environ.copy()
+        env["PGPASSWORD"] = db_password
+
+        result = subprocess.run(
+            [
+                "psql",
+                "-h",
+                db_host,
+                "-p",
+                db_port,
+                "-U",
+                db_user,
+                "-d",
+                db_name,
+                "-f",
+                "data/pop_db_test.sql",
+            ],
+            env=env,
+            capture_output=True,
+            text=True,
+            check=True,
+        )
+
+        print("Base de test peuplée avec succès!")
+
+        if "Données insérées avec succès" in result.stdout:
+            print(f"Sortie du script:\n{result.stdout}")
+
+    except subprocess.CalledProcessError as e:
+        raise RuntimeError(
+            message="Impossible de peupler la base de test. "
+            "Vérifiez que PostgreSQL est accessible et que le fichier "
+            "'scripts/pop_db_test.sql' existe.",
+        ) from e
+    except FileNotFoundError as e:
+        raise RuntimeError(
+            message="La commande 'psql' n'a pas été trouvée.\n"
+            "Assurez-vous que PostgreSQL est installé et que 'psql' est dans votre"
+            "PATH.",
+        ) from e
+
+    yield
+
+    print("\n Nettoyage final de la base de test...")
+
+
+@pytest.fixture(scope="function")
+def db_connection():
+    """Fournit une connexion à la base de données de test pour chaque test."""
+    connection = DBConnection().connection
+    yield connection
+    connection.rollback()
+    connection.close()
+
+
+@pytest.fixture(scope="function", autouse=True)
+def reset_singletons():
+    """Réinitialise tous les singletons après chaque test.
+
+    Cette fixture est CRITIQUE pour les tests d'intégration car elle évite
+    que les DAOs (qui sont des Singletons) réutilisent des connexions fermées
+    entre les tests.
+
+    Sans cette fixture, vous obtiendrez des erreurs "connection already closed".
+    """
+    yield
+    # Après chaque test, nettoyer toutes les instances singleton
+
+    Singleton._instances = {}
+
+
+@pytest.fixture(scope="function")
+def clean_database(db_connection) -> None:
+    """Nettoie la base de données avant chaque test."""
+    with db_connection.cursor() as cursor:
+        cursor.execute("""
+            TRUNCATE TABLE
+                avis,
+                liste_course,
+                stock,
+                acces,
+                instruction,
+                cocktail_ingredient,
+                cocktail,
+                ingredient,
+                unite,
+                utilisateur
+            RESTART IDENTITY CASCADE;
+        """)
+
+        db_connection.commit()
+
+    yield
+
+    db_connection.rollback()
