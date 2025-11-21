@@ -270,3 +270,86 @@ class CocktailDAO(metaclass=Singleton):
 
         except DBError as e:
             raise DAOError(message=None) from e
+
+    @staticmethod
+    @log
+    def ajouter_cocktail(cocktail: Cocktail) -> int:
+        """Ajoute un cocktail dans la base de données.
+
+        Parameters
+        ----------
+        cocktail : Cocktail
+            L'objet Cocktail à ajouter
+
+        Returns
+        -------
+        int
+            L'identifiant du cocktail créé
+
+        Raises
+        ------
+        DAOError
+            En cas d'erreur lors de l'insertion
+
+        """
+        try:
+            with DBConnection().connection as connection, connection.cursor() as cursor:
+                cursor.execute(
+                    """
+                    INSERT INTO cocktail (nom, categorie, verre, alcool, image)
+                    VALUES (%s, %s, %s, %s, %s)
+                    RETURNING id_cocktail;
+                    """,
+                    (
+                        cocktail.nom,
+                        cocktail.categorie,
+                        cocktail.verre,
+                        cocktail.alcool,
+                        cocktail.image,
+                    ),
+                )
+                row = cursor.fetchone()
+                id_cocktail = row["id_cocktail"]
+
+        except Exception as e:
+            raise DAOError(
+                message=f"Erreur lors de l'ajout du cocktail : {e}",
+            ) from e
+
+        return id_cocktail
+
+    def supprimer_cocktail(id_cocktail: int) -> bool:
+        """Supprime un cocktail de la base de données.
+
+        Supprime également toutes les données liées grâce aux contraintes CASCADE :
+        - Les accès (table acces)
+        - Les instructions (table instruction)
+        - Les ingrédients liés (table cocktail_ingredient)
+        - Les avis (table avis)
+
+        Parameters
+        ----------
+        id_cocktail : int
+            L'identifiant du cocktail à supprimer
+
+        Returns
+        -------
+        bool
+            True si la suppression a réussi
+
+        Raises
+        ------
+        DAOError
+            En cas d'erreur de base de données
+
+        """
+        with DBConnection().connection as connection, connection.cursor() as cursor:
+            cursor.execute(
+                """
+                DELETE FROM cocktail
+                WHERE id_cocktail = %s;
+                """,
+                (id_cocktail,),
+            )
+            # Vérifier si une ligne a été supprimée
+            return cursor.rowcount > 0

@@ -29,3 +29,46 @@ class CocktailResponse(BaseModel):
     verre: str | None
     alcool: bool | None
     image: str | None
+
+
+class CocktailPriveCreate(BaseModel):
+    """Modèle pour la création d'un cocktail privé.
+
+    Attributes
+    ----------
+    nom : str
+        Nom du cocktail
+    categorie : str
+        Catégorie du cocktail
+    verre : str
+        Type de verre
+    alcool : bool
+        Contient de l'alcool
+    image : str
+        URL de l'image
+    instructions : str | None
+        Instructions de préparation (optionnel)
+
+    """
+
+    nom: str = Field(..., min_length=1, max_length=100)
+    categorie: str = Field(..., min_length=1, max_length=100)
+    verre: str = Field(..., min_length=1, max_length=100)
+    alcool: bool
+    image: str
+    instructions: str | None = None
+
+
+class Config:
+    """Configuration Pydantic."""
+
+    json_schema_extra = {
+        "example": {
+            "nom": "Mon Mojito Spécial",
+            "categorie": "Cocktail",
+            "verre": "Highball glass",
+            "alcool": True,
+            "image": "https://example.com/mon_mojito.jpg",
+            "instructions": "Ma recette personnelle de mojito...",
+        },
+    }

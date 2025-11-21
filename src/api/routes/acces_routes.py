@@ -6,6 +6,8 @@ from fastapi import APIRouter, HTTPException, Path, Query
 
 from src.api.deps import CurrentUser
 from src.models.acces import AccessList, AccessResponse, PrivateCocktailsList
+from src.models.cocktail import Cocktail, CocktailAvecInstructions
+from src.models.cocktail_prive import CocktailPriveCreate
 from src.service.acces_service import AccesService
 from utils.exceptions import (
     AccessAlreadyExistsError,
@@ -19,7 +21,7 @@ from utils.exceptions import (
 router = APIRouter(prefix="/cocktails-prives", tags=["Cocktails Privés"])
 
 acces_service = AccesService()
-
+utilisateur
 
 # GESTION DE LA LISTE PRIVÉE (AJOUT/SUPPRESSION DE COCKTAILS)
 
@@ -29,35 +31,30 @@ acces_service = AccesService()
     summary="Ajouter un cocktail à ma liste privée (par nom)",
     status_code=201,
 )
-def add_cocktail_to_private_list_by_name(
+def creer_cocktail_prive(
     current_user: CurrentUser,
-    cocktail_name: Annotated[
-        str,
-        Query(..., description="Le nom du cocktail à ajouter", min_length=1),
-    ],
-) -> AccessResponse:
-    """Ajoute un cocktail à votre liste privée en utilisant son nom.
+    cocktail_data: CocktailPriveCreate,
+) -> CocktailAvecInstructions:
+    """Crée un nouveau cocktail privé pour l'utilisateur connecté.
 
-    L'utilisateur est automatiquement récupéré depuis le token JWT.
+    Le cocktail est automatiquement ajouté à votre liste privée avec is_owner=TRUE.
 
     Parameters
     ----------
     current_user : CurrentUser
         L'utilisateur authentifié (injecté automatiquement)
-    cocktail_name : str
-        Le nom du cocktail à ajouter (insensible à la casse)
+    cocktail_data : CocktailPriveCreate
+        Données du cocktail à créer
 
     Returns
     -------
-    AccessResponse
-        Objet contenant le succès de l'opération et un message de confirmation
+    CocktailAvecInstructions
+        Le cocktail créé avec ses instructions
 
     Raises
     ------
     HTTPException(404)
-        Si l'utilisateur ou le cocktail n'existe pas
-    HTTPException(409)
-        Si le cocktail est déjà dans la liste privée
+        Si l'utilisateur n'existe pas
     HTTPException(401/403)
         Si non authentifié ou token invalide
     HTTPException(500)
@@ -65,20 +62,55 @@ def add_cocktail_to_private_list_by_name(
 
     """
     try:
-        result = acces_service.add_cocktail_to_private_list_by_name(
-            current_user.pseudo,
-            cocktail_name,
+        # Vérifier que l'utilisateur existe
+        user = utilisateur_dao.recuperer_par_pseudo(current_user.pseudo)
+        if not user:
+            raise UserNotFoundError(
+                f"Utilisateur '{current_user.pseudo}' introuvable",
+            )
+
+        # Créer le cocktail
+        cocktail = Cocktail(
+            id_cocktail=None,
+            nom=cocktail_data.nom,
+            categorie=cocktail_data.categorie,
+            verre=cocktail_data.verre,
+            alcool=cocktail_data.alcool,
+            image=cocktail_data.image,
+        )
+
+        # Insérer le cocktail et créer la relation d'accès (propriétaire)
+        id_cocktail = cocktail_utilisateur_dao.insert_cocktail_prive(
+            user.id_utilisateur,
+            cocktail,
+        )
+
+        # Ajouter les instructions si fournies
+        instructions = None
+        if cocktail_data.instructions:
+            instruction_dao.ajouter_instruction(
+                id_cocktail,
+                cocktail_data.instructions,
+            )
+            instructions = cocktail_data.instructions
+
+        return CocktailAvecInstructions(
+            id_cocktail=id_cocktail,
+            nom=cocktail_data.nom,
+            categorie=cocktail_data.categorie,
+            verre=cocktail_data.verre,
+            alcool=cocktail_data.alcool,
+            image=cocktail_data.image,
+            instructions=instructions,
         )
 
     except UserNotFoundError as e:
         raise HTTPException(status_code=404, detail=str(e)) from e
-    except CocktailNotFoundError as e:
-        raise HTTPException(status_code=404, detail=str(e)) from e
-    except AccessAlreadyExistsError as e:
-        raise HTTPException(status_code=409, detail=str(e)) from e
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Erreur serveur: {e!s}") from e
-    return result
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Erreur serveur: {e!s}",
+        ) from e
 
 
 @router.delete(

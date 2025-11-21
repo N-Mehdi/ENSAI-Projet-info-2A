@@ -295,3 +295,13 @@ class CocktailNotTestedError(Exception):
         """Initialize CocktailNotTestedError."""
         message = f"Le cocktail '{nom_cocktail}' n'est pas dans vos cocktails testés!"
         super().__init__(message)
+
+
+class InstructionError(Exception):
+    """Exception levée quand il y a un problème concernant les instructions."""
+
+    def __init__(self, message: str) -> None:
+        """Initialize InstructionError."""
+        if message is None:
+            message = "Erreur dans l'instruction du cocktail."
+        super().__init__(message)

@@ -39,7 +39,6 @@ class AvisService:
             Si le cocktail n'existe pas (avec suggestions)
 
         """
-        # Normaliser le nom
         nom_normalized = normalize_ingredient_name(nom_cocktail)
 
         cocktail = self.cocktail_dao.rechercher_cocktail_par_nom(nom_normalized)
@@ -48,7 +47,7 @@ class AvisService:
             # Chercher des suggestions avec la méthode par séquence
             suggestions_cocktails = (
                 self.cocktail_dao.rechercher_cocktail_par_sequence_debut(
-                    sequence=nom_normalized[:3],  # Premiers caractères
+                    sequence=nom_normalized[:3],  # 3 premiers caractères
                     max_resultats=5,
                 )
             )
@@ -116,7 +115,6 @@ class AvisService:
         cocktail = self.get_cocktail_by_name(nom_cocktail)
 
         try:
-            # Créer ou mettre à jour
             self.avis_dao.create_or_update_avis(
                 id_utilisateur=id_utilisateur,
                 id_cocktail=cocktail["id_cocktail"],
@@ -355,7 +353,6 @@ class AvisService:
         try:
             rows = self.avis_dao.get_favoris_by_user(id_utilisateur)
 
-            # Extraire uniquement les noms des cocktails
             cocktails_favoris = [row["nom_cocktail"] for row in rows]
 
         except Exception as e:

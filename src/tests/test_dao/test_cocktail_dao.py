@@ -4,6 +4,7 @@ import pytest
 
 from src.business_object.cocktail import Cocktail
 from src.dao.cocktail_dao import CocktailDAO
+from src.dao.instruction_dao import InstructionDAO
 
 
 class TestCocktailDAOIntegration:
@@ -723,3 +724,159 @@ class TestCocktailDAOIntegration:
             raise AssertionError(
                 message="Menthe devrait être dans les ingrédients",
             )
+
+    @pytest.mark.usefixtures("clean_database")
+    @staticmethod
+    def test_ajouter_cocktail_success(db_connection) -> None:
+        """Teste l'ajout d'un cocktail dans la base de données."""
+        # GIVEN
+        dao = CocktailDAO()
+        cocktail = Cocktail(
+            id_cocktail=None,
+            nom="Test Mojito",
+            categorie="Cocktail",
+            verre="Highball glass",
+            alcool=True,
+            image="test_mojito.jpg",
+        )
+
+        # WHEN
+        id_cocktail = dao.ajouter_cocktail(cocktail)
+
+        # THEN
+        if not isinstance(id_cocktail, int):
+            raise TypeError(
+                message=f"L'ID devrait être un entier, obtenu: {type(id_cocktail)}",
+            )
+
+        if id_cocktail <= 0:
+            raise AssertionError(
+                message=f"L'ID devrait être positif, obtenu: {id_cocktail}",
+            )
+
+        # Vérifier que le cocktail est bien en base
+        with db_connection.cursor() as cursor:
+            cursor.execute(
+                "SELECT * FROM cocktail WHERE id_cocktail = %s",
+                (id_cocktail,),
+            )
+            row = cursor.fetchone()
+
+            if row is None:
+                raise AssertionError(
+                    message="Le cocktail devrait être en base",
+                )
+
+            if row["nom"] != "Test Mojito":
+                raise AssertionError(
+                    message=f"Nom devrait être 'Test Mojito', obtenu: {row['nom']}",
+                )
+
+            if row["categorie"] != "Cocktail":
+                raise AssertionError(
+                    message=f"Catégorie devrait être 'Cocktail', obtenu: "
+                    f"{row['categorie']}",
+                )
+
+            if row["alcool"] is not True:
+                raise AssertionError(
+                    message=f"Alcool devrait être True, obtenu: {row['alcool']}",
+                )
+
+    @pytest.mark.usefixtures("clean_database")
+    @staticmethod
+    def test_ajouter_cocktail_sans_alcool(db_connection) -> None:
+        """Teste l'ajout d'un cocktail sans alcool."""
+        # GIVEN
+        dao = CocktailDAO()
+        cocktail = Cocktail(
+            id_cocktail=None,
+            nom="Virgin Mojito",
+            categorie="Mocktail",
+            verre="Highball glass",
+            alcool=False,
+            image="virgin_mojito.jpg",
+        )
+
+        # WHEN
+        id_cocktail = dao.ajouter_cocktail(cocktail)
+
+        # THEN
+        with db_connection.cursor() as cursor:
+            cursor.execute(
+                "SELECT alcool FROM cocktail WHERE id_cocktail = %s",
+                (id_cocktail,),
+            )
+            row = cursor.fetchone()
+
+            if row["alcool"] is not False:
+                raise AssertionError(
+                    message=f"Alcool devrait être False, obtenu: {row['alcool']}",
+                )
+
+    @pytest.mark.usefixtures("clean_database")
+    @staticmethod
+    def test_ajouter_cocktail_avec_instruction(db_connection) -> None:
+        """Teste l'ajout d'un cocktail avec son instruction."""
+        # GIVEN
+        cocktail_dao = CocktailDAO()
+        instruction_dao = InstructionDAO()
+
+        cocktail = Cocktail(
+            id_cocktail=None,
+            nom="Daiquiri",
+            categorie="Cocktail",
+            verre="Cocktail glass",
+            alcool=True,
+            image="daiquiri.jpg",
+        )
+        texte_instruction = "Shake rum, lime juice, and sugar with ice."
+
+        # WHEN
+        # Étape 1 : Ajouter le cocktail
+        id_cocktail = cocktail_dao.ajouter_cocktail(cocktail)
+
+        # Étape 2 : Ajouter l'instruction
+        result = instruction_dao.ajouter_instruction(
+            id_cocktail,
+            texte_instruction,
+            "en",
+        )
+
+        # THEN
+        if result is not True:
+            raise AssertionError(
+                message=f"L'ajout de l'instruction devrait réussir, obtenu: {result}",
+            )
+
+        # Vérifier que tout est bien en base
+        with db_connection.cursor() as cursor:
+            # Vérifier le cocktail
+            cursor.execute(
+                "SELECT * FROM cocktail WHERE id_cocktail = %s",
+                (id_cocktail,),
+            )
+            cocktail_row = cursor.fetchone()
+
+            if cocktail_row is None:
+                raise AssertionError(
+                    message="Le cocktail devrait être en base",
+                )
+
+            # Vérifier l'instruction
+            cursor.execute(
+                "SELECT * FROM instruction WHERE id_cocktail = %s",
+                (id_cocktail,),
+            )
+            instruction_row = cursor.fetchone()
+
+            if instruction_row is None:
+                raise AssertionError(
+                    message="L'instruction devrait être en base",
+                )
+
+            if instruction_row["texte"] != texte_instruction:
+                raise AssertionError(
+                    message=f"Texte devrait être '{texte_instruction}', obtenu: "
+                    f"{instruction_row['texte']}",
+                )

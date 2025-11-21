@@ -376,7 +376,6 @@ class AvisDAO(metaclass=Singleton):
 
         """
         with DBConnection().connection as connection, connection.cursor() as cursor:
-            # Vérifier si déjà en favoris
             cursor.execute(
                 """
                 SELECT favoris
@@ -392,10 +391,8 @@ class AvisDAO(metaclass=Singleton):
             result = cursor.fetchone()
 
             if result and result["favoris"]:
-                # Déjà en favoris, ne rien faire
                 return {"favoris": True, "deja_en_favoris": True}
 
-            # Ajouter aux favoris (créer ou mettre à jour)
             cursor.execute(
                 """
                 INSERT INTO avis (id_utilisateur, id_cocktail, note, commentaire,
@@ -440,7 +437,6 @@ class AvisDAO(metaclass=Singleton):
 
         """
         with DBConnection().connection as connection, connection.cursor() as cursor:
-            # Vérifier que c'était en favoris
             cursor.execute(
                 """
                 SELECT favoris
@@ -458,7 +454,6 @@ class AvisDAO(metaclass=Singleton):
             if not result or not result["favoris"]:
                 return False
 
-            # Mettre favoris à FALSE
             cursor.execute(
                 """
                 UPDATE avis

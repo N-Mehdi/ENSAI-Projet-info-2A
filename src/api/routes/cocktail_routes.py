@@ -6,6 +6,7 @@ from fastapi import APIRouter, HTTPException, Query, status
 
 from src.api.deps import CurrentUser
 from src.dao.cocktail_dao import CocktailDAO
+from src.models.cocktail import CocktailAvecInstructions
 from src.service.cocktail_service import CocktailService
 from src.utils.exceptions import CocktailSearchError, ServiceError
 
@@ -74,53 +75,52 @@ def rechercher_cocktail_par_sequence_debut(
         )
 
     try:
-        # Recherche des cocktails
-        cocktails = cocktail_service.rechercher_cocktail_par_sequence_debut(
-            sequence,
-            max_resultats,
+        cocktails_avec_instructions = (
+            cocktail_service.rechercher_cocktail_par_sequence_debut(
+                sequence,
+                max_resultats,
+            )
         )
 
-        # Si des cocktails sont trouvés, les formater en dictionnaire
-        cocktails_dict = [
-            {
-                "id_cocktail": c.id_cocktail,
-                "nom": c.nom,
-                "categorie": c.categorie,
-                "verre": c.verre,
-                "alcool": c.alcool,
-                "image": c.image,
-            }
-            for c in cocktails
-        ]
+        cocktails_dict = []
+        for cocktail, instructions in cocktails_avec_instructions:
+            cocktails_dict.append(
+                {
+                    "id_cocktail": cocktail.id_cocktail,
+                    "nom": cocktail.nom,
+                    "categorie": cocktail.categorie,
+                    "verre": cocktail.verre,
+                    "alcool": cocktail.alcool,
+                    "image": cocktail.image,
+                    "instructions": instructions,
+                },
+            )
 
         return {
             "drinks": cocktails_dict,
-            "count": len(cocktails),
+            "count": len(cocktails_dict),
             "sequence": sequence,
         }
 
     except CocktailSearchError as e:
-        # Si aucun cocktail n'est trouvé pour la séquence
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=str(e),
         ) from e
 
     except Exception as e:
-        # Erreurs serveur
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Erreur serveur: {e!s}",
         ) from e
-        if not cocktails:
-            # Si aucun cocktail n'est trouvé, renvoyer une erreur 404
+        if not cocktails_dict:
             raise LookupError(
                 message=f"Aucun cocktail trouvé pour la séquence '{sequence}'",
             ) from None
 
 
 @router.get("/nom/{nom}")
-def rechercher_cocktail_par_nom(nom: str) -> dict:
+def rechercher_cocktail_par_nom(nom: str) -> CocktailAvecInstructions:
     """Récupère tous le cocktail via son nom.
 
     Parameters
@@ -141,31 +141,25 @@ def rechercher_cocktail_par_nom(nom: str) -> dict:
 
     """
     try:
-        cocktail = cocktail_service.rechercher_cocktail_par_nom(nom)
-
-        cocktail_json = {
-            "id_cocktail": cocktail.id_cocktail,
-            "nom": cocktail.nom,
-            "categorie": cocktail.categorie,
-            "verre": cocktail.verre,
-            "alcool": cocktail.alcool,
-            "image": cocktail.image,
-        }
+        cocktail, instructions = cocktail_service.rechercher_cocktail_par_nom(nom)
 
     except CocktailSearchError as e:
-        # Cas où le cocktail n'est pas trouvé
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=str(e),
-        ) from e
+        raise HTTPException(status_code=404, detail=str(e)) from e
 
     except Exception as e:
-        # Cas pour toutes les autres erreurs
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Erreur serveur: {e!s}",
         ) from e
-    return cocktail_json
+    return CocktailAvecInstructions(
+        id_cocktail=cocktail.id_cocktail,
+        nom=cocktail.nom,
+        categorie=cocktail.categorie,
+        verre=cocktail.verre,
+        alcool=cocktail.alcool,
+        image=cocktail.image,
+        instructions=instructions,
+    )
 
 
 @router.get(

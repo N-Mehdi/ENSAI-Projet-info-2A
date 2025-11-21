@@ -145,7 +145,6 @@ class StockCourseDAO(metaclass=Singleton):
                 },
             )
 
-            # Retourner le dictionnaire brut
             return cursor.fetchone()
 
     @staticmethod
@@ -180,7 +179,6 @@ class StockCourseDAO(metaclass=Singleton):
 
         """
         with DBConnection().connection as connection, connection.cursor() as cursor:
-            # Récupérer la quantité actuelle
             cursor.execute(
                 """
                 SELECT quantite
@@ -200,11 +198,8 @@ class StockCourseDAO(metaclass=Singleton):
                     message="Ingrédient introuvable dans le stock",
                 )
 
-            # Convertir Decimal en float
             quantite_actuelle = float(row["quantite"])
 
-            # Vérifier que la quantité à retirer n'est pas supérieure
-            # à la quantité actuelle
             if quantite > quantite_actuelle:
                 raise InvalidQuantityError(
                     message=f"Impossible de retirer {quantite}"
@@ -213,11 +208,10 @@ class StockCourseDAO(metaclass=Singleton):
 
             nouvelle_quantite = quantite_actuelle - quantite
 
-            # Si la nouvelle quantité est 0 (ou très proche de 0), supprimer la ligne
             presque_zero = 0.0001
             if (
                 nouvelle_quantite < presque_zero
-            ):  # Tolérance pour les arrondis flottants
+            ):
                 cursor.execute(
                     """
                     DELETE FROM stock
@@ -234,7 +228,6 @@ class StockCourseDAO(metaclass=Singleton):
                     "supprime": True,
                 }
 
-            # Sinon, mettre à jour la quantité
             cursor.execute(
                 """
                 UPDATE stock

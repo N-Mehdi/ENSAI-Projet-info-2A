@@ -5,7 +5,6 @@ from typing import Annotated
 from fastapi import APIRouter, HTTPException, Query
 
 from src.api.deps import CurrentUser
-from src.models.liste_course import ListeCourse
 from src.service.liste_course_service import ListeCourseService
 from src.utils.exceptions import (
     IngredientNotFoundError,
@@ -458,7 +457,7 @@ def toggle_effectue(
             nom_ingredient=nom_ingredient,
         )
 
-    except c as e:
+    except IngredientNotFoundError as e:
         raise HTTPException(
             status_code=404,
             detail={

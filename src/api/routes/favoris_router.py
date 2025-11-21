@@ -188,7 +188,7 @@ def remove_favoris(
         raise HTTPException(
             status_code=404,
             detail={
-                "error": str(e)
+                "error": str(e),
             },
         ) from e
     except ServiceError as e:

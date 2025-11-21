@@ -24,7 +24,6 @@ class UniteDAO:
 
         """
         with DBConnection().connection as connection, connection.cursor() as cursor:
-            # Vérifier si l'unité existe (insensible à la casse)
             cursor.execute(
                 """
                 SELECT id_unite
@@ -38,7 +37,6 @@ class UniteDAO:
             if row:
                 return row["id_unite"]
 
-            # Créer l'unité si elle n'existe pas
             cursor.execute(
                 """
                 INSERT INTO unite (nom)

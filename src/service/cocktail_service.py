@@ -2,6 +2,7 @@
 
 from src.business_object.cocktail import Cocktail
 from src.dao.cocktail_dao import CocktailDAO
+from src.dao.instruction_dao import InstructionDAO
 from src.dao.stock_course_dao import StockCourseDAO
 from src.utils.conversion_unite import UnitConverter
 from src.utils.exceptions import (
@@ -19,6 +20,7 @@ class CocktailService:
         """Initialise un CocktailService."""
         self.cocktail_dao = cocktail_dao
         self.stock_dao = StockCourseDAO()
+        self.instruction_dao = InstructionDAO()
 
     def rechercher_cocktail_par_nom(self, nom: str) -> Cocktail:
         """Recherche un cocktail par son nom.
@@ -57,14 +59,15 @@ class CocktailService:
             raise CocktailSearchError(
                 message=f"Aucun cocktail trouvé pour le nom '{nom}'",
             )
+        instructions = self.instruction_dao.get_instruction(cocktail.id_cocktail)
 
-        return cocktail
+        return cocktail, instructions
 
     def rechercher_cocktail_par_sequence_debut(
         self,
         sequence: str,
         max_resultats: int = 10,
-    ) -> list:
+    ) -> list[tuple[Cocktail, str | None]]:
         """Recherche les cocktails dont le nom commence par une séquence donnée.
 
         Parameters
@@ -119,7 +122,12 @@ class CocktailService:
                 message=f"Aucun cocktail trouvé pour la séquence '{sequence}'",
             )
 
-        return cocktails
+        cocktails_avec_instructions = []
+        for cocktail in cocktails:
+            instructions = self.instruction_dao.get_instruction(cocktail.id_cocktail)
+            cocktails_avec_instructions.append((cocktail, instructions))
+
+        return cocktails_avec_instructions
 
     def get_cocktails_realisables(self, id_utilisateur: int) -> dict:
         """Récupère les cocktails réalisables avec le stock actuel.
@@ -337,7 +345,6 @@ class CocktailService:
         for row in rows:
             id_cocktail = row["id_cocktail"]
 
-            # Initialiser le cocktail
             if id_cocktail not in cocktails_dict:
                 cocktails_dict[id_cocktail] = {
                     "info": {
@@ -352,7 +359,6 @@ class CocktailService:
                     "total_ingredients": 0,
                 }
 
-            # Traiter l'ingrédient
             if row["id_ingredient"]:
                 cocktails_dict[id_cocktail]["total_ingredients"] += 1
 
@@ -388,11 +394,9 @@ class CocktailService:
         quantite_stock = float(row["quantite_stock"]) if row["quantite_stock"] else None
         unite_stock = row["unite_stock"]
 
-        # Pas de stock
         if quantite_stock is None:
             return False
 
-        # Pas d'unité définie
         if not unite_requise or not unite_stock:
             return quantite_stock >= quantite_requise
 
@@ -400,7 +404,6 @@ class CocktailService:
         unite_requise_norm = UnitConverter.normalize_unit(unite_requise)
         unite_stock_norm = UnitConverter.normalize_unit(unite_stock)
 
-        # Même unité
         if unite_requise_norm == unite_stock_norm:
             return quantite_stock >= quantite_requise
 
@@ -532,7 +535,6 @@ class CocktailService:
             nb_manquants = len(data["ingredients_manquants"])
             nb_total = data["total_ingredients"]
 
-            # Filtrer selon le nombre d'ingrédients manquants
             if 0 < nb_manquants <= max_ingredients_manquants and nb_total > 0:
                 pourcentage = round(100.0 * (nb_total - nb_manquants) / nb_total, 2)
 
@@ -546,7 +548,6 @@ class CocktailService:
                     },
                 )
 
-        # Trier
         cocktails_quasi_realisables.sort(
             key=lambda x: (
                 x["nombre_ingredients_manquants"],
@@ -556,3 +557,141 @@ class CocktailService:
         )
 
         return cocktails_quasi_realisables
+
+    def get_instruction(self, nom_cocktail: str) -> str | None:
+        """Récupère les instructions de préparation d'un cocktail."""
+        id_cocktail = self.cocktail_dao.get_cocktail_id_by_name(nom_cocktail)
+        if id_cocktail is None:
+            return None
+        return self.instruction_dao.get_instruction(id_cocktail)
+
+    def ajouter_cocktail_complet(
+        self,
+        cocktail: Cocktail,
+        instructions: str | None = None,
+        langue: str = "en",
+    ) -> int:
+        """Ajoute un cocktail avec ses instructions dans la base de données.
+
+        Cette méthode effectue une transaction complète :
+        1. Ajoute le cocktail
+        2. Si des instructions sont fournies, les ajoute
+
+        Parameters
+        ----------
+        cocktail : Cocktail
+            L'objet Cocktail à ajouter
+        instructions : str | None, optional
+            Le texte des instructions (par défaut: None)
+        langue : str, optional
+            La langue des instructions (par défaut: "en")
+
+        Returns
+        -------
+        int
+            L'identifiant du cocktail créé
+
+        Raises
+        ------
+        CocktailServiceError
+            En cas d'erreur lors de l'ajout du cocktail ou des instructions
+
+        Examples
+        --------
+        >>> service = CocktailService()
+        >>> cocktail = Cocktail(
+        ...     id_cocktail=None,
+        ...     nom="Mojito Maison",
+        ...     categorie="Cocktail",
+        ...     verre="Highball glass",
+        ...     alcool=True,
+        ...     image="mojito.jpg"
+        ... )
+        >>> instructions = "Muddle mint leaves with sugar and lime juice..."
+        >>> id_cocktail = service.ajouter_cocktail_complet(cocktail, instructions)
+
+        """
+        try:
+            # 1. Ajouter le cocktail
+            id_cocktail = self.cocktail_dao.ajouter_cocktail(cocktail)
+
+            # 2. Ajouter les instructions si fournies
+
+        except Exception as e:
+            raise DAOError(
+                message=f"Erreur lors de l'ajout du cocktail complet : {e}",
+            ) from e
+
+        if instructions:
+            self.instruction_dao.ajouter_instruction(
+                id_cocktail=id_cocktail,
+                texte=instructions,
+                langue=langue,
+            )
+
+        return id_cocktail
+
+    def ajouter_cocktail(self, cocktail: Cocktail) -> int:
+        """Ajoute uniquement un cocktail sans instructions.
+
+        Parameters
+        ----------
+        cocktail : Cocktail
+            L'objet Cocktail à ajouter
+
+        Returns
+        -------
+        int
+            L'identifiant du cocktail créé
+
+        Raises
+        ------
+        CocktailServiceError
+            En cas d'erreur lors de l'ajout du cocktail
+
+        """
+        try:
+            return self.cocktail_dao.ajouter_cocktail(cocktail)
+        except Exception as e:
+            raise DAOError(
+                message=f"Erreur lors de l'ajout du cocktail : {e}",
+            ) from e
+
+    def ajouter_instruction(
+        self,
+        id_cocktail: int,
+        texte: str,
+        langue: str = "en",
+    ) -> bool:
+        """Ajoute une instruction pour un cocktail existant.
+
+        Parameters
+        ----------
+        id_cocktail : int
+            L'identifiant du cocktail
+        texte : str
+            Le texte de l'instruction
+        langue : str, optional
+            La langue de l'instruction (par défaut: "en")
+
+        Returns
+        -------
+        bool
+            True si l'ajout a réussi
+
+        Raises
+        ------
+        CocktailServiceError
+            En cas d'erreur lors de l'ajout de l'instruction
+
+        """
+        try:
+            return self.instruction_dao.ajouter_instruction(
+                id_cocktail=id_cocktail,
+                texte=texte,
+                langue=langue,
+            )
+        except Exception as e:
+            raise DAOError(
+                message=f"Erreur lors de l'ajout de l'instruction : {e}",
+            ) from e

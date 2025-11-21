@@ -38,7 +38,6 @@ class UtilisateurDAO(metaclass=Singleton):
             False sinon
 
         """
-        # Validation des champs vides
         if not utilisateur.pseudo or not utilisateur.pseudo.strip():
             raise EmptyFieldError(field="pseudo")
         if not utilisateur.mail or not utilisateur.mail.strip():
@@ -69,14 +68,12 @@ class UtilisateurDAO(metaclass=Singleton):
                 )
                 res = cursor.fetchone()
         except UniqueViolation as e:
-            # Analyser le message d'erreur pour identifier "pseudo" ou "mail"
             error_message = str(e)
 
             if "pseudo" in error_message.lower():
                 raise UserAlreadyExistsError(utilisateur.pseudo) from None
             if "mail" in error_message.lower():
                 raise MailAlreadyExistsError(utilisateur.mail) from None
-            # Cas générique si on ne peut pas identifier
             raise DAOError from None
 
         except Exception as e:
@@ -450,7 +447,6 @@ class UtilisateurDAO(metaclass=Singleton):
                 res = cursor.fetchone()
 
                 if res and res["date_inscription"]:
-                    # Extraire uniquement la partie date (sans l'heure)
                     date_obj = res["date_inscription"]
                     if hasattr(date_obj, "date"):  # Si c'est un datetime
                         return date_obj.date().isoformat()

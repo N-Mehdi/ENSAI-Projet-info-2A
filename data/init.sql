@@ -42,7 +42,7 @@ mot_de_passe VARCHAR(255),
 pseudo VARCHAR(50) UNIQUE,
 date_naissance DATE,
 date_inscription TIMESTAMPTZ NOT NULL DEFAULT NOW());
-)
+
 
 -- ================================
 -- TABLE instruction
@@ -109,6 +109,7 @@ CREATE TABLE IF NOT EXISTS avis (
     note INTEGER CHECK (note IS NULL OR (note >= 0 AND note <= 10)),
     commentaire TEXT CHECK (commentaire IS NULL OR LENGTH(commentaire) <= 1000),
     favoris BOOLEAN DEFAULT FALSE NOT NULL,
+    teste BOOLEAN DEFAULT TRUE NOT NULL,
     date_creation TIMESTAMP(0) DEFAULT NOW() NOT NULL,
     date_modification TIMESTAMP(0) DEFAULT NOW() NOT NULL,
     PRIMARY KEY (id_utilisateur, id_cocktail)

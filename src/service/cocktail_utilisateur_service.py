@@ -12,8 +12,6 @@ class CocktailUtilisateurService:
         """Initialise un CocktailUtilisateurService."""
         self.dao = CocktailUtilisateurDAO()
 
-    # ----------------- cocktails testés -----------------
-
     @log
     def get_cocktails_testes(self, id_utilisateur: int) -> list[Cocktail]:
         """Récupère tous les cocktails testés par un utilisateur.

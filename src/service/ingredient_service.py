@@ -111,11 +111,9 @@ class IngredientService:
         # Normaliser le nom
         nom_normalized = normalize_ingredient_name(nom)
 
-        # Chercher l'ingrédient
         ingredient = self.dao.get_by_name(nom_normalized)
 
         if not ingredient:
-            # Chercher des suggestions
             suggestions_data = self.dao.search_by_name(
                 nom=nom_normalized,
                 limit=5,

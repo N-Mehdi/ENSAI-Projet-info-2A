@@ -44,14 +44,11 @@ class StockCourseService:
             Si l'ingrédient n'existe pas
 
         """
-        # Normaliser le nom
         nom_normalized = normalize_ingredient_name(nom_ingredient)
 
-        # Chercher l'ingrédient
         ingredient = self.ingredient_dao.get_by_name(nom_normalized)
 
         if not ingredient:
-            # Chercher des suggestions
             suggestions_data = self.ingredient_dao.search_by_name(
                 nom_normalized,
                 limit=5,
@@ -101,16 +98,13 @@ class StockCourseService:
             Si erreur lors de l'ajout
 
         """
-        # Validation quantité
         if quantite <= 0:
             raise InvalidQuantityError(
                 message=f"Quantité invalide : {quantite}.La quantité doit être > 0",
             )
 
-        # Récupérer l'ingrédient (lève exception si non trouvé)
         ingredient = self.get_ingredient_by_name(nom_ingredient)
 
-        # Récupérer l'ID de l'unité via son abréviation
         try:
             id_unite = self.stock_dao.get_unite_id_by_abbreviation(abbreviation_unite)
 
@@ -120,7 +114,6 @@ class StockCourseService:
         except DAOError as e:
             raise ServiceError from e
 
-        # Ajouter au stock en utilisant l'ID
         try:
             success = self.stock_dao.update_or_create_stock_item(
                 id_utilisateur=id_utilisateur,
@@ -163,18 +156,16 @@ class StockCourseService:
 
         """
         try:
-            # Le DAO retourne des dictionnaires
             rows = self.stock_dao.get_stock(
                 id_utilisateur=id_utilisateur,
                 only_available=only_available,
             )
 
-            # Conversion en modèles Pydantic dans le Service
             items = [
                 StockItem(
                     id_ingredient=row["id_ingredient"],
                     nom_ingredient=row["nom_ingredient"],
-                    quantite=float(row["quantite"]),  # ← Conversion Decimal : float
+                    quantite=float(row["quantite"]),
                     id_unite=row["id_unite"],
                     code_unite=row["code_unite"],
                     nom_unite_complet=row["nom_unite_complet"],
@@ -216,11 +207,9 @@ class StockCourseService:
             Si l'ingrédient n'existe pas dans la base de données
 
         """
-        # Récupérer l'ingrédient (lève exception si non trouvé)
         ingredient = self.get_ingredient_by_name(nom_ingredient)
 
         try:
-            # Le DAO retourne un dictionnaire
             row = self.stock_dao.get_stock_item(
                 id_utilisateur=id_utilisateur,
                 id_ingredient=ingredient["id_ingredient"],
@@ -229,11 +218,10 @@ class StockCourseService:
             if not row:
                 return None
 
-            # Conversion en modèle Pydantic dans le Service
             return StockItem(
                 id_ingredient=row["id_ingredient"],
                 nom_ingredient=row["nom_ingredient"],
-                quantite=float(row["quantite"]),  # Conversion Decimal : float
+                quantite=float(row["quantite"]),
                 id_unite=row["id_unite"],
                 code_unite=row["code_unite"],
                 nom_unite_complet=row["nom_unite_complet"],
@@ -277,13 +265,11 @@ class StockCourseService:
             Si l'ingrédient n'est pas dans le stock ou erreur lors de la suppression
 
         """
-        # Validation de la quantité
         if quantite <= 0:
             raise InvalidQuantityError(
                 message=f"Quantité invalide : {quantite}. La quantité doit être > 0",
             )
 
-        # Récupérer l'ingrédient (lève exception si non trouvé)
         ingredient = self.get_ingredient_by_name(nom_ingredient)
 
         try:
@@ -304,11 +290,8 @@ class StockCourseService:
             )
 
         except ValueError as e:
-            # Capturer les erreurs de quantité insuffisante ou ingrédient non trouvé
             error_msg = str(e)
             if "Impossible de retirer" in error_msg:
-                # Extraire les quantités du message d'erreur, format: "Impossible de
-                # retirer X (quantité disponible : Y)"
 
                 match = re.search(r"retirer ([\d.]+).*disponible : ([\d.]+)", error_msg)
                 if match:
@@ -366,7 +349,6 @@ class StockCourseService:
             Si l'ingrédient n'est pas dans le stock ou erreur lors de la suppression
 
         """
-        # Récupérer l'ingrédient (lève exception si non trouvé)
         ingredient = self.get_ingredient_by_name(nom_ingredient)
 
         try:

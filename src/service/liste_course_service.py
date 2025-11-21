@@ -114,10 +114,8 @@ class ListeCourseService:
             En cas d'erreur
 
         """
-        # Utiliser la méthode du DAO qui gère les suggestions
         ingredient = self.ingredient_svc.get_by_name_with_suggestions(nom_ingredient)
 
-        # Récupérer l'ID de l'unité via son abréviation
         try:
             id_unite = self.stock_dao.get_unite_id_by_abbreviation(abbreviation_unite)
 
@@ -437,7 +435,6 @@ class ListeCourseService:
             En cas d'erreur lors de la modification du statut
 
         """
-        # Utiliser la méthode du DAO
         ingredient = self.ingredient_svc.get_by_name_with_suggestions(nom_ingredient)
 
         try:

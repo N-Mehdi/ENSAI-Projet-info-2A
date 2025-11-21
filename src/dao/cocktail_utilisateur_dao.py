@@ -98,20 +98,17 @@ class CocktailUtilisateurDAO(metaclass=Singleton):
             En cas d'erreur de base de données
 
         """
-        # Ajout du cocktail dans la base de données et récupération de son id
         sql_insert_cocktail = """
         INSERT INTO cocktail (nom, categorie, verre, alcool, image)
         VALUES (%(nom)s, %(categorie)s, %(verre)s, %(alcool)s, %(image)s)
         RETURNING id_cocktail;
         """
 
-        # Insertion du cocktail dans la table acces pour établir le lien de propriété
         sql_insert_acces = """
         INSERT INTO acces (id_cocktail, id_utilisateur, is_owner, can_edit)
         VALUES (%(id_cocktail)s, %(id_utilisateur)s, TRUE, TRUE);
         """
 
-        # Paramètres pour l'insertion du cocktail
         cocktail_params = {
             "nom": cocktail.nom,
             "categorie": cocktail.categorie,
@@ -121,12 +118,9 @@ class CocktailUtilisateurDAO(metaclass=Singleton):
         }
 
         with DBConnection().connection as connection, connection.cursor() as cursor:
-            # Ajout du cocktail et récupération de l'id
             cursor.execute(sql_insert_cocktail, cocktail_params)
-            # Récupération de l'id généré par la bdd
             res = cursor.fetchone()
             new_cocktail_id = res["id_cocktail"]
-            # Ajout de la relation d'accès
             acces_params = {
                 "id_cocktail": new_cocktail_id,
                 "id_utilisateur": id_utilisateur,
@@ -162,7 +156,6 @@ class CocktailUtilisateurDAO(metaclass=Singleton):
                 "id_cocktail = %(id_cocktail)s",
                 {"id_cocktail": id_cocktail},
             )
-            # Retourne un dictionnaire {id_ingredient: quantite}
             return {row[0]: row[1] for row in cursor.fetchall()}
 
     @staticmethod
@@ -195,7 +188,6 @@ class CocktailUtilisateurDAO(metaclass=Singleton):
 
         """
         with DBConnection().connection as connection, connection.cursor() as cursor:
-            # Vérifier si l'utilisateur est bien le propriétaire du cocktail
             cursor.execute(
                 "SELECT 1 FROM acces "
                 "WHERE id_utilisateur = %(id_utilisateur)s "
@@ -207,7 +199,6 @@ class CocktailUtilisateurDAO(metaclass=Singleton):
                 },
             )
 
-            # Si l'utilisateur est le propriétaire :
             if cursor.fetchone():
                 cursor.execute(
                     "UPDATE cocktail_ingredient "
@@ -221,7 +212,6 @@ class CocktailUtilisateurDAO(metaclass=Singleton):
                     },
                 )
             else:
-                # Si l'utilisateur n'est pas le propriétaire
                 raise PermissionDeniedError
 
     @staticmethod
@@ -254,7 +244,6 @@ class CocktailUtilisateurDAO(metaclass=Singleton):
 
         """
         with DBConnection().connection as connection, connection.cursor() as cursor:
-            # Vérifier si l'utilisateur est bien le propriétaire du cocktail
             cursor.execute(
                 "SELECT 1 FROM acces "
                 "WHERE id_utilisateur = %(id_utilisateur)s "
@@ -266,7 +255,6 @@ class CocktailUtilisateurDAO(metaclass=Singleton):
                 },
             )
 
-            # Si l'utilisateur est le propriétaire :
             if cursor.fetchone():
                 cursor.execute(
                     "INSERT INTO cocktail_ingredient (id_cocktail,  "
@@ -281,7 +269,6 @@ class CocktailUtilisateurDAO(metaclass=Singleton):
                     },
                 )
             else:
-                # Si l'utilisateur n'est pas le propriétaire
                 raise PermissionDeniedError
 
     @staticmethod
@@ -311,7 +298,6 @@ class CocktailUtilisateurDAO(metaclass=Singleton):
 
         """
         with DBConnection().connection as connection, connection.cursor() as cursor:
-            # Vérifier si l'utilisateur est bien le propriétaire du cocktail
             cursor.execute(
                 "SELECT 1 FROM acces "
                 "WHERE id_utilisateur = %(id_utilisateur)s "
@@ -323,7 +309,6 @@ class CocktailUtilisateurDAO(metaclass=Singleton):
                 },
             )
 
-            # Si l'utilisateur est le propriétaire :
             if cursor.fetchone():
                 cursor.execute(
                     "DELETE FROM cocktail_ingredient "
@@ -335,7 +320,6 @@ class CocktailUtilisateurDAO(metaclass=Singleton):
                     },
                 )
             else:
-                # Si l'utilisateur n'est pas le propriétaire
                 raise PermissionDeniedError
 
     @staticmethod
@@ -458,7 +442,7 @@ class CocktailUtilisateurDAO(metaclass=Singleton):
                 "UPDATE avis                                "
                 "SET favoris = TRUE                         "
                 "WHERE id_utilisateur = %(id_utilisateur)s  "
-                "AND id_coktail = %(id_cocktail)s           ",
+                "AND id_cocktail = %(id_cocktail)s           ",
                 {
                     "id_cocktail": id_cocktail,
                     "id_utilisateur": id_utilisateur,
@@ -488,7 +472,7 @@ class CocktailUtilisateurDAO(metaclass=Singleton):
                 "UPDATE avis                                "
                 "SET favoris = FALSE                        "
                 "WHERE id_utilisateur = %(id_utilisateur)s  "
-                "AND id_coktail = %(id_cocktail)s           ",
+                "AND id_cocktail = %(id_cocktail)s           ",
                 {
                     "id_cocktail": id_cocktail,
                     "id_utilisateur": id_utilisateur,
@@ -611,14 +595,12 @@ class CocktailUtilisateurDAO(metaclass=Singleton):
             En cas d'erreur de base de données
 
         """
-        # Récupérer l'ID du cocktail par son nom
         id_cocktail = self.get_cocktail_id_by_name(nom_cocktail)
 
         if not id_cocktail:
             raise CocktailNotFoundError(nom_cocktail)
 
         with DBConnection().connection as connection, connection.cursor() as cursor:
-            # Vérifier si déjà testé
             cursor.execute(
                 """
                 SELECT teste
@@ -641,7 +623,6 @@ class CocktailUtilisateurDAO(metaclass=Singleton):
                     "deja_teste": True,
                 }
 
-            # Ajouter aux testés (ou créer l'avis si inexistant)
             cursor.execute(
                 """
                 INSERT INTO avis (id_utilisateur, id_cocktail, note, commentaire, teste)
@@ -694,14 +675,12 @@ class CocktailUtilisateurDAO(metaclass=Singleton):
             En cas d'erreur de base de données
 
         """
-        # Récupérer l'ID du cocktail par son nom
         id_cocktail = self.get_cocktail_id_by_name(nom_cocktail)
 
         if not id_cocktail:
             raise CocktailNotFoundError(nom_cocktail)
 
         with DBConnection().connection as connection, connection.cursor() as cursor:
-            # Vérifier si le cocktail est testé
             cursor.execute(
                 """
                 SELECT teste
@@ -719,7 +698,6 @@ class CocktailUtilisateurDAO(metaclass=Singleton):
             if not result or not result["teste"]:
                 raise CocktailNotTestedError
 
-            # Retirer des testés
             cursor.execute(
                 """
                 UPDATE avis

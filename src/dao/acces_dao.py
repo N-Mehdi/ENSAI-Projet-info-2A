@@ -73,7 +73,6 @@ class AccesDAO(metaclass=Singleton):
 
         """
         with DBConnection().connection as connection, connection.cursor() as cursor:
-            # Récupérer tous les cocktails privés du propriétaire
             cursor.execute(
                 """
                     SELECT id_cocktail
@@ -88,10 +87,8 @@ class AccesDAO(metaclass=Singleton):
             if not private_cocktails:
                 return False
 
-            # Pour chaque cocktail privé, créer un accès pour l'utilisateur
             created = False
             for cocktail in private_cocktails:
-                # Vérifier si l'accès existe déjà
                 cursor.execute(
                     """
                         SELECT 1
@@ -103,7 +100,6 @@ class AccesDAO(metaclass=Singleton):
                 )
 
                 if not cursor.fetchone():
-                    # Créer l'accès : l'utilisateur reçoit une ligne avec is_owner=false
                     cursor.execute(
                         """
                             INSERT INTO acces (id_utilisateur, id_cocktail, is_owner,
@@ -144,7 +140,6 @@ class AccesDAO(metaclass=Singleton):
 
         """
         with DBConnection().connection as connection, connection.cursor() as cursor:
-            # Récupérer tous les cocktails privés du propriétaire
             cursor.execute(
                 """
                     SELECT id_cocktail
@@ -159,7 +154,6 @@ class AccesDAO(metaclass=Singleton):
             if not private_cocktails:
                 return False
 
-            # Supprimer tous les accès de cet utilisateur à ces cocktails
             cocktail_ids = [c["id_cocktail"] for c in private_cocktails]
             cursor.execute(
                 """
@@ -197,13 +191,10 @@ class AccesDAO(metaclass=Singleton):
             En cas d'erreur de base de données
 
         """
-        # Le propriétaire a toujours accès à ses propres cocktails
         if owner_id == viewer_id:
             return True
 
         with DBConnection().connection as connection, connection.cursor() as cursor:
-            # Vérifier si l'utilisateur a au moins une ligne d'accès aux cocktails du
-            # propriétaire
             cursor.execute(
                 """
                     SELECT 1
@@ -246,8 +237,6 @@ class AccesDAO(metaclass=Singleton):
 
         """
         with DBConnection().connection as connection, connection.cursor() as cursor:
-            # Trouver tous les utilisateurs qui ont des lignes d'accès aux cocktails du
-            # propriétaire
             cursor.execute(
                 """
                     SELECT DISTINCT u.pseudo
@@ -307,7 +296,6 @@ class AccesDAO(metaclass=Singleton):
             )
             cocktails = cursor.fetchall()
 
-            # Pour chaque cocktail, récupérer les ingrédients
             result = []
             for cocktail in cocktails:
                 cursor.execute(
@@ -364,7 +352,6 @@ class AccesDAO(metaclass=Singleton):
 
         """
         with DBConnection().connection as connection, connection.cursor() as cursor:
-            # Vérifier si le cocktail existe déjà dans la liste privée
             cursor.execute(
                 """
                     SELECT 1
@@ -379,7 +366,6 @@ class AccesDAO(metaclass=Singleton):
             if cursor.fetchone():
                 return False
 
-            # Ajouter le cocktail à la liste privée
             cursor.execute(
                 """
                     INSERT INTO acces (id_utilisateur, id_cocktail, is_owner,
