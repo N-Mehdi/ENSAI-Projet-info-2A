@@ -140,6 +140,7 @@ celerybeat.pid
 .envrc
 .venv
 env/
+env.test/
 venv/
 ENV/
 env.bak/
