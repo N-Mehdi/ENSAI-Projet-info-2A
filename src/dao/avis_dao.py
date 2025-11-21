@@ -10,9 +10,9 @@ from src.utils.singleton import Singleton
 class AvisDAO(metaclass=Singleton):
     """DAO pour gérer les avis sur les cocktails."""
 
+    @staticmethod
     @log
     def create_or_update_avis(
-        self,
         id_utilisateur: int,
         id_cocktail: int,
         note: str | None,
@@ -67,9 +67,9 @@ class AvisDAO(metaclass=Singleton):
             )
             return cursor.fetchone()
 
+    @staticmethod
     @log
     def get_avis_by_user_and_cocktail(
-        self,
         id_utilisateur: int,
         id_cocktail: int,
     ) -> dict | None:
@@ -121,8 +121,9 @@ class AvisDAO(metaclass=Singleton):
             )
             return cursor.fetchone()
 
+    @staticmethod
     @log
-    def get_avis_by_cocktail(self, id_cocktail: int) -> list[dict]:
+    def get_avis_by_cocktail(id_cocktail: int) -> list[dict]:
         """Récupère tous les avis d'un cocktail.
 
         Les avis sont triés par date de création décroissante
@@ -169,8 +170,9 @@ class AvisDAO(metaclass=Singleton):
             )
             return cursor.fetchall()
 
+    @staticmethod
     @log
-    def get_avis_by_user(self, id_utilisateur: int) -> list[dict]:
+    def get_avis_by_user(id_utilisateur: int) -> list[dict]:
         """Récupère tous les avis d'un utilisateur.
 
         Les avis sont triés par date de création décroissante
@@ -217,8 +219,9 @@ class AvisDAO(metaclass=Singleton):
             )
             return cursor.fetchall()
 
+    @staticmethod
     @log
-    def delete_avis(self, id_utilisateur: int, id_cocktail: int) -> bool:
+    def delete_avis(id_utilisateur: int, id_cocktail: int) -> bool:
         """Supprime un avis d'un utilisateur sur un cocktail.
 
         Parameters
@@ -253,8 +256,9 @@ class AvisDAO(metaclass=Singleton):
             )
             return cursor.rowcount > 0
 
+    @staticmethod
     @log
-    def get_avis_summary(self, id_cocktail: int) -> dict:
+    def get_avis_summary(id_cocktail: int) -> dict:
         """Récupère un résumé statistique des avis pour un cocktail.
 
         Parameters
@@ -308,8 +312,9 @@ class AvisDAO(metaclass=Singleton):
                 }
             return None
 
+    @staticmethod
     @log
-    def get_favoris_by_user(self, id_utilisateur: int) -> list[dict]:
+    def get_favoris_by_user(id_utilisateur: int) -> list[dict]:
         """Récupère tous les cocktails favoris d'un utilisateur avec leurs avis.
 
         Les résultats sont triés par date de modification décroissante.
@@ -356,8 +361,9 @@ class AvisDAO(metaclass=Singleton):
             )
             return cursor.fetchall()
 
+    @staticmethod
     @log
-    def add_favoris(self, id_utilisateur: int, id_cocktail: int) -> dict:
+    def add_favoris(id_utilisateur: int, id_cocktail: int) -> dict:
         """Ajoute un cocktail aux favoris.
         Crée l'avis s'il n'existe pas (avec note et commentaire NULL).
         Si déjà en favoris, ne fait rien.
@@ -412,8 +418,9 @@ class AvisDAO(metaclass=Singleton):
 
             return {"favoris": True, "deja_en_favoris": False}
 
+    @staticmethod
     @log
-    def remove_favoris(self, id_utilisateur: int, id_cocktail: int) -> bool:
+    def remove_favoris(id_utilisateur: int, id_cocktail: int) -> bool:
         """Retire un cocktail des favoris d'un utilisateur.
 
         Met le champ favoris à FALSE et met à jour la date de modification.

@@ -1,6 +1,6 @@
 """Classe de test de UtilisateurService."""
 
-from datetime import date, timedelta
+from datetime import UTC, datetime, timedelta
 from unittest.mock import MagicMock
 
 import pytest
@@ -132,7 +132,7 @@ class TestUtilisateurService:
     def test_creer_compte_date_naissance_future() -> None:
         """Teste la création d'un compte avec une date de naissance future."""
         # GIVEN
-        date_future = (date.today() + timedelta(days=365)).isoformat()
+        date_future = (datetime.now(UTC).date() + timedelta(days=365)).isoformat()
         donnees = UserRegister(
             pseudo="john_doe",
             mail="john@example.com",
@@ -158,7 +158,9 @@ class TestUtilisateurService:
     def test_creer_compte_age_moins_de_18_ans() -> None:
         """Teste la création d'un compte avec un âge inférieur à 18 ans."""
         # GIVEN
-        date_trop_recente = (date.today() - timedelta(days=365 * 10)).isoformat()
+        date_trop_recente = (
+            datetime.now(UTC).date() - timedelta(days=365 * 10)
+        ).isoformat()
         donnees = UserRegister(
             pseudo="john_doe",
             mail="john@example.com",
@@ -274,7 +276,7 @@ class TestUtilisateurService:
             mail="john@example.com",
             mot_de_passe_hashed=mot_de_passe_hashed,
             date_naissance="2000-01-01",
-            date_inscription=date.today().isoformat(),
+            date_inscription=datetime.now(UTC).date().isoformat(),
         )
 
         dao_mock = MagicMock(spec=UtilisateurDAO)
@@ -324,7 +326,7 @@ class TestUtilisateurService:
             mail="john@example.com",
             mot_de_passe_hashed=mot_de_passe_hashed,
             date_naissance="2000-01-01",
-            date_inscription=date.today().isoformat(),
+            date_inscription=datetime.now(UTC).date().isoformat(),
         )
 
         dao_mock = MagicMock(spec=UtilisateurDAO)
@@ -356,7 +358,7 @@ class TestUtilisateurService:
             mail="john@example.com",
             mot_de_passe_hashed=mot_de_passe_hashed,
             date_naissance="2000-01-01",
-            date_inscription=date.today().isoformat(),
+            date_inscription=datetime.now(UTC).date().isoformat(),
         )
 
         dao_mock = MagicMock(spec=UtilisateurDAO)
@@ -429,7 +431,7 @@ class TestUtilisateurService:
             mail="john@example.com",
             mot_de_passe_hashed=mot_de_passe_hashed,
             date_naissance="2000-01-01",
-            date_inscription=date.today().isoformat(),
+            date_inscription=datetime.now(UTC).date().isoformat(),
         )
 
         dao_mock = MagicMock(spec=UtilisateurDAO)
@@ -460,7 +462,7 @@ class TestUtilisateurService:
             mail="john@example.com",
             mot_de_passe_hashed=mot_de_passe_hashed,
             date_naissance="2000-01-01",
-            date_inscription=date.today().isoformat(),
+            date_inscription=datetime.now(UTC).date().isoformat(),
         )
 
         dao_mock = MagicMock(spec=UtilisateurDAO)
@@ -502,7 +504,7 @@ class TestUtilisateurService:
             mail="john@example.com",
             mot_de_passe_hashed=mot_de_passe_hashed,
             date_naissance="2000-01-01",
-            date_inscription=date.today().isoformat(),
+            date_inscription=datetime.now(UTC).date().isoformat(),
         )
 
         dao_mock = MagicMock(spec=UtilisateurDAO)
@@ -610,7 +612,7 @@ class TestUtilisateurService:
             mail="john@example.com",
             mot_de_passe_hashed=mot_de_passe_hashed,
             date_naissance="2000-01-01",
-            date_inscription=date.today().isoformat(),
+            date_inscription=datetime.now(UTC).date().isoformat(),
         )
 
         dao_mock = MagicMock(spec=UtilisateurDAO)

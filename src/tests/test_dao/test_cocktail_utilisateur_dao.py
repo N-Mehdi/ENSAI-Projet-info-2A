@@ -129,7 +129,8 @@ class TestCocktailUtilisateurDAOIntegration:
         cocktails_prives = dao.get_prive(id_utilisateur)
 
         # THEN
-        if len(cocktails_prives) != 2:
+        nb_cocktail = 2
+        if len(cocktails_prives) != nb_cocktail:
             raise AssertionError(
                 message=f"Devrait avoir 2 cocktails, obtenu: {len(cocktails_prives)}",
             )
@@ -273,7 +274,8 @@ class TestCocktailUtilisateurDAOIntegration:
         ingredients = dao.get_cocktail_ingredient(id_cocktail)
 
         # THEN
-        if len(ingredients) != 2:
+        nb_ing = 2
+        if len(ingredients) != nb_ing:
             raise AssertionError(
                 message=f"Devrait avoir 2 ingrédients, obtenu: {len(ingredients)}",
             )

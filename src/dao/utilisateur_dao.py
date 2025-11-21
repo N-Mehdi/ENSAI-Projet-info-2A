@@ -23,13 +23,15 @@ class UtilisateurDAO(metaclass=Singleton):
     données.
     """
 
+    @staticmethod
     @log
-    def create_compte(self, utilisateur: UserCreate) -> bool:
+    def create_compte(utilisateur: UserCreate) -> bool:
         """Création d'un compte utilisateur.
 
         Parameters
         ----------
         utilisateur : UserCreate
+            Données sur le compte utilisateur
 
         Returns
         -------
@@ -85,8 +87,9 @@ class UtilisateurDAO(metaclass=Singleton):
 
         return created
 
+    @staticmethod
     @log
-    def se_connecter(self, pseudo, mot_de_passe) -> Utilisateur:
+    def se_connecter(pseudo, mot_de_passe) -> Utilisateur:
         """Se connecter grâce à son pseudo et son mot de passe.
 
         Parameters
@@ -130,8 +133,9 @@ class UtilisateurDAO(metaclass=Singleton):
             )
         return utilisateur
 
+    @staticmethod
     @log
-    def delete_compte(self, pseudo) -> bool:
+    def delete_compte(pseudo) -> bool:
         """Supprimer un utilisateur de la base de données.
 
         Parameters
@@ -159,7 +163,8 @@ class UtilisateurDAO(metaclass=Singleton):
             raise AccountDeletionError from e
         return res > 0
 
-    def read(self, id_utilisateur: int) -> User | None:
+    @staticmethod
+    def read(id_utilisateur: int) -> User | None:
         """Récupère un utilisateur par son identifiant.
 
         Parameters
@@ -210,7 +215,8 @@ class UtilisateurDAO(metaclass=Singleton):
             raise DAOError from exc
         return None
 
-    def recuperer_par_pseudo(self, pseudo: str) -> User | None:
+    @staticmethod
+    def recuperer_par_pseudo(pseudo: str) -> User | None:
         """Récupère un utilisateur par son pseudo.
 
         Parameters
@@ -265,7 +271,8 @@ class UtilisateurDAO(metaclass=Singleton):
             )
         return utilisateur
 
-    def pseudo_existe(self, pseudo: str) -> bool:
+    @staticmethod
+    def pseudo_existe(pseudo: str) -> bool:
         """Vérifie si un pseudo existe déjà en base de données.
 
         Parameters
@@ -299,7 +306,8 @@ class UtilisateurDAO(metaclass=Singleton):
         except Exception as e:
             raise DAOError from e
 
-    def mail_existe(self, mail: str) -> bool:
+    @staticmethod
+    def mail_existe(mail: str) -> bool:
         """Vérifie si un email existe déjà en base de données.
 
         Parameters
@@ -333,8 +341,9 @@ class UtilisateurDAO(metaclass=Singleton):
         except Exception as e:
             raise DAOError from e
 
+    @staticmethod
     @log
-    def update_mot_de_passe(self, mdps: UserUpdatePassword) -> bool:
+    def update_mot_de_passe(mdps: UserUpdatePassword) -> bool:
         """Met à jour le mot de passe d'un utilisateur par son pseudo.
 
         Parameters
@@ -370,8 +379,9 @@ class UtilisateurDAO(metaclass=Singleton):
         except Exception as e:
             raise DAOError from e
 
+    @staticmethod
     @log
-    def update_pseudo(self, ancien_pseudo: str, nouveau_pseudo: str) -> bool:
+    def update_pseudo(ancien_pseudo: str, nouveau_pseudo: str) -> bool:
         """Met à jour le pseudo d'un utilisateur.
 
         Parameters
@@ -413,8 +423,9 @@ class UtilisateurDAO(metaclass=Singleton):
         except DBError as e:
             raise PseudoChangingError from e
 
+    @staticmethod
     @log
-    def get_date_inscription(self, pseudo: str) -> str | None:
+    def get_date_inscription(pseudo: str) -> str | None:
         """Récupère la date d'inscription d'un utilisateur par son pseudo.
 
         Parameters

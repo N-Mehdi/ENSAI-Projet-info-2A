@@ -30,7 +30,7 @@ cocktail_service = CocktailService(CocktailDAO())
 
 @router.post(
     "/ajouter-cocktail",
-    summary="Ajouter un cocktail à ma liste privée (par nom)",
+    summary="Ajouter un cocktail à ma liste privée",
     status_code=201,
 )
 def add_cocktail_to_private_list_by_name(
@@ -45,7 +45,7 @@ def add_cocktail_to_private_list_by_name(
     ----------
     current_user : CurrentUser
         L'utilisateur authentifié (injecté automatiquement)
-    cocktail_data : CocktailPriveCreate
+    cocktail_prive : CocktailPriveCreate
         Données du cocktail à créer
 
     Returns

@@ -31,7 +31,7 @@ class AccesService:
         self,
         owner_pseudo: str,
         user_pseudo: str,
-    ) -> AccessResponse:
+    ) -> dict:
         """Donne l'accès à un utilisateur pour voir les cocktails privés du
         propriétaire.
 
@@ -78,16 +78,16 @@ class AccesService:
 
         if not created:
             raise AccessAlreadyExistsError(
-                message=f"L'utilisateur '{user_pseudo}' a déjà accès aux cocktails de"
-                f"'{owner_pseudo}'",
+                message=f"L'utilisateur '{user_pseudo}' a déjà accès aux cocktails"
+                f"de '{owner_pseudo}'",
             )
 
-        return AccessResponse(
-            success=True,
-            message=f"Accès accordé à '{user_pseudo}' pour voir vos cocktails privés",
-            owner_pseudo=owner_pseudo,
-            user_pseudo=user_pseudo,
-        )
+        return {
+            "success": True,
+            "message": f"Accès accordé à '{user_pseudo}' pour voir vos cocktails "
+            "privés",
+            "owner_pseudo": owner_pseudo,
+        }
 
     def revoke_access_from_user(
         self,
@@ -228,6 +228,11 @@ class AccesService:
                 id_cocktail=c["id_cocktail"],
                 nom_cocktail=c["nom_cocktail"],
                 ingredients=[CocktailIngredient(**ing) for ing in c["ingredients"]],
+                categorie=c["categorie"],
+                verre=c["verre"],
+                alcool=c["alcool"],
+                image=c["image"],
+                instructions=c["instruction"],
             )
             for c in cocktails_data
         ]

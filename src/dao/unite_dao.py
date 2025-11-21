@@ -1,6 +1,5 @@
 """Classe DAO du business object Unite."""
 
-
 from src.dao.db_connection import DBConnection
 from src.utils.log_decorator import log
 
@@ -8,8 +7,9 @@ from src.utils.log_decorator import log
 class UniteDAO:
     """DAO pour gérer les unités de mesure."""
 
+    @staticmethod
     @log
-    def get_or_create_unit(self, nom: str) -> int:
+    def get_or_create_unit(nom: str) -> int:
         """Récupère l'ID d'une unité ou la crée si elle n'existe pas.
 
         Parameters
@@ -48,8 +48,9 @@ class UniteDAO:
 
             return cursor.fetchone()["id_unite"]
 
+    @staticmethod
     @log
-    def get_unit_name_by_id(self, id_unite: int) -> str | None:
+    def get_unit_name_by_id(id_unite: int) -> str | None:
         """Récupère le nom d'une unité par son ID.
 
         Parameters

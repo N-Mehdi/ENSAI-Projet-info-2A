@@ -130,7 +130,7 @@ class StockCourseService:
             raise ServiceError(message="Impossible d'ajouter l'ingrédient au stock")
 
         return (
-            f"Ingrédient '{ingredient['nom']}' ajouté/mis à jour avec succès"
+            f"Ingrédient '{ingredient['nom']}' ajouté/mis à jour avec succès "
             f"({quantite} {abbreviation_unite})"
         )
 
@@ -292,7 +292,6 @@ class StockCourseService:
         except ValueError as e:
             error_msg = str(e)
             if "Impossible de retirer" in error_msg:
-
                 match = re.search(r"retirer ([\d.]+).*disponible : ([\d.]+)", error_msg)
                 if match:
                     quantite_demandee = float(match.group(1))

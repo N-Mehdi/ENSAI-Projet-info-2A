@@ -197,8 +197,8 @@ class ListeCourseService:
 
         if not liste_item:
             raise ServiceError(
-                message=f"L'ingrédient '{ingredient['nom']}' n'est pas dans votre liste"
-                f"de course",
+                message=f"L'ingrédient '{ingredient['nom']}' n'est pas dans votre "
+                "liste de course",
             )
 
         quantite_liste = float(liste_item["quantite"])

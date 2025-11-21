@@ -8,7 +8,8 @@ from src.utils.log_decorator import log
 class InstructionDAO:
     """DAO pour accéder aux instructions de cocktails."""
 
-    def get_instruction(self, id_cocktail: int) -> str | None:
+    @staticmethod
+    def get_instruction(id_cocktail: int) -> str | None:
         """Récupération du texte d'instruction pour un cocktail.
 
         Parameters

@@ -1,6 +1,6 @@
 """Couche service pour les opérations utilisateur."""
 
-from datetime import date
+from datetime import UTC, date, datetime
 
 from src.dao.utilisateur_dao import UtilisateurDAO
 from src.models.utilisateurs import (
@@ -262,7 +262,8 @@ class UtilisateurService:
 
         return "Mot de passe modifié avec succès."
 
-    def _parse_and_validate_birth_date(self, birth_date_input) -> date:
+    @staticmethod
+    def _parse_and_validate_birth_date(birth_date_input) -> date:
         """Parse et valide la date de naissance.
 
         Parameters
@@ -307,7 +308,7 @@ class UtilisateurService:
             )
 
         # Validation de la logique métier
-        today = date.today()
+        today = datetime.now(UTC).date()
 
         # Date dans le futur
         if birth_date >= today:
@@ -354,7 +355,8 @@ class UtilisateurService:
             Si le pseudo est déjà utilisé ou si la mise à jour échoue.
 
         """
-        # Vérifier si le pseudo existe déjà
+        if not nouveau_pseudo or not nouveau_pseudo.strip():
+            raise EmptyFieldError(field="pseudo")
         if self.utilisateur_dao.pseudo_existe(nouveau_pseudo):
             raise PseudoChangingError(
                 message=(

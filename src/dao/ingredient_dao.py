@@ -8,8 +8,9 @@ from src.utils.singleton import Singleton
 class IngredientDAO(metaclass=Singleton):
     """DAO pour gérer les ingrédients."""
 
+    @staticmethod
     @log
-    def get_all_ingredients(self) -> list[dict]:
+    def get_all_ingredients() -> list[dict]:
         """Récupère tous les ingrédients.
 
         Returns
@@ -28,8 +29,9 @@ class IngredientDAO(metaclass=Singleton):
             )
             return cursor.fetchall()
 
+    @staticmethod
     @log
-    def get_by_name(self, nom: str) -> dict | None:
+    def get_by_name(nom: str) -> dict | None:
         """Cherche un ingrédient par son nom exact.
 
         Parameters
@@ -54,8 +56,9 @@ class IngredientDAO(metaclass=Singleton):
             )
             return cursor.fetchone()
 
+    @staticmethod
     @log
-    def search_by_name(self, nom: str, limit: int = 10) -> list[dict]:
+    def search_by_name(nom: str, limit: int = 10) -> list[dict]:
         """Recherche des ingrédients dont le nom contient la chaîne donnée.
         Utile pour l'auto-complétion et les suggestions.
 
@@ -85,7 +88,8 @@ class IngredientDAO(metaclass=Singleton):
             )
             return cursor.fetchall()
 
-    def is_alcoholic(self, ingredient_id: int) -> bool:
+    @staticmethod
+    def is_alcoholic(ingredient_id: int) -> bool:
         """Vérifie si un ingrédient contient de l'alcool."""
         with DBConnection().connection as connection, connection.cursor() as cursor:
             cursor.execute(
@@ -103,7 +107,8 @@ class IngredientDAO(metaclass=Singleton):
 
             return result["alcool"]
 
-    def is_alcoholic_by_name(self, ingredient_name: str) -> bool:
+    @staticmethod
+    def is_alcoholic_by_name(ingredient_name: str) -> bool:
         """Vérifie si un ingrédient contient de l'alcool en utilisant son nom."""
         with DBConnection().connection as connection, connection.cursor() as cursor:
             cursor.execute(

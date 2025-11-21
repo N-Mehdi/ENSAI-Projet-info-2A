@@ -9,8 +9,9 @@ from src.utils.singleton import Singleton
 class ListeCourseDAO(metaclass=Singleton):
     """DAO pour gérer la liste de course des utilisateurs."""
 
+    @staticmethod
     @log
-    def get_liste_course(self, id_utilisateur: int) -> list[dict]:
+    def get_liste_course(id_utilisateur: int) -> list[dict]:
         """Récupère la liste de course d'un utilisateur.
 
         Parameters
@@ -45,9 +46,9 @@ class ListeCourseDAO(metaclass=Singleton):
             )
             return cursor.fetchall()
 
+    @staticmethod
     @log
     def add_to_liste_course(
-        self,
         id_utilisateur: int,
         id_ingredient: int,
         quantite: float,
@@ -267,9 +268,9 @@ class ListeCourseDAO(metaclass=Singleton):
             )
             return cursor.fetchone()
 
+    @staticmethod
     @log
     def get_liste_course_item(
-        self,
         id_utilisateur: int,
         id_ingredient: int,
     ) -> dict | None:
@@ -305,9 +306,9 @@ class ListeCourseDAO(metaclass=Singleton):
             )
             return cursor.fetchone()
 
+    @staticmethod
     @log
     def remove_from_liste_course(
-        self,
         id_utilisateur: int,
         id_ingredient: int,
     ) -> bool:
@@ -340,8 +341,9 @@ class ListeCourseDAO(metaclass=Singleton):
             )
             return cursor.rowcount > 0
 
+    @staticmethod
     @log
-    def clear_liste_course(self, id_utilisateur: int) -> int:
+    def clear_liste_course(id_utilisateur: int) -> int:
         """Vide complètement la liste de course d'un utilisateur.
 
         Parameters
@@ -365,9 +367,9 @@ class ListeCourseDAO(metaclass=Singleton):
             )
             return cursor.rowcount
 
+    @staticmethod
     @log
     def toggle_effectue(
-        self,
         id_utilisateur: int,
         id_ingredient: int,
     ) -> bool:

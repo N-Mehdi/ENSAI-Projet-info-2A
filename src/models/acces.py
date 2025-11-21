@@ -12,11 +12,19 @@ class CocktailIngredient(BaseModel):
 
 
 class PrivateCocktailDetail(BaseModel):
-    """Modèle pour les détails d'un cocktail privé."""
+    """Modèle pour les cocktails privés d'un utilisateur avec tous les
+    détails pour chaque cocktail.
+    """
 
     id_cocktail: int
     nom_cocktail: str
     ingredients: list[CocktailIngredient]
+
+    categorie: str
+    verre: str
+    alcool: bool
+    image: str
+    instructions: str | None
 
 
 class PrivateCocktailsList(BaseModel):

@@ -218,8 +218,8 @@ class CocktailDAO(metaclass=Singleton):
         except DBError as e:
             raise DAOError(message=None) from e
 
+    @staticmethod
     def get_cocktails_quasi_realisables(
-        self,
         id_utilisateur: int,
     ) -> list[dict]:
         """Récupère tous les cocktails avec leurs ingrédients et le stock de
@@ -271,7 +271,8 @@ class CocktailDAO(metaclass=Singleton):
         except DBError as e:
             raise DAOError(message=None) from e
 
-    def ajouter_cocktail(self, cocktail: Cocktail) -> int:
+    @staticmethod
+    def ajouter_cocktail(cocktail: Cocktail) -> int:
         """Ajoute un cocktail dans la base de données.
 
         Parameters
@@ -316,7 +317,8 @@ class CocktailDAO(metaclass=Singleton):
 
         return id_cocktail
 
-    def supprimer_cocktail(self, id_cocktail: int) -> bool:
+    @staticmethod
+    def supprimer_cocktail(id_cocktail: int) -> bool:
         """Supprime un cocktail de la base de données.
 
         Supprime également toutes les données liées grâce aux contraintes CASCADE :

@@ -209,9 +209,7 @@ class StockCourseDAO(metaclass=Singleton):
             nouvelle_quantite = quantite_actuelle - quantite
 
             presque_zero = 0.0001
-            if (
-                nouvelle_quantite < presque_zero
-            ):
+            if nouvelle_quantite < presque_zero:
                 cursor.execute(
                     """
                     DELETE FROM stock
@@ -343,8 +341,9 @@ class StockCourseDAO(metaclass=Singleton):
             )
             return cursor.fetchone()
 
+    @staticmethod
     @log
-    def get_unite_id_by_abbreviation(self, abbreviation: str) -> int | None:
+    def get_unite_id_by_abbreviation(abbreviation: str) -> int | None:
         """Récupère l'ID d'une unité par son abréviation.
 
         Parameters

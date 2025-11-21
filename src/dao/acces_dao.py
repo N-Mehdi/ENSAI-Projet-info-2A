@@ -5,6 +5,7 @@ sur la table acces dans la base de données.
 from typing import Any
 
 from src.dao.db_connection import DBConnection
+from src.utils.exceptions import DAOError
 from src.utils.singleton import Singleton
 
 
@@ -263,7 +264,7 @@ class AccesDAO(metaclass=Singleton):
     @staticmethod
     def get_private_cocktails(owner_id: int) -> list[dict[str, Any]]:
         """Récupère la liste des cocktails privés d'un utilisateur avec leurs
-        ingrédients.
+        ingrédients et instructions.
 
         Parameters
         ----------
@@ -276,6 +277,11 @@ class AccesDAO(metaclass=Singleton):
             Liste de dictionnaires contenant pour chaque cocktail :
             - id_cocktail : int
             - nom_cocktail : str
+            - categorie : str
+            - verre : str
+            - alcool : bool
+            - image : str
+            - instruction : str | None
             - ingredients : list[dict] avec nom_ingredient, quantite, unite
 
         Raises
@@ -284,50 +290,75 @@ class AccesDAO(metaclass=Singleton):
             En cas d'erreur de base de données
 
         """
-        with DBConnection().connection as connection, connection.cursor() as cursor:
-            cursor.execute(
-                """
-                    SELECT c.id_cocktail, c.nom
-                    FROM cocktail c
-                    JOIN acces a ON c.id_cocktail = a.id_cocktail
-                    WHERE a.id_utilisateur = %(owner_id)s
-                    AND a.is_owner = true
-                    ORDER BY c.nom
-                    """,
-                {"owner_id": owner_id},
-            )
-            cocktails = cursor.fetchall()
-
-            result = []
-            for cocktail in cocktails:
+        try:
+            with DBConnection().connection as connection, connection.cursor() as cursor:
                 cursor.execute(
                     """
-                        SELECT i.nom, ci.qte, ci.unite
-                        FROM cocktail_ingredient ci
-                        JOIN ingredient i ON ci.id_ingredient = i.id_ingredient
-                        WHERE ci.id_cocktail = %(cocktail_id)s
-                        ORDER BY i.nom
+                        SELECT c.id_cocktail, c.nom, c.categorie, c.verre, c.alcool,
+                        c.image
+                        FROM cocktail c
+                        JOIN acces a ON c.id_cocktail = a.id_cocktail
+                        WHERE a.id_utilisateur = %(owner_id)s
+                        AND a.is_owner = true
+                        ORDER BY c.nom
                         """,
-                    {"cocktail_id": cocktail["id_cocktail"]},
+                    {"owner_id": owner_id},
                 )
-                ingredients = cursor.fetchall()
+                cocktails = cursor.fetchall()
 
-                result.append(
-                    {
-                        "id_cocktail": cocktail["id_cocktail"],
-                        "nom_cocktail": cocktail["nom"],
-                        "ingredients": [
-                            {
-                                "nom_ingredient": ing["nom"],
-                                "quantite": float(ing["qte"]) if ing["qte"] else None,
-                                "unite": ing["unite"],
-                            }
-                            for ing in ingredients
-                        ],
-                    },
-                )
+                result = []
+                for cocktail in cocktails:
+                    # Récupérer les ingrédients
+                    cursor.execute(
+                        """
+                            SELECT i.nom, ci.qte, ci.unite
+                            FROM cocktail_ingredient ci
+                            JOIN ingredient i ON ci.id_ingredient = i.id_ingredient
+                            WHERE ci.id_cocktail = %(cocktail_id)s
+                            ORDER BY i.nom
+                            """,
+                        {"cocktail_id": cocktail["id_cocktail"]},
+                    )
+                    ingredients = cursor.fetchall()
 
-            return result
+                    # Récupérer les instructions (colonne 'texte')
+                    cursor.execute(
+                        """
+                            SELECT texte
+                            FROM instruction
+                            WHERE id_cocktail = %(cocktail_id)s
+                            AND langue = 'en'
+                            """,
+                        {"cocktail_id": cocktail["id_cocktail"]},
+                    )
+                    instruction_row = cursor.fetchone()
+                    instruction = instruction_row["texte"] if instruction_row else None
+
+                    result.append(
+                        {
+                            "id_cocktail": cocktail["id_cocktail"],
+                            "nom_cocktail": cocktail["nom"],
+                            "categorie": cocktail["categorie"],
+                            "verre": cocktail["verre"],
+                            "alcool": cocktail["alcool"],
+                            "image": cocktail["image"],
+                            "instruction": instruction,
+                            "ingredients": [
+                                {
+                                    "nom_ingredient": ing["nom"],
+                                    "quantite": float(ing["qte"])
+                                    if ing["qte"]
+                                    else None,
+                                    "unite": ing["unite"],
+                                }
+                                for ing in ingredients
+                            ],
+                        },
+                    )
+
+                return result
+        except Exception as e:
+            raise DAOError from e
 
     @staticmethod
     def add_cocktail_to_private_list(owner_id: int, cocktail_id: int) -> bool:
