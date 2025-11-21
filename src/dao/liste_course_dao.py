@@ -94,7 +94,9 @@ class ListeCourseDAO(metaclass=Singleton):
             # Vérifier si l'ingrédient existe déjà dans la liste
             cursor.execute(
                 """
-                SELECT lc.quantite, lc.id_unite, u.type_unite as type_unite, u.abbreviation as code_unite
+                SELECT lc.quantite, lc.id_unite, u.type_unite as type_unite,
+                u.abbreviation
+                as code_unite
                 FROM liste_course lc
                 LEFT JOIN unite u ON lc.id_unite = u.id_unite
                 WHERE lc.id_utilisateur = %(id_utilisateur)s
@@ -115,11 +117,14 @@ class ListeCourseDAO(metaclass=Singleton):
 
                 # Récupérer les infos de la nouvelle unité
                 cursor.execute(
-                    "SELECT abbreviation, type_unite FROM unite WHERE id_unite = %(id_unite)s",
+                    "SELECT abbreviation, type_unite FROM unite WHERE id_unite"
+                    "= %(id_unite)s",
                     {"id_unite": id_unite},
                 )
                 new_unite_info = cursor.fetchone()
-                code_unite_nouvelle = new_unite_info["abbreviation"] if new_unite_info else None
+                code_unite_nouvelle = (
+                    new_unite_info["abbreviation"] if new_unite_info else None
+                )
 
                 code_existante_norm = UnitConverter.normalize_unit(code_unite_existante)
                 code_nouvelle_norm = UnitConverter.normalize_unit(code_unite_nouvelle)
@@ -148,17 +153,27 @@ class ListeCourseDAO(metaclass=Singleton):
                     and type_unite_existante == new_unite_info["type_unite"]
                     and type_unite_existante == "liquide"
                 ):
-                    # Unités différentes mais même type (liquide) : convertir et additionner
+                    # Unités différentes mais même type (liquide) : convertir et
+                    # additionner
                     code_unite_nouvelle = new_unite_info["abbreviation"]
 
                     # Convertir tout en ml
-                    ml_existant = UnitConverter.convert_to_ml(quantite_existante, code_unite_existante)
-                    ml_nouveau = UnitConverter.convert_to_ml(quantite, code_unite_nouvelle)
+                    ml_existant = UnitConverter.convert_to_ml(
+                        quantite_existante,
+                        code_unite_existante,
+                    )
+                    ml_nouveau = UnitConverter.convert_to_ml(
+                        quantite,
+                        code_unite_nouvelle,
+                    )
 
                     if ml_existant and ml_nouveau:
                         # Additionner en ml et reconvertir vers l'unité existante
                         total_ml = ml_existant + ml_nouveau
-                        facteur = UnitConverter.LIQUID_TO_ML.get(code_unite_existante.lower(), 1)
+                        facteur = UnitConverter.LIQUID_TO_ML.get(
+                            code_unite_existante.lower(),
+                            1,
+                        )
                         nouvelle_quantite = total_ml / facteur
 
                         cursor.execute(
@@ -215,8 +230,10 @@ class ListeCourseDAO(metaclass=Singleton):
                 # L'ingrédient n'existe pas : créer
                 cursor.execute(
                     """
-                    INSERT INTO liste_course (id_utilisateur, id_ingredient, quantite, id_unite, effectue)
-                    VALUES (%(id_utilisateur)s, %(id_ingredient)s, %(quantite)s, %(id_unite)s, FALSE)
+                    INSERT INTO liste_course (id_utilisateur, id_ingredient, quantite,
+                    id_unite, effectue)
+                    VALUES (%(id_utilisateur)s, %(id_ingredient)s, %(quantite)s,
+                    %(id_unite)s, FALSE)
                     """,
                     {
                         "id_utilisateur": id_utilisateur,
@@ -274,7 +291,8 @@ class ListeCourseDAO(metaclass=Singleton):
         with DBConnection().connection as connection, connection.cursor() as cursor:
             cursor.execute(
                 """
-                SELECT lc.quantite, lc.id_unite, u.type_unite as type_unite, u.abbreviation as code_unite
+                SELECT lc.quantite, lc.id_unite, u.type_unite as type_unite,
+                u.abbreviation as code_unite
                 FROM liste_course lc
                 LEFT JOIN unite u ON lc.id_unite = u.id_unite
                 WHERE lc.id_utilisateur = %(id_utilisateur)s

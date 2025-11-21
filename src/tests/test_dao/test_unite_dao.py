@@ -1,5 +1,3 @@
-"""doc."""
-
 """Tests d'intégration pour UniteDAO."""
 
 import pytest
@@ -120,7 +118,7 @@ class TestUniteDAOIntegration:
 
     @pytest.mark.usefixtures("clean_database")
     @staticmethod
-    def test_get_or_create_unit_unites_differentes(db_connection) -> None:
+    def test_get_or_create_unit_unites_differentes() -> None:
         """Teste la création de plusieurs unités différentes."""
         # GIVEN
         dao = UniteDAO()
@@ -246,7 +244,7 @@ class TestUniteDAOIntegration:
             cursor.execute(
                 """
                 INSERT INTO unite (nom, abbreviation, type_unite)
-                VALUES 
+                VALUES
                     ('millilitre', 'ml', 'liquide'),
                     ('gramme', 'g', 'poids'),
                     ('once', 'oz', 'poids')

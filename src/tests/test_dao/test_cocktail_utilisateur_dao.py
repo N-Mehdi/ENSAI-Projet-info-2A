@@ -1,1 +1,1 @@
-"""doc."""
+"""Tests d'intégration pour CocktailUtilisateurDAO."""

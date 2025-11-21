@@ -72,7 +72,8 @@ class TestStockCourseDAOIntegration:
             raise AssertionError(
                 message="L'item de stock devrait être créé",
             )
-        if float(stock_item["quantite"]) != 50.0:
+        qte = 50.0
+        if float(stock_item["quantite"]) != qte:
             raise AssertionError(
                 message=f"La quantité devrait être 50.0, "
                 f"obtenu: {stock_item['quantite']}",
@@ -143,7 +144,8 @@ class TestStockCourseDAOIntegration:
 
         # Vérifier le cumul : 100 + 50 = 150
         stock_item = dao.get_stock_item(user_id, ingredient_id)
-        if float(stock_item["quantite"]) != 150.0:
+        qte = 150.0
+        if float(stock_item["quantite"]) != qte:
             raise AssertionError(
                 message=f"La quantité devrait être 150.0 (100+50), "
                 f"obtenu: {stock_item['quantite']}",
@@ -291,7 +293,8 @@ class TestStockCourseDAOIntegration:
                 message=f"L'ingredient_id devrait être {ingredient_id}, "
                 f"obtenu: {result[0]['id_ingredient']}",
             )
-        if float(result[0]["quantite"]) != 100.0:
+        qte = 100.0
+        if float(result[0]["quantite"]) != qte:
             raise AssertionError(
                 message=f"La quantité devrait être 100.0, "
                 f"obtenu: {result[0]['quantite']}",
@@ -421,7 +424,8 @@ class TestStockCourseDAOIntegration:
         result = dao.get_stock(user_id, only_available=False)
 
         # THEN
-        if len(result) != 2:
+        nb_item = 2
+        if len(result) != nb_item:
             raise AssertionError(
                 message=f"2 items attendus, obtenu: {len(result)}",
             )
@@ -583,7 +587,8 @@ class TestStockCourseDAOIntegration:
                 message=f"L'ingredient_id devrait être {ingredient_id}, "
                 f"obtenu: {result['id_ingredient']}",
             )
-        if float(result["quantite"]) != 100.0:
+        qte = 100.0
+        if float(result["quantite"]) != qte:
             raise AssertionError(
                 message=f"La quantité devrait être 100.0, obtenu: {result['quantite']}",
             )
@@ -685,7 +690,8 @@ class TestStockCourseDAOIntegration:
         )
 
         # THEN
-        if result["nouvelle_quantite"] != 70.0:
+        qte = 70.0
+        if result["nouvelle_quantite"] != qte:
             raise AssertionError(
                 message=f"La nouvelle quantité devrait être 70.0, "
                 f"obtenu: {result['nouvelle_quantite']}",
@@ -697,7 +703,8 @@ class TestStockCourseDAOIntegration:
 
         # Vérifier en base
         stock_item = dao.get_stock_item(user_id, ingredient_id)
-        if float(stock_item["quantite"]) != 70.0:
+        qte = 70.0
+        if float(stock_item["quantite"]) != qte:
             raise AssertionError(
                 message=f"La quantité en base devrait être 70.0, "
                 f"obtenu: {stock_item['quantite']}",
@@ -1088,7 +1095,8 @@ class TestStockCourseDAOIntegration:
         result = dao.get_full_stock(user_id)
 
         # THEN
-        if len(result) != 3:
+        nb_item = 3
+        if len(result) != nb_item:
             raise AssertionError(
                 message=f"3 ingrédients attendus, obtenu: {len(result)}",
             )
@@ -1099,7 +1107,8 @@ class TestStockCourseDAOIntegration:
             raise AssertionError(
                 message="Le Rhum devrait être dans les résultats",
             )
-        if float(rhum[0]["quantite"]) != 100.0:
+        qte = 100.0
+        if float(rhum[0]["quantite"]) != qte:
             raise AssertionError(
                 message=f"Le Rhum devrait avoir une quantité de 100.0, "
                 f"obtenu: {rhum[0]['quantite']}",
@@ -1343,7 +1352,8 @@ class TestStockCourseDAOIntegration:
 
         # Vérifier la quantité
         stock_item = dao.get_stock_item(user_id, ingredient_id)
-        if float(stock_item["quantite"]) != 75.0:
+        qte = 75.0
+        if float(stock_item["quantite"]) != qte:
             raise AssertionError(
                 message=f"La quantité devrait être 75.0, "
                 f"obtenu: {stock_item['quantite']}",
@@ -1414,7 +1424,8 @@ class TestStockCourseDAOIntegration:
 
         # Vérifier que c'est 50 (pas 150)
         stock_item = dao.get_stock_item(user_id, ingredient_id)
-        if float(stock_item["quantite"]) != 50.0:
+        qte = 50.0
+        if float(stock_item["quantite"]) != qte:
             raise AssertionError(
                 message=f"La quantité devrait être 50.0 (remplacée, pas cumulée), "
                 f"obtenu: {stock_item['quantite']}",
