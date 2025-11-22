@@ -81,6 +81,23 @@ class MailAlreadyExistsError(Exception):
         super().__init__(f"Email {mail} already exists")
 
 
+class InvalidPasswordError(ServiceError):
+    """Exception levée quand le mot de passe ne respecte pas les critères."""
+
+    def __init__(self, errors: list[str]) -> None:
+        """Initialise l'exception avec la liste des erreurs.
+
+        Parameters
+        ----------
+        errors : list[str]
+            Liste des erreurs de validation du mot de passe
+
+        """
+        self.errors = errors
+        message = "Le mot de passe ne respecte pas les critères de sécurité"
+        super().__init__(message)
+
+
 class UserNotFoundError(Exception):
     """Raised when a user is not found.
 
@@ -304,4 +321,28 @@ class InstructionError(Exception):
         """Initialize InstructionError."""
         if message is None:
             message = "Erreur dans l'instruction du cocktail."
+        super().__init__(message)
+
+
+class OneIngredientError:
+    """Exception levée quand il y a un problème d'ingredients dans la création
+    d'un cocktail privé.
+    """
+
+    def __init__(self, message: str) -> None:
+        """Initialize InstructOneIngredientErrorionError."""
+        if message is None:
+            message = "Erreur dans la création du cocktail privé."
+        super().__init__(message)
+
+
+class CocktailDupeError(Exception):
+    """Exception levée quand un cocktail exoste déjà dans la base de
+    données.
+    """
+
+    def __init__(self, message: str) -> None:
+        """Itilialize CocktailDupeError."""
+        if message is None:
+            message = "Ce nom de cocktail existe déjà !"
         super().__init__(message)

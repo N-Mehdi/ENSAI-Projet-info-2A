@@ -15,6 +15,7 @@ from src.utils.exceptions import (
     AuthError,
     DAOError,
     EmptyFieldError,
+    InvalidPasswordError,
     PseudoChangingError,
     ServiceError,
     UserAlreadyExistsError,
@@ -176,6 +177,21 @@ def changer_pseudo(
                                 "de l'ancien",
                             },
                         },
+                        "invalid_password": {
+                            "summary": "Mot de passe invalide",
+                            "value": {
+                                "detail": {
+                                    "message": "Le nouveau mot de passe ne respecte pas"
+                                    "les critères de sécurité",
+                                    "errors": [
+                                        "Le mot de passe doit contenir au moins 8"
+                                        "caractères",
+                                        "Le mot de passe doit contenir au moins une"
+                                        "majuscule",
+                                    ],
+                                },
+                            },
+                        },
                     },
                 },
             },
@@ -221,6 +237,7 @@ def changer_mot_de_passe(
     **Sécurité** :
     - Le mot de passe actuel est vérifié avant le changement
     - Le nouveau mot de passe doit être différent de l'ancien
+    - Le nouveau mot de passe doit respecter les critères de sécurité
     - Le nouveau mot de passe est automatiquement haché
     """
     try:
@@ -229,7 +246,16 @@ def changer_mot_de_passe(
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=str(e),
-        ) from None
+        ) from e
+    except InvalidPasswordError as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail={
+                "message": "Le nouveau mot de passe ne respecte pas les critères"
+                "de sécurité",
+                "errors": e.errors,
+            },
+        ) from e
     except UserNotFoundError:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -242,14 +268,14 @@ def changer_mot_de_passe(
         ) from None
     except ServiceError as e:
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            status_code=status.HTTP_400_BAD_REQUEST,
             detail=str(e),
-        ) from None
-    except DAOError:
+        ) from e
+    except DAOError as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Could not update password.",
-        ) from None
+        ) from e
 
 
 @router.get(

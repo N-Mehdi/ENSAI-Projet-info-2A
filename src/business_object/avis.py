@@ -20,6 +20,7 @@ class Avis:
         True si l'utilisateur a testé le cocktail.
     """
 
+    # ruff: noqa: PLR0913
     def __init__(
         self,
         id_utilisateur: int,

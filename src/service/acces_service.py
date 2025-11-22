@@ -1,7 +1,11 @@
 """Couche service pour les opérations d'accès aux cocktails privés."""
 
+from src.business_object.cocktail import Cocktail
 from src.dao.acces_dao import AccesDAO
 from src.dao.cocktail_dao import CocktailDAO
+from src.dao.cocktail_utilisateur_dao import CocktailUtilisateurDAO
+from src.dao.ingredient_dao import IngredientDAO
+from src.dao.instruction_dao import InstructionDAO
 from src.models.acces import (
     AccessList,
     AccessResponse,
@@ -9,14 +13,18 @@ from src.models.acces import (
     PrivateCocktailDetail,
     PrivateCocktailsList,
 )
+from src.utils.conversion_unite import UnitConverter
 from src.utils.exceptions import (
     AccessAlreadyExistsError,
     AccessDeniedError,
     AccessNotFoundError,
+    CocktailDupeError,
     CocktailNotFoundError,
     SelfAccessError,
+    ServiceError,
     UserNotFoundError,
 )
+from src.utils.text_utils import normalize_ingredient_name
 
 
 class AccesService:
@@ -26,6 +34,7 @@ class AccesService:
         """Initialise un AccesService."""
         self.dao = AccesDAO()
         self.dao_cocktail = CocktailDAO()
+        self.dao_cocktail_utilisateur = CocktailUtilisateurDAO()
 
     def grant_access_to_user(
         self,
@@ -313,59 +322,135 @@ class AccesService:
             owner_pseudo=owner_pseudo,
         )
 
-    def add_cocktail_to_private_list_by_name(
+    def create_private_cocktail_with_ingredients(
         self,
         owner_pseudo: str,
-        cocktail_name: str,
-    ) -> AccessResponse:
-        """Ajoute un cocktail à la liste privée par son nom.
+        cocktail_data: dict,
+        ingredients: list[dict],
+        instructions: str | None = None,
+    ) -> dict:
+        """Crée un cocktail privé avec ses ingrédients.
 
         Parameters
         ----------
         owner_pseudo : str
-            Le pseudo du propriétaire
-        cocktail_name : str
-            Le nom du cocktail à ajouter
+            Pseudo du propriétaire
+        cocktail_data : dict
+            Données du cocktail (nom, categorie, verre, alcool, image)
+        ingredients : list[dict]
+            Liste des ingrédients avec quantités
+            Format: [{"nom_ingredient": str, "quantite": float, "unite": str}]
+        instructions : str | None
+            Instructions de préparation
 
         Returns
         -------
-        AccessResponse
-            Objet contenant le succès de l'opération et un message de confirmation
+        dict
+            Cocktail créé avec ses informations
 
         Raises
         ------
         UserNotFoundError
-            Si le propriétaire n'existe pas
-        CocktailNotFoundError
-            Si le cocktail n'existe pas
-        AccessAlreadyExistsError
-            Si le cocktail est déjà dans la liste privée
-        DAOError
-            En cas d'erreur de base de données
+            Si l'utilisateur n'existe pas
+        ServiceError
+            En cas d'erreur
 
         """
+        # Vérifier que l'utilisateur existe
         owner_id = self.dao.get_user_id_by_pseudo(owner_pseudo)
         if owner_id is None:
             raise UserNotFoundError(message=f"Utilisateur '{owner_pseudo}' introuvable")
+        if self.dao_cocktail.cocktail_existe(cocktail_data["nom"]):
+            raise CocktailDupeError(
+                message="Un cocktail ayant le même nom existe déjà.",
+            )
+        try:
+            # 1. Créer le cocktail
 
-        cocktail_id = self.dao_cocktail.get_cocktail_id_by_name(cocktail_name)
-        if cocktail_id is None:
-            raise CocktailNotFoundError(
-                message=f"Cocktail '{cocktail_name}' non trouvé.",
+            cocktail = Cocktail(
+                id_cocktail=None,
+                nom=cocktail_data["nom"],
+                categorie=cocktail_data["categorie"],
+                verre=cocktail_data["verre"],
+                alcool=cocktail_data["alcool"],
+                image=cocktail_data.get("image"),
             )
 
-        added = self.dao.add_cocktail_to_private_list(owner_id, cocktail_id)
-
-        if not added:
-            raise AccessAlreadyExistsError(
-                message=f"Le cocktail '{cocktail_name}' est déjà dans votre liste"
-                "privée",
+            cocktail_id = self.dao_cocktail_utilisateur.insert_cocktail_prive(
+                owner_id,
+                cocktail,
             )
 
-        return AccessResponse(
-            success=True,
-            message=f"Cocktail '{cocktail_name}' ajouté à votre liste privée",
-            owner_pseudo=owner_pseudo,
+            # 2. Ajouter les instructions si fournies
+            if instructions:
+                instruction_dao = InstructionDAO()
+                instruction_dao.ajouter_instruction(cocktail_id, instructions, "en")
+
+            # 3. Traiter et ajouter les ingrédients
+            if ingredients:
+                self._add_ingredients_to_cocktail(cocktail_id, ingredients)
+
+            return {
+                "id_cocktail": cocktail_id,
+                "nom": cocktail_data["nom"],
+                "categorie": cocktail_data["categorie"],
+                "verre": cocktail_data["verre"],
+                "alcool": cocktail_data["alcool"],
+                "image": cocktail_data.get("image"),
+                "instructions": instructions,
+                "ingredients": ingredients,
+            }
+
+        except Exception as e:
+            raise ServiceError(
+                message=f"Erreur lors de la création du cocktail privé: {e}",
+            ) from e
+
+    def _add_ingredients_to_cocktail(
+        self,
+        id_cocktail: int,
+        ingredients: list[dict],
+    ) -> None:
+        """Ajoute les ingrédients à un cocktail.
+
+        Parameters
+        ----------
+        id_cocktail : int
+            ID du cocktail
+        ingredients : list[dict]
+            Liste des ingrédients avec quantités
+
+        """
+        ingredient_dao = IngredientDAO()
+        cocktail_ingredient_dao = CocktailDAO()
+
+        ingredients_to_add = []
+
+        for ing in ingredients:
+            # Normaliser le nom
+            nom_normalise = normalize_ingredient_name(ing["nom_ingredient"])
+
+            # Récupérer ou créer l'ingrédient
+            id_ingredient = ingredient_dao.get_or_create_ingredient(
+                nom_normalise,
+                alcool=False,  # Par défaut, peut être amélioré
+            )
+
+            # Normaliser l'unité
+            unite_normalisee = UnitConverter.normalize_unit(ing["unite"])
+
+            ingredients_to_add.append(
+                {
+                    "id_ingredient": id_ingredient,
+                    "quantite": ing["quantite"],
+                    "unite": unite_normalisee or ing["unite"],
+                },
+            )
+
+        # Ajouter tous les ingrédients
+        cocktail_ingredient_dao.add_ingredients_to_cocktail(
+            id_cocktail,
+            ingredients_to_add,
         )
 
     def remove_cocktail_from_private_list(

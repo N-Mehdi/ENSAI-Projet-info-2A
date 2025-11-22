@@ -15,6 +15,7 @@ from src.utils.exceptions import (
     DAOError,
     EmptyFieldError,
     InvalidBirthDateError,
+    InvalidPasswordError,
     MailAlreadyExistsError,
     ServiceError,
     UserAlreadyExistsError,
@@ -60,71 +61,7 @@ def login_access_token(
 
 @router.post("/login/inscription")
 def creer_compte(donnees: UserRegister) -> str:
-    """Créer un nouveau compte utilisateur.
-
-    Parameters
-    ----------
-    donnees : UserRegister
-        Données d'inscription contenant :
-        - pseudo : str - Nom d'utilisateur unique
-        - mail : str - Adresse email unique et valide
-        - mot_de_passe : str - Mot de passe en clair (sera haché)
-        - date_naissance : date - Date de naissance de l'utilisateur
-
-    Returns
-    -------
-    str
-        Message de confirmation : "compte créé avec succès."
-
-    Raises
-    ------
-    HTTPException (400 - Bad Request)
-        - Champ vide : "Le champ '{nom_champ}' ne peut pas être vide"
-        - Pseudo déjà utilisé : "Username already registered"
-        - Email déjà utilisé : "Email already registered"
-        - Date de naissance invalide : "Invalid birth date: must be in the past and user
-          must be at least 13 years old"
-
-    HTTPException (500 - Internal Server Error)
-        - Erreur lors de la création du compte
-        - Erreur de base de données
-
-    Examples
-    --------
-    Requête réussie :
-    ```json
-    {
-        "pseudo": "alice",
-        "mail": "alice@example.com",
-        "mot_de_passe": "MotDePasse123!",
-        "date_naissance": "1995-06-15"
-    }
-    ```
-    Réponse : "compte créé avec succès."
-
-    Requête avec pseudo existant :
-    ```json
-    {
-        "pseudo": "alice",
-        "mail": "nouvelle@example.com",
-        "mot_de_passe": "MotDePasse123!",
-        "date_naissance": "1995-06-15"
-    }
-    ```
-    Erreur 400 : "Username already registered"
-
-    Requête avec date de naissance invalide :
-    ```json
-    {
-        "pseudo": "bob",
-        "mail": "bob@example.com",
-        "mot_de_passe": "MotDePasse123!",
-        "date_naissance": "2025-01-01"
-    }
-    ```
-    Erreur 400 : "Invalid birth date: must be in the past."
-
-    """
+    """Créer un nouveau compte utilisateur."""
     try:
         return service.creer_compte(donnees)
     except EmptyFieldError as e:
@@ -132,11 +69,19 @@ def creer_compte(donnees: UserRegister) -> str:
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=str(e),
         ) from e
+    except InvalidPasswordError as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail={
+                "message": "Le mot de passe ne respecte pas les critères de sécurité",
+                "errors": e.errors,
+            },
+        ) from e
     except InvalidBirthDateError as e:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=str(e),
-        ) from None
+        ) from e
     except UserAlreadyExistsError:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -151,9 +96,9 @@ def creer_compte(donnees: UserRegister) -> str:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=str(e),
-        ) from None
-    except DAOError:
+        ) from e
+    except DAOError as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Could not register user.",
-        ) from None
+        ) from e

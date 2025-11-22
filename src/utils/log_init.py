@@ -1,3 +1,5 @@
+"""log."""
+
 import logging
 import logging.config
 import pathlib
@@ -5,13 +7,8 @@ import pathlib
 import yaml
 
 
-def initialiser_logs(nom):
+def initialiser_logs(nom) -> None:
     """Initialise les logs à partir du fichier de config."""
-    # print current working directory
-    # print(os.getcwd())
-    # os.chdir('ENSAI-2A-projet-info-template')
-
-    # Création du dossier logs à la racine si non existant
     pathlib.Path("logs").mkdir(exist_ok=True, parents=True)
 
     stream = pathlib.Path("logging_config.yml").open(encoding="utf-8")

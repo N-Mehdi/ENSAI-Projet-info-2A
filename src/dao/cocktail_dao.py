@@ -352,3 +352,98 @@ class CocktailDAO(metaclass=Singleton):
                 (id_cocktail,),
             )
             return cursor.rowcount > 0
+
+    @staticmethod
+    @log
+    def add_ingredient_to_cocktail(
+        id_cocktail: int,
+        id_ingredient: int,
+        quantite: float,
+        unite: str,
+    ) -> None:
+        """Ajoute un ingrédient à un cocktail.
+
+        Parameters
+        ----------
+        id_cocktail : int
+            ID du cocktail
+        id_ingredient : int
+            ID de l'ingrédient
+        quantite : float
+            Quantité de l'ingrédient
+        unite : str
+            Unité de mesure
+
+        """
+        with DBConnection().connection as connection, connection.cursor() as cursor:
+            cursor.execute(
+                "INSERT INTO cocktail_ingredient "
+                "(id_cocktail, id_ingredient, qte, unite) "
+                "VALUES (%s, %s, %s, %s)",
+                (id_cocktail, id_ingredient, quantite, unite),
+            )
+
+    @staticmethod
+    @log
+    def add_ingredients_to_cocktail(
+        id_cocktail: int,
+        ingredients: list[dict],
+    ) -> None:
+        """Ajoute plusieurs ingrédients à un cocktail.
+
+        Parameters
+        ----------
+        id_cocktail : int
+            ID du cocktail
+        ingredients : list[dict]
+            Liste des ingrédients avec leurs quantités
+            Format: [{"id_ingredient": int, "quantite": float, "unite": str}]
+
+        """
+        with DBConnection().connection as connection, connection.cursor() as cursor:
+            for ingredient in ingredients:
+                cursor.execute(
+                    "INSERT INTO cocktail_ingredient "
+                    "(id_cocktail, id_ingredient, qte, unite) "
+                    "VALUES (%s, %s, %s, %s)",
+                    (
+                        id_cocktail,
+                        ingredient["id_ingredient"],
+                        ingredient["quantite"],
+                        ingredient["unite"],
+                    ),
+                )
+
+    @staticmethod
+    def cocktail_existe(nom: str) -> bool:
+        """Vérifie si un cocktail existe déjà en base de données.
+
+        Parameters
+        ----------
+        nom : str
+            Le nom du cocktail à vérifier
+
+        Returns
+        -------
+        bool
+            True si le cocktail existe, False sinon
+
+        Raises
+        ------
+        DAOError
+            En cas d'erreur de base de données
+
+        """
+        try:
+            with DBConnection().connection as connection:
+                with connection.cursor() as cursor:
+                    cursor.execute(
+                        "SELECT EXISTS(SELECT 1 FROM cocktail WHERE nom = %(nom)s)",
+                        {"nom": nom},
+                    )
+                    result = cursor.fetchone()
+                if result:
+                    return result["exists"]
+                return False
+        except Exception as e:
+            raise DAOError from e

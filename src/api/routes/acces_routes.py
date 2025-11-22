@@ -2,26 +2,30 @@
 
 from typing import Annotated
 
-from fastapi import APIRouter, HTTPException, Path, Query
+from fastapi import APIRouter, HTTPException, Path, Query, status
 
 from src.api.deps import CurrentUser
 from src.dao.cocktail_dao import CocktailDAO
 from src.models.acces import AccessList, AccessResponse, PrivateCocktailsList
-from src.models.cocktail import CocktailWithoutId
-from src.models.cocktail_prive import CocktailPriveCreate
+from src.models.cocktail import CocktailPriveCreate, IngredientCreate
 from src.service.acces_service import AccesService
 from src.service.cocktail_service import CocktailService
+from src.service.ingredient_service import IngredientService
 from utils.exceptions import (
     AccessAlreadyExistsError,
     AccessDeniedError,
     AccessNotFoundError,
+    CocktailDupeError,
     CocktailNotFoundError,
+    OneIngredientError,
     SelfAccessError,
+    ServiceError,
     UserNotFoundError,
 )
 
 router = APIRouter(prefix="/cocktails-prives", tags=["Cocktails Privés"])
 
+ingredient_service = IngredientService()
 acces_service = AccesService()
 cocktail_service = CocktailService(CocktailDAO())
 
@@ -29,29 +33,30 @@ cocktail_service = CocktailService(CocktailDAO())
 
 
 @router.post(
-    "/ajouter-cocktail",
-    summary="Ajouter un cocktail à ma liste privée",
-    status_code=201,
+    "/cocktails-prives",
+    summary="Créer un cocktail privé",
+    status_code=status.HTTP_201_CREATED,
 )
-def add_cocktail_to_private_list_by_name(
+def create_private_cocktail(
     current_user: CurrentUser,
     cocktail_prive: CocktailPriveCreate,
-) -> AccessResponse:
+) -> dict:
     """Crée un nouveau cocktail privé pour l'utilisateur connecté.
 
     Le cocktail est automatiquement ajouté à votre liste privée avec is_owner=TRUE.
+    Les ingrédients sont normalisés et créés s'ils n'existent pas dans la base.
 
     Parameters
     ----------
     current_user : CurrentUser
         L'utilisateur authentifié (injecté automatiquement)
     cocktail_prive : CocktailPriveCreate
-        Données du cocktail à créer
+        Données du cocktail à créer avec ses ingrédients
 
     Returns
     -------
-    CocktailAvecInstructions
-        Le cocktail créé avec ses instructions
+    dict
+        Le cocktail créé avec ses informations complètes
 
     Raises
     ------
@@ -62,33 +67,131 @@ def add_cocktail_to_private_list_by_name(
     HTTPException(500)
         En cas d'erreur serveur
 
+    Examples
+    --------
+    ```json
+    {
+        "nom": "Mon Mojito",
+        "categorie": "Cocktail",
+        "verre": "Highball",
+        "alcool": true,
+        "image": "mojito.jpg",
+        "instructions": "Piler la menthe avec le sucre...",
+        "ingredients": [
+            {
+                "nom_ingredient": "Rhum blanc",
+                "quantite": 50,
+                "unite": "ml"
+            },
+            {
+                "nom_ingredient": "Menthe fraîche",
+                "quantite": 10,
+                "unite": "feuilles"
+            },
+            {
+                "nom_ingredient": "Sucre",
+                "quantite": 2,
+                "unite": "cuillères à café"
+            }
+        ]
+    }
+    ```
+
     """
-    cocktail = CocktailWithoutId(
-        nom=cocktail_prive.nom,
-        categorie=cocktail_prive.categorie,
-        verre=cocktail_prive.verre,
-        alcool=cocktail_prive.alcool,
-        image=cocktail_prive.image,
-    )
-    instructions = cocktail_prive.instructions
     try:
-        cocktail = cocktail_service.ajouter_cocktail_complet(
-            cocktail,
-            instructions,
-            langue="en",
+        cocktail_data = {
+            "nom": cocktail_prive.nom,
+            "categorie": cocktail_prive.categorie,
+            "verre": cocktail_prive.verre,
+            "alcool": cocktail_prive.alcool,
+            "image": cocktail_prive.image,
+        }
+        ingredients = [
+            {
+                "nom_ingredient": ing.nom_ingredient,
+                "quantite": ing.quantite,
+                "unite": ing.unite,
+            }
+            for ing in cocktail_prive.ingredients
+            if ing.nom_ingredient and ing.quantite > 0
+        ]
+        try:
+            assert ingredients is not None
+            # au moins 1 ingrédient
+        except ValueError as e:
+            raise OneIngredientError(
+                message="Erreur dans la création ducocktail privé.",
+            ) from e
+
+        result = acces_service.create_private_cocktail_with_ingredients(
+            owner_pseudo=current_user.pseudo,
+            cocktail_data=cocktail_data,
+            ingredients=ingredients,  # Le service reçoit maintenant la liste filtrée
+            instructions=cocktail_prive.instructions,
         )
-        result = acces_service.add_cocktail_to_private_list_by_name(
-            current_user.pseudo,
-            cocktail_prive.nom,
-        )
+
     except UserNotFoundError as e:
-        raise HTTPException(status_code=404, detail=str(e)) from e
-    except CocktailNotFoundError as e:
-        raise HTTPException(status_code=404, detail=str(e)) from e
-    except AccessAlreadyExistsError as e:
-        raise HTTPException(status_code=409, detail=str(e)) from e
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=str(e),
+        ) from e
+    except CocktailDupeError as e:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=str(e),
+        ) from e
+    except ServiceError as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=str(e),
+        ) from e
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Erreur serveur: {e!s}") from e
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Erreur serveur: {e!s}",
+        ) from e
+
+    return result
+
+
+@router.post(
+    "/ingredients",
+    summary="Créer un nouvel ingrédient",
+    status_code=status.HTTP_201_CREATED,
+)
+def create_ingredient(
+    current_user: CurrentUser,
+    ingredient: IngredientCreate,
+) -> dict:
+    """Crée un nouvel ingrédient dans la base de données.
+
+    Le nom de l'ingrédient est automatiquement normalisé pour éviter les doublons.
+    Si l'ingrédient existe déjà, retourne l'ingrédient existant.
+
+    Parameters
+    ----------
+    current_user : CurrentUser
+        L'utilisateur authentifié
+    ingredient : IngredientCreate
+        Données de l'ingrédient à créer
+
+    Returns
+    -------
+    dict
+        L'ingrédient créé ou existant
+
+    """
+    try:
+        result = ingredient_service.get_or_create_ingredient(
+            nom=ingredient.nom,
+            alcool=ingredient.alcool,
+        )
+
+    except ServiceError as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=str(e),
+        ) from e
     return result
 
 

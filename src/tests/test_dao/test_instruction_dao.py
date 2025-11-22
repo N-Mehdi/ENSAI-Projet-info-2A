@@ -3,6 +3,7 @@
 import pytest
 
 from src.dao.instruction_dao import InstructionDAO
+from src.utils.exceptions import DAOError
 
 
 class TestInstructionDAOAjout:
@@ -110,5 +111,5 @@ class TestInstructionDAOAjout:
         texte_instruction = "Test instruction"
 
         # WHEN / THEN
-        with pytest.raises(Exception):
+        with pytest.raises(DAOError):
             dao.ajouter_instruction(id_cocktail_inexistant, texte_instruction)

@@ -11,7 +11,7 @@ from src.utils.singleton import Singleton
 
 
 @pytest.fixture(scope="session", autouse=True)
-def load_test_env():
+def load_test_env() -> None:
     """Charge les variables d'environnement de test."""
     load_dotenv(".env.test", override=True)
 
@@ -27,7 +27,7 @@ def load_test_env():
 
 
 @pytest.fixture(scope="session", autouse=True)
-def populate_test_database(load_test_env):
+def populate_test_database(load_test_env) -> None:
     """Peuple la base de test avec les données de référence au début de la session."""
     db_name = os.getenv("POSTGRES_DATABASE")
     db_user = os.getenv("POSTGRES_USER")
@@ -58,8 +58,6 @@ def populate_test_database(load_test_env):
             check=True,
         )
 
-        print("Base de test peuplée avec succès!")
-
         if "Données insérées avec succès" in result.stdout:
             print(f"Sortie du script:\n{result.stdout}")
 
@@ -76,13 +74,9 @@ def populate_test_database(load_test_env):
             "PATH.",
         ) from e
 
-    yield
 
-    print("\n Nettoyage final de la base de test...")
-
-
-@pytest.fixture(scope="function")
-def db_connection():
+@pytest.fixture
+def db_connection() -> None:
     """Fournit une connexion à la base de données de test pour chaque test."""
     connection = DBConnection().connection
     yield connection
@@ -90,8 +84,8 @@ def db_connection():
     connection.close()
 
 
-@pytest.fixture(scope="function", autouse=True)
-def reset_singletons():
+@pytest.fixture(autouse=True)
+def reset_singletons() -> None:
     """Réinitialise tous les singletons après chaque test.
 
     Cette fixture est CRITIQUE pour les tests d'intégration car elle évite
@@ -106,7 +100,7 @@ def reset_singletons():
     Singleton._instances = {}
 
 
-@pytest.fixture(scope="function")
+@pytest.fixture
 def clean_database(db_connection) -> None:
     """Nettoie la base de données avant chaque test."""
     with db_connection.cursor() as cursor:

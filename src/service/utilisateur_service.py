@@ -16,11 +16,16 @@ from src.utils.exceptions import (
     AuthError,
     EmptyFieldError,
     InvalidBirthDateError,
+    InvalidPasswordError,
     PseudoChangingError,
     ServiceError,
     UserNotFoundError,
 )
-from src.utils.securite import hacher_mot_de_passe, verifier_mot_de_passe
+from src.utils.securite import (
+    hacher_mot_de_passe,
+    validate_password,
+    verifier_mot_de_passe,
+)
 
 
 class UtilisateurService:
@@ -41,7 +46,7 @@ class UtilisateurService:
 
         Returns
         -------
-        "compte créé avec succès." : str
+        str
             Message indiquant le succès de la création du compte.
 
         Raises
@@ -49,6 +54,8 @@ class UtilisateurService:
         EmptyFieldError
             Si un champ obligatoire (pseudo, mail, mot de passe, date de naissance)
             est vide.
+        InvalidPasswordError
+            Si le mot de passe ne respecte pas les critères de sécurité.
         ServiceError
             En cas d'erreur lors du hachage du mot de passe, de la validation du modèle
             ou de la création en base.
@@ -64,15 +71,17 @@ class UtilisateurService:
         if not donnees.date_naissance:
             raise EmptyFieldError(field="date_naissance")
 
-        # valider la date de naissance
+        # Validation du mot de passe
+        validation_result = validate_password(donnees.mot_de_passe)
+        if not validation_result.is_valid:
+            raise InvalidPasswordError(errors=validation_result.errors)
+
+        # Valider la date de naissance
         birth_date = self._parse_and_validate_birth_date(donnees.date_naissance)
 
-        # Récupérer le mot de passe brut
-        mot_de_passe = donnees.mot_de_passe
-
-        # Hachage
+        # Hachage du mot de passe
         try:
-            mot_de_passe_hashed = hacher_mot_de_passe(mot_de_passe)
+            mot_de_passe_hashed = hacher_mot_de_passe(donnees.mot_de_passe)
         except Exception as e:
             raise ServiceError(
                 message=f"Erreur lors du hachage du mot de passe : {e}",
@@ -203,12 +212,14 @@ class UtilisateurService:
         ------
         EmptyFieldError
             Si un champ est vide
+        InvalidPasswordError
+            Si le nouveau mot de passe ne respecte pas les critères
         UserNotFoundError
             Si l'utilisateur n'existe pas
         AuthError
             Si le mot de passe actuel est incorrect
         ServiceError
-            En cas d'erreur générale
+            Si les mots de passe sont identiques ou erreur générale
 
         """
         # Validation des champs vides
@@ -224,6 +235,11 @@ class UtilisateurService:
             raise ServiceError(
                 message="Le nouveau mot de passe doit être différent de l'ancien",
             )
+
+        # Validation du nouveau mot de passe
+        validation_result = validate_password(donnees.mot_de_passe_nouveau)
+        if not validation_result.is_valid:
+            raise InvalidPasswordError(errors=validation_result.errors)
 
         # Récupérer l'utilisateur pour vérifier le mot de passe actuel
         utilisateur = self.utilisateur_dao.recuperer_par_pseudo(donnees.pseudo)
@@ -260,7 +276,7 @@ class UtilisateurService:
         if not succes:
             raise ServiceError(message="Impossible de mettre à jour le mot de passe")
 
-        return "Mot de passe modifié avec succès."
+        return "Mot de passe modifié avec succès"
 
     @staticmethod
     def _parse_and_validate_birth_date(birth_date_input) -> date:

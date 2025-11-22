@@ -139,3 +139,33 @@ class CocktailCreateResponse(BaseModel):
     id_cocktail: int = Field(..., description="ID du cocktail créé")
     nom: str = Field(..., description="Nom du cocktail créé")
     message: str = Field(..., description="Message de confirmation")
+
+
+class IngredientQuantite(BaseModel):
+    """Modèle pour un ingrédient avec sa quantité."""
+
+    nom_ingredient: str = Field(..., description="Nom de l'ingrédient")
+    quantite: float = Field(..., gt=0, description="Quantité de l'ingrédient")
+    unite: str = Field(..., description="Unité de mesure (ml, g, cl, etc.)")
+
+
+class IngredientCreate(BaseModel):
+    """Modèle pour la création d'un ingrédient."""
+
+    nom: str = Field(..., min_length=1, max_length=200)
+    alcool: bool = Field(default=False)
+
+
+class CocktailPriveCreate(BaseModel):
+    """Modèle pour la création d'un cocktail privé."""
+
+    nom: str = Field(..., min_length=1, max_length=200)
+    categorie: str = Field(..., min_length=1, max_length=100)
+    verre: str = Field(..., min_length=1, max_length=100)
+    alcool: bool
+    image: str | None = None
+    instructions: str | None = None
+    ingredients: list[IngredientQuantite] = Field(
+        default_factory=list,
+        description="Liste des ingrédients avec quantités",
+    )

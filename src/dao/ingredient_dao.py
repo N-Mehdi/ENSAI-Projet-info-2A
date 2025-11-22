@@ -3,6 +3,7 @@
 from src.dao.db_connection import DBConnection
 from src.utils.log_decorator import log
 from src.utils.singleton import Singleton
+from src.utils.text_utils import normalize_ingredient_name
 
 
 class IngredientDAO(metaclass=Singleton):
@@ -50,7 +51,7 @@ class IngredientDAO(metaclass=Singleton):
                 """
                 SELECT id_ingredient, nom
                 FROM ingredient
-                WHERE nom = %(nom)s
+                WHERE LOWER(nom) = LOWER(%(nom)s)
                 """,
                 {"nom": nom},
             )
@@ -125,3 +126,84 @@ class IngredientDAO(metaclass=Singleton):
                 return None
 
             return result["alcool"]
+
+    def get_ingredient_by_name(self, nom: str) -> dict | None:
+        """Récupère un ingrédient par son nom (insensible à la casse).
+
+        Parameters
+        ----------
+        nom : str
+            Nom de l'ingrédient
+
+        Returns
+        -------
+        dict | None
+            Ingrédient trouvé ou None
+
+        """
+        with DBConnection().connection as connection, connection.cursor() as cursor:
+            cursor.execute(
+                "SELECT id_ingredient, nom, alcool FROM ingredient "
+                "WHERE LOWER(nom) = LOWER(%s)",
+                (nom,),
+            )
+            return cursor.fetchone()
+
+    @log
+    def create_ingredient(self, nom: str, *, alcool: bool) -> int:
+        """Crée un nouvel ingrédient.
+
+        Parameters
+        ----------
+        nom : str
+            Nom de l'ingrédient
+        alcool : bool
+            Indique si l'ingrédient contient de l'alcool
+
+        Returns
+        -------
+        int
+            ID de l'ingrédient créé
+
+        Raises
+        ------
+        DAOError
+            En cas d'erreur de base de données
+
+        """
+        with DBConnection().connection as connection, connection.cursor() as cursor:
+            cursor.execute(
+                "INSERT INTO ingredient (nom, alcool) VALUES (%s, %s) "
+                "RETURNING id_ingredient",
+                (nom, alcool),
+            )
+            result = cursor.fetchone()
+            return result["id_ingredient"]
+
+    @log
+    def get_or_create_ingredient(self, nom: str, *, alcool: bool) -> int:
+        """Récupère ou crée un ingrédient.
+
+        Parameters
+        ----------
+        nom : str
+            Nom de l'ingrédient (sera normalisé)
+        alcool : bool
+            Indique si l'ingrédient contient de l'alcool
+
+        Returns
+        -------
+        int
+            ID de l'ingrédient
+
+        """
+        # Normaliser le nom
+        nom_normalise = normalize_ingredient_name(nom)
+
+        # Vérifier si l'ingrédient existe
+        ingredient = self.get_ingredient_by_name(nom_normalise)
+        if ingredient:
+            return ingredient["id_ingredient"]
+
+        # Créer l'ingrédient
+        return self.create_ingredient(nom_normalise, alcool)

@@ -200,28 +200,27 @@ class TestIngredientDAOIntegration:
 
     @pytest.mark.usefixtures("clean_database")
     @staticmethod
-    def test_get_by_name_exact_match(db_connection) -> None:
-        """Teste que la recherche nécessite un match exact."""
+    def test_get_by_name_case_insensitive(db_connection) -> None:
+        """Teste que la recherche est insensible à la casse."""
         # GIVEN
         with db_connection.cursor() as cursor:
             cursor.execute(
                 """
                 INSERT INTO ingredient (nom, alcool)
-                VALUES ('Rhum', TRUE)
+                VALUES ('Rhum', TRUE) -- Casse initiale 'Rhum'
             """,
             )
             db_connection.commit()
 
         dao = IngredientDAO()
 
-        # WHEN - Rechercher avec une casse différente
+        # WHEN
         result = dao.get_by_name("rhum")
 
-        # THEN - Ne devrait pas trouver (match exact requis)
-        if result is not None:
+        if result is None:
             raise AssertionError(
-                message="La recherche devrait être sensible à la casse "
-                "(match exact requis)",
+                message="La recherche devrait être insensible à la casse, l'ingrédient "
+                "n'a pas été trouvé.",
             )
 
     @pytest.mark.usefixtures("clean_database")

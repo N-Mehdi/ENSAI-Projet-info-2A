@@ -516,9 +516,9 @@ class TestUtilisateurService:
         resultat = service.changer_mot_de_passe(donnees)
 
         # THEN
-        if resultat != "Mot de passe modifié avec succès.":
+        if resultat != "Mot de passe modifié avec succès":
             raise AssertionError(
-                message=f"Le message devrait être 'Mot de passe modifié avec succès.',"
+                message=f"Le message devrait être 'Mot de passe modifié avec succès, "
                 f"obtenu: {resultat}",
             )
         dao_mock.update_mot_de_passe.assert_called_once()
@@ -529,8 +529,8 @@ class TestUtilisateurService:
         # GIVEN
         donnees = UserChangePassword(
             pseudo="",
-            mot_de_passe_actuel="OldPass",
-            mot_de_passe_nouveau="NewPass",
+            mot_de_passe_actuel="OldPass123!",
+            mot_de_passe_nouveau="NewPass123!",
         )
 
         dao_mock = MagicMock(spec=UtilisateurDAO)
@@ -579,8 +579,8 @@ class TestUtilisateurService:
         # GIVEN
         donnees = UserChangePassword(
             pseudo="inconnu",
-            mot_de_passe_actuel="OldPass",
-            mot_de_passe_nouveau="NewPass",
+            mot_de_passe_actuel="OldPass123!",
+            mot_de_passe_nouveau="NewPass123!",
         )
 
         dao_mock = MagicMock(spec=UtilisateurDAO)
@@ -602,7 +602,7 @@ class TestUtilisateurService:
 
         donnees = UserChangePassword(
             pseudo="john_doe",
-            mot_de_passe_actuel="WrongPass",
+            mot_de_passe_actuel="WrongPass123!",
             mot_de_passe_nouveau="NewPass456!",
         )
 
