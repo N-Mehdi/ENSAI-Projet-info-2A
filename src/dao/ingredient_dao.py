@@ -149,8 +149,9 @@ class IngredientDAO(metaclass=Singleton):
             )
             return cursor.fetchone()
 
+    @staticmethod
     @log
-    def create_ingredient(self, nom: str, *, alcool: bool) -> int:
+    def create_ingredient(nom: str, *, alcool: bool) -> int:
         """Crée un nouvel ingrédient.
 
         Parameters
