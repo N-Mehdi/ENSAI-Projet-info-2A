@@ -2,7 +2,7 @@
 
 from src.dao.ingredient_dao import IngredientDAO
 from src.dao.liste_course_dao import ListeCourseDAO
-from src.dao.stock_course_dao import StockCourseDAO
+from src.dao.stock_dao import StockDAO
 from src.dao.utilisateur_dao import UtilisateurDAO
 from src.models.liste_course import ListeCourseItem
 from src.service.ingredient_service import IngredientService
@@ -21,7 +21,7 @@ class ListeCourseService:
     def __init__(self) -> None:
         """Initialise un ListeCourseService."""
         self.liste_course_dao = ListeCourseDAO()
-        self.stock_dao = StockCourseDAO()
+        self.stock_dao = StockDAO()
         self.ingredient_dao = IngredientDAO()
         self.ingredient_svc = IngredientService()
         utilisateur_dao = UtilisateurDAO()
@@ -180,12 +180,50 @@ class ListeCourseService:
             lors du transfert
 
         """
-        ingredient = self.ingredient_svc.get_by_name_with_suggestions(
-            nom_ingredient,
+        ingredient = self.ingredient_svc.get_by_name_with_suggestions(nom_ingredient)
+        liste_item = self._recuperer_liste_item(id_utilisateur, ingredient)
+        stock_item = self._recuperer_stock_item(id_utilisateur, ingredient)
+
+        nouvelle_quantite, id_unite_finale = self._calculer_nouvelle_quantite(
+            liste_item,
+            stock_item,
         )
 
+        self._transferer_vers_stock(
+            id_utilisateur,
+            ingredient["id_ingredient"],
+            nouvelle_quantite,
+            id_unite_finale,
+        )
+
+        return self._generer_message_confirmation(
+            ingredient["nom"],
+            nouvelle_quantite,
+            id_unite_finale,
+        )
+
+    def _recuperer_liste_item(self, id_utilisateur: int, ingredient: dict) -> dict:
+        """Récupère l'item de la liste de course.
+
+        Parameters
+        ----------
+        id_utilisateur : int
+            L'identifiant de l'utilisateur
+        ingredient : dict
+            Informations de l'ingrédient
+
+        Returns
+        -------
+        dict
+            Item de la liste de course
+
+        Raises
+        ------
+        ServiceError
+            Si l'item n'existe pas ou erreur de récupération
+
+        """
         try:
-            # Récupérer l'item de la liste de course
             liste_item = self.liste_course_dao.get_liste_course_item(
                 id_utilisateur=id_utilisateur,
                 id_ingredient=ingredient["id_ingredient"],
@@ -201,13 +239,35 @@ class ListeCourseService:
                 "liste de course",
             )
 
-        quantite_liste = float(liste_item["quantite"])
-        id_unite_liste = liste_item["id_unite"]
-        code_unite_liste = liste_item["code_unite"]
+        return liste_item
 
-        # Vérifier si l'ingrédient existe déjà dans le stock
+    def _recuperer_stock_item(
+        self,
+        id_utilisateur: int,
+        ingredient: dict,
+    ) -> dict | None:
+        """Récupère l'item du stock s'il existe.
+
+        Parameters
+        ----------
+        id_utilisateur : int
+            L'identifiant de l'utilisateur
+        ingredient : dict
+            Informations de l'ingrédient
+
+        Returns
+        -------
+        dict | None
+            Item du stock ou None s'il n'existe pas
+
+        Raises
+        ------
+        ServiceError
+            En cas d'erreur de récupération
+
+        """
         try:
-            stock_item = self.stock_dao.get_stock_item(
+            return self.stock_dao.get_stock_item(
                 id_utilisateur=id_utilisateur,
                 id_ingredient=ingredient["id_ingredient"],
             )
@@ -216,102 +276,297 @@ class ListeCourseService:
                 message=f"Erreur lors de la récupération du stock : {e}",
             ) from e
 
-        # Initialiser les variables par défaut
-        nouvelle_quantite = quantite_liste
-        id_unite_finale = id_unite_liste
+    def _calculer_nouvelle_quantite(
+        self,
+        liste_item: dict,
+        stock_item: dict | None,
+    ) -> tuple[float, int]:
+        """Trouve la nouvelle quantité en gérant les conversions d'unités.
 
-        if stock_item:
-            # L'ingrédient existe dans le stock
-            quantite_stock = float(stock_item["quantite"])
-            id_unite_stock = stock_item["id_unite"]
+        Parameters
+        ----------
+        liste_item : dict
+            Item de la liste de course
+        stock_item : dict | None
+            Item du stock existant ou None
 
-            # Récupérer l'info de l'unité du stock
-            stock_unite_info = self.stock_dao.get_unite_info(id_unite_stock)
-            code_unite_stock = (
-                stock_unite_info["abbreviation"] if stock_unite_info else None
+        Returns
+        -------
+        tuple[float, int]
+            (nouvelle_quantite, id_unite_finale)
+
+        """
+        quantite_liste = float(liste_item["quantite"])
+        id_unite_liste = liste_item["id_unite"]
+
+        if not stock_item:
+            return quantite_liste, id_unite_liste
+
+        return self._fusionner_quantites(liste_item, stock_item)
+
+    def _fusionner_quantites(
+        self,
+        liste_item: dict,
+        stock_item: dict,
+    ) -> tuple[float, int]:
+        """Fusionne les quantités du stock et de la liste de course.
+
+        Parameters
+        ----------
+        liste_item : dict
+            Item de la liste de course
+        stock_item : dict
+            Item du stock existant
+
+        Returns
+        -------
+        tuple[float, int]
+            (nouvelle_quantite, id_unite_finale)
+
+        """
+        quantite_liste = float(liste_item["quantite"])
+        id_unite_liste = liste_item["id_unite"]
+        code_unite_liste = liste_item["code_unite"]
+
+        quantite_stock = float(stock_item["quantite"])
+        id_unite_stock = stock_item["id_unite"]
+
+        # Même unité : addition directe
+        if id_unite_liste == id_unite_stock:
+            return quantite_stock + quantite_liste, id_unite_liste
+
+        # Unités différentes : conversion nécessaire
+        stock_unite_info = self.stock_dao.get_unite_info(id_unite_stock)
+        code_unite_stock = (
+            stock_unite_info["abbreviation"] if stock_unite_info else None
+        )
+
+        if not (code_unite_stock and code_unite_liste):
+            return quantite_liste, id_unite_liste
+
+        return self._convertir_et_additionner(
+            quantite_liste,
+            code_unite_liste,
+            quantite_stock,
+            code_unite_stock,
+            id_unite_stock,
+            id_unite_liste,
+        )
+
+    # ruff: noqa: PLR0913
+    # ruff: noqa: PLR0917
+    def _convertir_et_additionner(
+        self,
+        quantite_liste: float,
+        code_unite_liste: str,
+        quantite_stock: float,
+        code_unite_stock: str,
+        id_unite_stock: int,
+        id_unite_liste: int,
+    ) -> tuple[float, int]:
+        """Convertit et additionne les quantités selon leur type.
+
+        Parameters
+        ----------
+        quantite_liste : float
+            Quantité de la liste de course
+        code_unite_liste : str
+            Code unité de la liste
+        quantite_stock : float
+            Quantité du stock
+        code_unite_stock : str
+            Code unité du stock
+        id_unite_stock : int
+            ID unité du stock
+        id_unite_liste : int
+            ID unité de la liste
+
+        Returns
+        -------
+        tuple[float, int]
+            (nouvelle_quantite, id_unite_finale)
+
+        """
+        # Vérifier si les deux unités sont liquides
+        if UnitConverter.is_liquid_unit(
+            code_unite_liste,
+        ) and UnitConverter.is_liquid_unit(code_unite_stock):
+            return self._additionner_liquides(
+                quantite_liste,
+                code_unite_liste,
+                quantite_stock,
+                code_unite_stock,
+                id_unite_stock,
             )
 
-            if id_unite_liste == id_unite_stock:
-                # Même unité : additionner directement
-                nouvelle_quantite = quantite_stock + quantite_liste
-                id_unite_finale = id_unite_liste
+        # Vérifier si les deux unités sont solides
+        if UnitConverter.is_solid_unit(
+            code_unite_liste,
+        ) and UnitConverter.is_solid_unit(code_unite_stock):
+            return self._additionner_solides(
+                quantite_liste,
+                code_unite_liste,
+                quantite_stock,
+                code_unite_stock,
+                id_unite_stock,
+            )
 
-            elif code_unite_stock and code_unite_liste:
-                # Déterminer le type d'unité
-                is_liquid_liste = UnitConverter.is_liquid_unit(code_unite_liste)
-                is_liquid_stock = UnitConverter.is_liquid_unit(code_unite_stock)
-                is_solid_liste = UnitConverter.is_solid_unit(code_unite_liste)
-                is_solid_stock = UnitConverter.is_solid_unit(code_unite_stock)
+        # Types incompatibles : garder la quantité de la liste
+        return quantite_liste, id_unite_liste
 
-                if is_liquid_liste and is_liquid_stock:
-                    # Les deux sont liquides : convertir en ml
-                    ml_stock = UnitConverter.convert_to_ml(
-                        quantite_stock,
-                        code_unite_stock,
-                    )
-                    ml_liste = UnitConverter.convert_to_ml(
-                        quantite_liste,
-                        code_unite_liste,
-                    )
+    @staticmethod
+    def _additionner_liquides(
+        quantite_liste: float,
+        code_unite_liste: str,
+        quantite_stock: float,
+        code_unite_stock: str,
+        id_unite_stock: int,
+    ) -> tuple[float, int]:
+        """Additionne deux quantités liquides avec conversion.
 
-                    if ml_stock is not None and ml_liste is not None:
-                        total_ml = ml_stock + ml_liste
+        Parameters
+        ----------
+        quantite_liste : float
+            Quantité de la liste de course
+        code_unite_liste : str
+            Code unité de la liste
+        quantite_stock : float
+            Quantité du stock
+        code_unite_stock : str
+            Code unité du stock
+        id_unite_stock : int
+            ID unité du stock
 
-                        # Convertir le total dans l'unité du stock
-                        facteur_stock = UnitConverter.LIQUID_TO_ML.get(
-                            code_unite_stock.lower(),
-                            1,
-                        )
-                        nouvelle_quantite = total_ml / facteur_stock
-                        id_unite_finale = id_unite_stock
+        Returns
+        -------
+        tuple[float, int]
+            (nouvelle_quantite, id_unite_finale)
 
-                elif is_solid_liste and is_solid_stock:
-                    # Les deux sont solides : convertir en g
-                    g_stock = UnitConverter.convert_to_g(
-                        quantite_stock,
-                        code_unite_stock,
-                    )
-                    g_liste = UnitConverter.convert_to_g(
-                        quantite_liste,
-                        code_unite_liste,
-                    )
+        """
+        ml_stock = UnitConverter.convert_to_ml(quantite_stock, code_unite_stock)
+        ml_liste = UnitConverter.convert_to_ml(quantite_liste, code_unite_liste)
 
-                    if g_stock is not None and g_liste is not None:
-                        total_g = g_stock + g_liste
+        if ml_stock is None or ml_liste is None:
+            return quantite_liste, id_unite_stock
 
-                        # Convertir le total dans l'unité du stock
-                        facteur_stock = UnitConverter.SOLID_TO_G.get(
-                            code_unite_stock.lower(),
-                            1,
-                        )
-                        nouvelle_quantite = total_g / facteur_stock
-                        id_unite_finale = id_unite_stock
+        total_ml = ml_stock + ml_liste
+        facteur_stock = UnitConverter.LIQUID_TO_ML.get(code_unite_stock.lower(), 1)
+        nouvelle_quantite = total_ml / facteur_stock
 
-        # Créer ou mettre à jour le stock
+        return nouvelle_quantite, id_unite_stock
+
+    @staticmethod
+    def _additionner_solides(
+        quantite_liste: float,
+        code_unite_liste: str,
+        quantite_stock: float,
+        code_unite_stock: str,
+        id_unite_stock: int,
+    ) -> tuple[float, int]:
+        """Additionne deux quantités solides avec conversion.
+
+        Parameters
+        ----------
+        quantite_liste : float
+            Quantité de la liste de course
+        code_unite_liste : str
+            Code unité de la liste
+        quantite_stock : float
+            Quantité du stock
+        code_unite_stock : str
+            Code unité du stock
+        id_unite_stock : int
+            ID unité du stock
+
+        Returns
+        -------
+        tuple[float, int]
+            (nouvelle_quantite, id_unite_finale)
+
+        """
+        g_stock = UnitConverter.convert_to_g(quantite_stock, code_unite_stock)
+        g_liste = UnitConverter.convert_to_g(quantite_liste, code_unite_liste)
+
+        if g_stock is None or g_liste is None:
+            return quantite_liste, id_unite_stock
+
+        total_g = g_stock + g_liste
+        facteur_stock = UnitConverter.SOLID_TO_G.get(code_unite_stock.lower(), 1)
+        nouvelle_quantite = total_g / facteur_stock
+
+        return nouvelle_quantite, id_unite_stock
+
+    def _transferer_vers_stock(
+        self,
+        id_utilisateur: int,
+        id_ingredient: int,
+        nouvelle_quantite: float,
+        id_unite_finale: int,
+    ) -> None:
+        """Transfère l'ingrédient de la liste de course vers le stock.
+
+        Parameters
+        ----------
+        id_utilisateur : int
+            L'identifiant de l'utilisateur
+        id_ingredient : int
+            L'identifiant de l'ingrédient
+        nouvelle_quantite : float
+            La nouvelle quantité
+        id_unite_finale : int
+            L'identifiant de l'unité finale
+
+        Raises
+        ------
+        ServiceError
+            En cas d'erreur lors du transfert
+
+        """
         try:
             self.stock_dao.set_stock_item(
                 id_utilisateur=id_utilisateur,
-                id_ingredient=ingredient["id_ingredient"],
+                id_ingredient=id_ingredient,
                 quantite=nouvelle_quantite,
                 id_unite=id_unite_finale,
             )
 
-            # Supprimer de la liste de course
             self.liste_course_dao.remove_from_liste_course(
                 id_utilisateur=id_utilisateur,
-                id_ingredient=ingredient["id_ingredient"],
+                id_ingredient=id_ingredient,
             )
         except Exception as e:
             raise ServiceError(
                 message=f"Erreur lors du transfert vers le stock : {e}",
             ) from e
 
-        # Récupérer l'unité finale pour le message
+    def _generer_message_confirmation(
+        self,
+        nom_ingredient: str,
+        nouvelle_quantite: float,
+        id_unite_finale: int,
+    ) -> str:
+        """Génère le message de confirmation.
+
+        Parameters
+        ----------
+        nom_ingredient : str
+            Nom de l'ingrédient
+        nouvelle_quantite : float
+            La nouvelle quantité
+        id_unite_finale : int
+            L'identifiant de l'unité finale
+
+        Returns
+        -------
+        str
+            Message de confirmation
+
+        """
         unite_info = self.stock_dao.get_unite_info(id_unite_finale)
         code_unite_final = unite_info["abbreviation"] if unite_info else ""
 
         return (
-            f"Ingrédient '{ingredient['nom']}' retiré de la liste de course"
+            f"Ingrédient '{nom_ingredient}' retiré de la liste de course "
             f"et ajouté au stock ({nouvelle_quantite} {code_unite_final})"
         )
 

@@ -16,26 +16,25 @@ from src.utils.exceptions import (
 
 
 @pytest.fixture
-def mock_cocktail_dao():
+def mock_cocktail_dao() -> MagicMock:
     """Fixture pour créer un mock de CocktailDAO."""
     return MagicMock(spec=CocktailDAO)
 
 
 @pytest.fixture
-def mock_stock_dao():
-    """Fixture pour créer un mock de StockCourseDAO."""
+def mock_stock_dao() -> MagicMock:
+    """Fixture pour créer un mock de StockDAO."""
     return MagicMock()
 
 
 @pytest.fixture
-def cocktail_service(mock_cocktail_dao):
+def cocktail_service(mock_cocktail_dao) -> CocktailService:
     """Fixture pour créer une instance de CocktailService avec des mocks."""
-    service = CocktailService(mock_cocktail_dao)
-    return service
+    return CocktailService(mock_cocktail_dao)
 
 
 @pytest.fixture
-def sample_cocktail():
+def sample_cocktail() -> Cocktail:
     """Fixture pour créer un cocktail de test."""
     return Cocktail(
         id_cocktail=1,
@@ -50,41 +49,74 @@ def sample_cocktail():
 class TestRechercherCocktailParNom:
     """Tests pour la méthode rechercher_cocktail_par_nom."""
 
-    def test_rechercher_cocktail_par_nom_success(
-        self, cocktail_service, mock_cocktail_dao, sample_cocktail
-    ):
-        """Test de recherche réussie d'un cocktail par nom."""
-        # Arrange
-        mock_cocktail_dao.rechercher_cocktail_par_nom.return_value = sample_cocktail
+    def rechercher_cocktail_par_nom(self, nom: str) -> tuple[Cocktail, str | None]:
+        """Recherche un cocktail par son nom avec ses instructions.
 
-        # Act
-        result = cocktail_service.rechercher_cocktail_par_nom("Mojito")
+        Parameters
+        ----------
+        nom : str
+            Nom du cocktail à rechercher.
 
-        # Assert
-        assert result == sample_cocktail
-        mock_cocktail_dao.rechercher_cocktail_par_nom.assert_called_once_with("Mojito")
+        Raises
+        ------
+        CocktailSearchError
+            Si le nom n'est pas une chaîne de caractères.
+        CocktailSearchError
+            Si le nom est vide ou None.
+        CocktailSearchError
+            Si aucun cocktail n'est trouvé pour le nom donné.
 
-    def test_rechercher_cocktail_par_nom_vide(self, cocktail_service):
+        Returns
+        -------
+        tuple[Cocktail, str | None]
+            Un tuple contenant le cocktail et ses instructions (ou None)
+
+        """
+        if not nom:
+            raise EmptyFieldError(nom)
+
+        if not isinstance(nom, str):
+            raise CocktailSearchError(
+                message="Le nom du cocktail doit être une chaîne de caractères.",
+            )
+
+        cocktail = self.cocktail_dao.rechercher_cocktail_par_nom(nom)
+
+        if cocktail is None:
+            raise CocktailSearchError(
+                message=f"Aucun cocktail trouvé pour le nom '{nom}'",
+            )
+
+        instructions = self.instruction_dao.get_instruction(cocktail.id_cocktail)
+
+        return cocktail, instructions
+
+    @staticmethod
+    def test_rechercher_cocktail_par_nom_vide(cocktail_service) -> None:
         """Test avec un nom vide."""
         # Act & Assert
         with pytest.raises(EmptyFieldError):
             cocktail_service.rechercher_cocktail_par_nom("")
 
-    def test_rechercher_cocktail_par_nom_none(self, cocktail_service):
+    @staticmethod
+    def test_rechercher_cocktail_par_nom_none(cocktail_service) -> None:
         """Test avec None comme nom."""
         # Act & Assert
         with pytest.raises(EmptyFieldError):
             cocktail_service.rechercher_cocktail_par_nom(None)
 
-    def test_rechercher_cocktail_par_nom_type_invalide(self, cocktail_service):
+    @staticmethod
+    def test_rechercher_cocktail_par_nom_type_invalide(cocktail_service) -> None:
         """Test avec un type invalide (non string)."""
         # Act & Assert
         with pytest.raises(CocktailSearchError):
             cocktail_service.rechercher_cocktail_par_nom(123)
 
+    @staticmethod
     def test_rechercher_cocktail_par_nom_non_trouve(
-        self, cocktail_service, mock_cocktail_dao
-    ):
+        cocktail_service,
+        mock_cocktail_dao,
+    ) -> None:
         """Test quand aucun cocktail n'est trouvé."""
         # Arrange
         mock_cocktail_dao.rechercher_cocktail_par_nom.return_value = None
@@ -97,9 +129,12 @@ class TestRechercherCocktailParNom:
 class TestRechercherCocktailParSequenceDebut:
     """Tests pour la méthode rechercher_cocktail_par_sequence_debut."""
 
+    @staticmethod
     def test_rechercher_par_sequence_success(
-        self, cocktail_service, mock_cocktail_dao, sample_cocktail
-    ):
+        cocktail_service,
+        mock_cocktail_dao,
+        sample_cocktail,
+    ) -> None:
         """Test de recherche réussie par séquence."""
         # Arrange
         cocktails = [sample_cocktail]
@@ -107,46 +142,80 @@ class TestRechercherCocktailParSequenceDebut:
             cocktails
         )
 
+        # Mock l'instruction_dao si le service l'utilise
+        cocktail_service.instruction_dao = MagicMock()
+        cocktail_service.instruction_dao.get_instruction.return_value = (
+            "Mélanger tous les ingrédients"
+        )
+
         # Act
         result = cocktail_service.rechercher_cocktail_par_sequence_debut("Moj", 10)
 
         # Assert
-        assert result == cocktails
+        if len(result) != 1:
+            raise AssertionError(
+                message=f"Devrait avoir 1 résultat, obtenu: {len(result)}",
+            )
+
+        result_cocktail, result_instructions = result[0]
+
+        if result_cocktail != sample_cocktail:
+            raise AssertionError(
+                message=f"Le cocktail devrait être {sample_cocktail},"
+                f"obtenu: {result_cocktail}",
+            )
+
+        if result_instructions != "Mélanger tous les ingrédients":
+            raise AssertionError(
+                message=f"Les instructions devraient être 'Mélanger tous "
+                f"les ingrédients', obtenu: {result_instructions}",
+            )
+
         mock_cocktail_dao.rechercher_cocktail_par_sequence_debut.assert_called_once_with(
-            "Moj", 10
+            "Moj",
+            10,
+        )
+        cocktail_service.instruction_dao.get_instruction.assert_called_once_with(
+            sample_cocktail.id_cocktail,
         )
 
-    def test_rechercher_par_sequence_vide(self, cocktail_service):
+    @staticmethod
+    def test_rechercher_par_sequence_vide(cocktail_service) -> None:
         """Test avec une séquence vide."""
         # Act & Assert
         with pytest.raises(EmptyFieldError):
             cocktail_service.rechercher_cocktail_par_sequence_debut("", 10)
 
-    def test_rechercher_par_sequence_type_invalide(self, cocktail_service):
+    @staticmethod
+    def test_rechercher_par_sequence_type_invalide(cocktail_service) -> None:
         """Test avec un type invalide pour la séquence."""
         # Act & Assert
         with pytest.raises(CocktailSearchError):
             cocktail_service.rechercher_cocktail_par_sequence_debut(123, 10)
 
+    @staticmethod
     def test_rechercher_par_sequence_max_resultats_invalide_type(
-        self, cocktail_service
-    ):
+        cocktail_service,
+    ) -> None:
         """Test avec un type invalide pour max_resultats."""
         # Act & Assert
         with pytest.raises(CocktailSearchError):
             cocktail_service.rechercher_cocktail_par_sequence_debut("Moj", "10")
 
+    @staticmethod
     def test_rechercher_par_sequence_max_resultats_invalide_valeur(
-        self, cocktail_service
-    ):
+        cocktail_service,
+    ) -> None:
         """Test avec une valeur invalide pour max_resultats."""
         # Act & Assert
         with pytest.raises(CocktailSearchError):
             cocktail_service.rechercher_cocktail_par_sequence_debut("Moj", 0)
 
+    @staticmethod
     def test_rechercher_par_sequence_aucun_resultat(
-        self, cocktail_service, mock_cocktail_dao
-    ):
+        cocktail_service,
+        mock_cocktail_dao,
+    ) -> None:
         """Test quand aucun cocktail n'est trouvé."""
         # Arrange
         mock_cocktail_dao.rechercher_cocktail_par_sequence_debut.return_value = []
@@ -159,7 +228,8 @@ class TestRechercherCocktailParSequenceDebut:
 class TestGetCocktailsRealisables:
     """Tests pour la méthode get_cocktails_realisables."""
 
-    def test_get_cocktails_realisables_success(self, cocktail_service):
+    @staticmethod
+    def test_get_cocktails_realisables_success(cocktail_service) -> None:
         """Test de récupération réussie des cocktails réalisables."""
         # Arrange
         id_utilisateur = 1
@@ -215,13 +285,34 @@ class TestGetCocktailsRealisables:
         result = cocktail_service.get_cocktails_realisables(id_utilisateur)
 
         # Assert
-        assert "cocktails_realisables" in result
-        assert "nombre_cocktails" in result
-        assert result["nombre_cocktails"] == 1
-        assert len(result["cocktails_realisables"]) == 1
-        assert result["cocktails_realisables"][0]["nom"] == "Screwdriver"
+        if "cocktails_realisables" not in result:
+            raise AssertionError(
+                message="La clé 'cocktails_realisables' devrait être présente",
+            )
+        if "nombre_cocktails" not in result:
+            raise AssertionError(
+                message="La clé 'nombre_cocktails' devrait être présente",
+            )
+        if result["nombre_cocktails"] != 1:
+            raise AssertionError(
+                message=f"Devrait avoir 1 cocktail, obtenu:"
+                f"{result['nombre_cocktails']}",
+            )
+        if len(result["cocktails_realisables"]) != 1:
+            raise AssertionError(
+                message=f"Devrait avoir 1 cocktail réalisable, obtenu: "
+                f"{len(result['cocktails_realisables'])}",
+            )
+        if result["cocktails_realisables"][0]["nom"] != "Screwdriver":
+            raise AssertionError(
+                message=f"Le cocktail devrait être 'Screwdriver', obtenu: "
+                f"{result['cocktails_realisables'][0]['nom']}",
+            )
 
-    def test_get_cocktails_realisables_quantite_insuffisante(self, cocktail_service):
+    @staticmethod
+    def test_get_cocktails_realisables_quantite_insuffisante(
+        cocktail_service,
+    ) -> None:
         """Test quand la quantité en stock est insuffisante."""
         # Arrange
         id_utilisateur = 1
@@ -257,9 +348,16 @@ class TestGetCocktailsRealisables:
         result = cocktail_service.get_cocktails_realisables(id_utilisateur)
 
         # Assert
-        assert result["nombre_cocktails"] == 0
+        if result["nombre_cocktails"] != 0:
+            raise AssertionError(
+                message=f"Devrait avoir 0 cocktail, obtenu:"
+                f"{result['nombre_cocktails']}",
+            )
 
-    def test_get_cocktails_realisables_conversion_unites(self, cocktail_service):
+    @staticmethod
+    def test_get_cocktails_realisables_conversion_unites(
+        cocktail_service,
+    ) -> None:
         """Test avec conversion d'unités (cl vers ml)."""
         # Arrange
         id_utilisateur = 1
@@ -295,13 +393,18 @@ class TestGetCocktailsRealisables:
         result = cocktail_service.get_cocktails_realisables(id_utilisateur)
 
         # Assert
-        assert result["nombre_cocktails"] == 1
+        if result["nombre_cocktails"] != 1:
+            raise AssertionError(
+                message=f"Devrait avoir 1 cocktail, obtenu:"
+                f"{result['nombre_cocktails']}",
+            )
 
-    def test_get_cocktails_realisables_dao_error(self, cocktail_service):
+    @staticmethod
+    def test_get_cocktails_realisables_dao_error(cocktail_service) -> None:
         """Test avec erreur DAO."""
         # Arrange
         cocktail_service.stock_dao.get_stock = MagicMock(
-            side_effect=DAOError("Erreur DAO")
+            side_effect=DAOError("Erreur DAO"),
         )
 
         # Act & Assert
@@ -312,9 +415,11 @@ class TestGetCocktailsRealisables:
 class TestGetCocktailsQuasiRealisables:
     """Tests pour la méthode get_cocktails_quasi_realisables."""
 
+    @staticmethod
     def test_get_cocktails_quasi_realisables_success(
-        self, cocktail_service, mock_cocktail_dao
-    ):
+        cocktail_service,
+        mock_cocktail_dao,
+    ) -> None:
         """Test de récupération réussie des cocktails quasi-réalisables."""
         # Arrange
         id_utilisateur = 1
@@ -330,7 +435,7 @@ class TestGetCocktailsQuasiRealisables:
                 "nom_ingredient": "Rhum Blanc",
                 "quantite_requise": 50.0,
                 "unite_requise": "ml",
-                "quantite_stock": None,  # Manquant
+                "quantite_stock": None,
                 "unite_stock": None,
             },
             {
@@ -344,7 +449,7 @@ class TestGetCocktailsQuasiRealisables:
                 "nom_ingredient": "Menthe",
                 "quantite_requise": 10.0,
                 "unite_requise": "g",
-                "quantite_stock": 20.0,  # Disponible
+                "quantite_stock": 20.0,
                 "unite_stock": "g",
             },
         ]
@@ -353,38 +458,77 @@ class TestGetCocktailsQuasiRealisables:
 
         # Act
         result = cocktail_service.get_cocktails_quasi_realisables(
-            id_utilisateur, max_ingredients_manquants=1
+            id_utilisateur,
+            max_ingredients_manquants=1,
         )
 
         # Assert
-        assert "cocktails_quasi_realisables" in result
-        assert "nombre_cocktails" in result
-        assert result["nombre_cocktails"] == 1
-        assert result["max_ingredients_manquants"] == 1
-        cocktail = result["cocktails_quasi_realisables"][0]
-        assert cocktail["nom"] == "Mojito"
-        assert cocktail["nombre_ingredients_manquants"] == 1
-        assert "Rhum Blanc" in cocktail["ingredients_manquants"]
+        if "cocktails_quasi_realisables" not in result:
+            raise AssertionError(
+                message="La clé 'cocktails_quasi_realisables' devrait être présente",
+            )
+        if "nombre_cocktails" not in result:
+            raise AssertionError(
+                message="La clé 'nombre_cocktails' devrait êtreprésente",
+            )
+        if result["nombre_cocktails"] != 1:
+            raise AssertionError(
+                message=f"Devrait avoir 1 cocktail, obtenu:"
+                f"{result['nombre_cocktails']}",
+            )
+        if result["max_ingredients_manquants"] != 1:
+            raise AssertionError(
+                message=f"max_ingredients_manquants devrait être 1, obtenu: "
+                f"{result['max_ingredients_manquants']}",
+            )
 
+        cocktail = result["cocktails_quasi_realisables"][0]
+        if cocktail["nom"] != "Mojito":
+            raise AssertionError(
+                message=f"Le cocktail devrait être 'Mojito', obtenu:{cocktail['nom']}",
+            )
+        if cocktail["nombre_ingredients_manquants"] != 1:
+            raise AssertionError(
+                message=f"Devrait avoir 1 ingrédient manquant, obtenu: "
+                f"{cocktail['nombre_ingredients_manquants']}",
+            )
+        if "Rhum Blanc" not in cocktail["ingredients_manquants"]:
+            raise AssertionError(
+                message="Rhum Blanc devrait être dans les ingrédients manquants",
+            )
+
+    @staticmethod
     def test_get_cocktails_quasi_realisables_aucun_resultat(
-        self, cocktail_service, mock_cocktail_dao
-    ):
+        cocktail_service,
+        mock_cocktail_dao,
+    ) -> None:
         """Test quand aucun cocktail quasi-réalisable n'est trouvé."""
         # Arrange
         mock_cocktail_dao.get_cocktails_quasi_realisables.return_value = []
 
         # Act
         result = cocktail_service.get_cocktails_quasi_realisables(
-            1, max_ingredients_manquants=1
+            1,
+            max_ingredients_manquants=1,
         )
 
         # Assert
-        assert result["nombre_cocktails"] == 0
-        assert result["cocktails_quasi_realisables"] == []
+        if result["nombre_cocktails"] != 0:
+            raise AssertionError(
+                message=f"Devrait avoir 0 cocktail, obtenu:"
+                f"{result['nombre_cocktails']}",
+            )
+        if result["cocktails_quasi_realisables"] != []:
+            raise AssertionError(
+                message=f"La liste devrait être vide, obtenu: "
+                f"{result['cocktails_quasi_realisables']}",
+            )
 
+    @staticmethod
     def test_get_cocktails_quasi_realisables_tri(
-        self, cocktail_service, mock_cocktail_dao
-    ):
+        cocktail_service,
+        mock_cocktail_dao,
+    ) -> None:
         """Test du tri des cocktails quasi-réalisables."""
         # Arrange
         rows = [
@@ -466,23 +610,39 @@ class TestGetCocktailsQuasiRealisables:
 
         # Act
         result = cocktail_service.get_cocktails_quasi_realisables(
-            1, max_ingredients_manquants=2
+            1,
+            max_ingredients_manquants=2,
         )
 
         # Assert
+        nb_cocktail = 2
         cocktails = result["cocktails_quasi_realisables"]
-        assert len(cocktails) == 2
+        if len(cocktails) != nb_cocktail:
+            raise AssertionError(
+                message=f"Devrait avoir {nb_cocktail} cocktails, obtenu:"
+                f"{len(cocktails)}",
+            )
         # Cocktail B devrait être en premier (1 manquant vs 2 manquants)
-        assert cocktails[0]["nom"] == "Cocktail B"
-        assert cocktails[1]["nom"] == "Cocktail A"
+        if cocktails[0]["nom"] != "Cocktail B":
+            raise AssertionError(
+                message=f"Le premier cocktail devrait être 'Cocktail B',"
+                f"obtenu: {cocktails[0]['nom']}",
+            )
+        if cocktails[1]["nom"] != "Cocktail A":
+            raise AssertionError(
+                message=f"Le deuxième cocktail devrait être 'Cocktail A', obtenu: "
+                f"{cocktails[1]['nom']}",
+            )
 
+    @staticmethod
     def test_get_cocktails_quasi_realisables_dao_error(
-        self, cocktail_service, mock_cocktail_dao
-    ):
+        cocktail_service,
+        mock_cocktail_dao,
+    ) -> None:
         """Test avec erreur DAO."""
         # Arrange
         mock_cocktail_dao.get_cocktails_quasi_realisables.side_effect = DAOError(
-            "Erreur DAO"
+            "Erreur DAO",
         )
 
         # Act & Assert
@@ -491,9 +651,10 @@ class TestGetCocktailsQuasiRealisables:
 
 
 class TestIsIngredientAvailable:
-    """Tests pour la méthode _is_ingredient_available."""
+    """Tests pour la méthode is_ingredient_available."""
 
-    def test_is_ingredient_available_pas_de_stock(self, cocktail_service):
+    @staticmethod
+    def test_is_ingredient_available_pas_de_stock(cocktail_service) -> None:
         """Test quand l'ingrédient n'est pas en stock."""
         # Arrange
         row = {
@@ -505,12 +666,16 @@ class TestIsIngredientAvailable:
         }
 
         # Act
-        result = cocktail_service._is_ingredient_available(row)
+        result = cocktail_service.is_ingredient_available(row)
 
         # Assert
-        assert result is False
+        if result is not False:
+            raise AssertionError(message=f"Devrait être False, obtenu: {result}")
 
-    def test_is_ingredient_available_meme_unite_suffisant(self, cocktail_service):
+    @staticmethod
+    def test_is_ingredient_available_meme_unite_suffisant(
+        cocktail_service,
+    ) -> None:
         """Test avec même unité et quantité suffisante."""
         # Arrange
         row = {
@@ -522,12 +687,16 @@ class TestIsIngredientAvailable:
         }
 
         # Act
-        result = cocktail_service._is_ingredient_available(row)
+        result = cocktail_service.is_ingredient_available(row)
 
         # Assert
-        assert result is True
+        if result is not True:
+            raise AssertionError(message=f"Devrait être True, obtenu: {result}")
 
-    def test_is_ingredient_available_meme_unite_insuffisant(self, cocktail_service):
+    @staticmethod
+    def test_is_ingredient_available_meme_unite_insuffisant(
+        cocktail_service,
+    ) -> None:
         """Test avec même unité mais quantité insuffisante."""
         # Arrange
         row = {
@@ -539,12 +708,14 @@ class TestIsIngredientAvailable:
         }
 
         # Act
-        result = cocktail_service._is_ingredient_available(row)
+        result = cocktail_service.is_ingredient_available(row)
 
         # Assert
-        assert result is False
+        if result is not False:
+            raise AssertionError(message=f"Devrait être False, obtenu: {result}")
 
-    def test_is_ingredient_available_conversion_liquide(self, cocktail_service):
+    @staticmethod
+    def test_is_ingredient_available_conversion_liquide(cocktail_service) -> None:
         """Test avec conversion d'unités liquides (cl vers ml)."""
         # Arrange
         row = {
@@ -556,29 +727,35 @@ class TestIsIngredientAvailable:
         }
 
         # Act
-        result = cocktail_service._is_ingredient_available(row)
+        result = cocktail_service.is_ingredient_available(row)
 
         # Assert
-        assert result is True
+        if result is not True:
+            raise AssertionError(message=f"Devrait être True, obtenu: {result}")
 
-    def test_is_ingredient_available_conversion_solide(self, cocktail_service):
+    @staticmethod
+    def test_is_ingredient_available_conversion_solide(cocktail_service) -> None:
         """Test avec conversion d'unités solides (kg vers g)."""
         # Arrange
         row = {
             "quantite_requise": 50.0,  # 50 g requis
             "unite_requise": "g",
-            "quantite_stock": 1.0,  # 1 kg = 1000 g en stock
+            "quantite_stock": 1.0,
             "unite_stock": "kg",
             "nom_ingredient": "Sucre",
         }
 
         # Act
-        result = cocktail_service._is_ingredient_available(row)
+        result = cocktail_service.is_ingredient_available(row)
 
         # Assert
-        assert result is True
+        if result is not True:
+            raise AssertionError(message=f"Devrait être True, obtenu: {result}")
 
-    def test_is_ingredient_available_unites_incompatibles(self, cocktail_service):
+    @staticmethod
+    def test_is_ingredient_available_unites_incompatibles(
+        cocktail_service,
+    ) -> None:
         """Test avec unités incompatibles (liquide vs solide)."""
         # Arrange
         row = {
@@ -590,12 +767,14 @@ class TestIsIngredientAvailable:
         }
 
         # Act
-        result = cocktail_service._is_ingredient_available(row)
+        result = cocktail_service.is_ingredient_available(row)
 
         # Assert
-        assert result is False
+        if result is not False:
+            raise AssertionError(message=f"Devrait être False, obtenu: {result}")
 
-    def test_is_ingredient_available_sans_unite(self, cocktail_service):
+    @staticmethod
+    def test_is_ingredient_available_sans_unite(cocktail_service) -> None:
         """Test sans unité définie."""
         # Arrange
         row = {
@@ -607,63 +786,76 @@ class TestIsIngredientAvailable:
         }
 
         # Act
-        result = cocktail_service._is_ingredient_available(row)
+        result = cocktail_service.is_ingredient_available(row)
 
         # Assert
-        assert result is True
+        if result is not True:
+            raise AssertionError(message=f"Devrait être True, obtenu: {result}")
 
 
 class TestCompareLiquidQuantities:
     """Tests pour la méthode _compare_liquid_quantities."""
 
-    def test_compare_liquid_quantities_suffisant(self, cocktail_service):
+    @staticmethod
+    def test_compare_liquid_quantities_suffisant(cocktail_service) -> None:
         """Test avec quantité suffisante."""
         # Act
-        result = cocktail_service._compare_liquid_quantities(50.0, "ml", 100.0, "ml")
+        result = cocktail_service.compare_liquid_quantities(50.0, "ml", 100.0, "ml")
 
         # Assert
-        assert result is True
+        if result is not True:
+            raise AssertionError(message=f"Devrait être True, obtenu: {result}")
 
-    def test_compare_liquid_quantities_insuffisant(self, cocktail_service):
+    @staticmethod
+    def test_compare_liquid_quantities_insuffisant(cocktail_service) -> None:
         """Test avec quantité insuffisante."""
         # Act
-        result = cocktail_service._compare_liquid_quantities(100.0, "ml", 50.0, "ml")
+        result = cocktail_service.compare_liquid_quantities(100.0, "ml", 50.0, "ml")
 
         # Assert
-        assert result is False
+        if result is not False:
+            raise AssertionError(message=f"Devrait être False, obtenu: {result}")
 
-    def test_compare_liquid_quantities_conversion(self, cocktail_service):
+    @staticmethod
+    def test_compare_liquid_quantities_conversion(cocktail_service) -> None:
         """Test avec conversion d'unités."""
         # Act (50 ml requis, 10 cl = 100 ml en stock)
-        result = cocktail_service._compare_liquid_quantities(50.0, "ml", 10.0, "cl")
+        result = cocktail_service.compare_liquid_quantities(50.0, "ml", 10.0, "cl")
 
         # Assert
-        assert result is True
+        if result is not True:
+            raise AssertionError(message=f"Devrait être True, obtenu: {result}")
 
 
 class TestCompareSolidQuantities:
-    """Tests pour la méthode _compare_solid_quantities."""
+    """Tests pour la méthode compare_solid_quantities."""
 
-    def test_compare_solid_quantities_suffisant(self, cocktail_service):
+    @staticmethod
+    def test_compare_solid_quantities_suffisant(cocktail_service) -> None:
         """Test avec quantité suffisante."""
         # Act
-        result = cocktail_service._compare_solid_quantities(50.0, "g", 100.0, "g")
+        result = cocktail_service.compare_solid_quantities(50.0, "g", 100.0, "g")
 
         # Assert
-        assert result is True
+        if result is not True:
+            raise AssertionError(message=f"Devrait être True, obtenu: {result}")
 
-    def test_compare_solid_quantities_insuffisant(self, cocktail_service):
+    @staticmethod
+    def test_compare_solid_quantities_insuffisant(cocktail_service) -> None:
         """Test avec quantité insuffisante."""
         # Act
-        result = cocktail_service._compare_solid_quantities(100.0, "g", 50.0, "g")
+        result = cocktail_service.compare_solid_quantities(100.0, "g", 50.0, "g")
 
         # Assert
-        assert result is False
+        if result is not False:
+            raise AssertionError(message=f"Devrait être False, obtenu: {result}")
 
-    def test_compare_solid_quantities_conversion(self, cocktail_service):
+    @staticmethod
+    def test_compare_solid_quantities_conversion(cocktail_service) -> None:
         """Test avec conversion d'unités."""
         # Act (50 g requis, 1 kg = 1000 g en stock)
-        result = cocktail_service._compare_solid_quantities(50.0, "g", 1.0, "kg")
+        result = cocktail_service.compare_solid_quantities(50.0, "g", 1.0, "kg")
 
         # Assert
-        assert result is True
+        if result is not True:
+            raise AssertionError(message=f"Devrait être True, obtenu: {result}")

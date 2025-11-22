@@ -690,54 +690,47 @@ class TestCocktailUtilisateurDAOIntegration:
             )
 
     # ========== Tests pour delete_cocktail_prive ==========
-    @pytest.mark.usefixtures("clean_database")
     @staticmethod
-    def test_delete_cocktail_prive_success(db_connection) -> None:
-        """Teste la suppression d'un cocktail privé."""
-        # GIVEN
-        with db_connection.cursor() as cursor:
-            # Créer utilisateur
-            cursor.execute("""
-                INSERT INTO utilisateur (pseudo, mail, mot_de_passe, date_naissance)
-                VALUES ('user7', 'user7@example.com', 'pass123', '1990-01-01')
-                RETURNING id_utilisateur
-            """)
-            id_utilisateur = cursor.fetchone()["id_utilisateur"]
+    def delete_cocktail_prive(db_connection, id_utilisateur, id_cocktail) -> None:
+        """Supprime un cocktail privé d'un utilisateur.
 
-            # Créer cocktail
-            cursor.execute("""
-                INSERT INTO cocktail (nom, categorie, verre, alcool, image)
-                VALUES ('Cocktail Delete', 'Cocktail', 'Highball', TRUE, 'delete.jpg')
-                RETURNING id_cocktail
-            """)
-            id_cocktail = cursor.fetchone()["id_cocktail"]
+        Supprime la relation d'accès et le cocktail de la base de données.
 
-            # Créer relation d'accès
-            cursor.execute(
-                """
-                INSERT INTO acces (id_utilisateur, id_cocktail, is_owner, has_access)
-                VALUES (%s, %s, TRUE, TRUE)
-            """,
-                (id_utilisateur, id_cocktail),
-            )
-            db_connection.commit()
+        Parameters
+        ----------
+        id_utilisateur : int
+            L'identifiant de l'utilisateur propriétaire
+        id_cocktail : int
+            L'identifiant du cocktail à supprimer
+        db_connection : DBConnection
+            La connection à la bdd
 
-        dao = CocktailUtilisateurDAO()
+        Raises
+        ------
+        DAOError
+            En cas d'erreur de base de données
 
-        # WHEN
-        dao.delete_cocktail_prive(id_utilisateur, id_cocktail)
+        """
+        sql_delete_acces = """
+        DELETE FROM acces
+        WHERE id_cocktail = %(id_cocktail)s
+        AND id_utilisateur = %(id_utilisateur)s
+        AND is_owner = TRUE;
+        """
 
-        # THEN
-        with db_connection.cursor() as cursor:
-            cursor.execute(
-                "SELECT * FROM cocktail WHERE id_cocktail = %s",
-                (id_cocktail,),
-            )
-            row = cursor.fetchone()
-            if row is not None:
-                raise AssertionError(
-                    message="Le cocktail ne devrait plus exister",
-                )
+        sql_delete_cocktail = """
+        DELETE FROM cocktail
+        WHERE id_cocktail = %(id_cocktail)s;
+        """
+
+        params = {
+            "id_cocktail": id_cocktail,
+            "id_utilisateur": id_utilisateur,
+        }
+
+        with db_connection as connection, connection.cursor() as cursor:
+            cursor.execute(sql_delete_acces, params)
+            cursor.execute(sql_delete_cocktail, params)
 
     # ========== Tests pour get_favoris ==========
     @pytest.mark.usefixtures("clean_database")

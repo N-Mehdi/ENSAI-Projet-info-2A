@@ -20,6 +20,7 @@ class Cocktail:
         image du cocktail
     """
 
+    # ruff: noqa: PLR0913
     def __init__(
         self,
         id_cocktail: int,
@@ -67,3 +68,14 @@ class Cocktail:
             and self.alcool == other.alcool
             and self.image == other.image
         )
+
+    def __hash__(self) -> int:
+        """Retourne le hash du cocktail basé sur son identifiant unique.
+
+        Returns
+        -------
+        int
+            Hash du cocktail
+
+        """
+        return hash(self.id_cocktail)

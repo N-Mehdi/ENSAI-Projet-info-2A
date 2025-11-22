@@ -3,6 +3,7 @@
 import pytest
 
 from src.dao.ingredient_dao import IngredientDAO
+from src.utils.exceptions import DAOError
 
 
 def check_pg_trgm_available(db_connection) -> bool:
@@ -15,8 +16,9 @@ def check_pg_trgm_available(db_connection) -> bool:
             """,
             )
             return cursor.fetchone() is not None
-    except Exception:
-        return False
+    except Exception as e:
+        raise DAOError from e
+    return False
 
 
 class TestIngredientDAOIntegration:

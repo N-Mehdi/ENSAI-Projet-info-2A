@@ -1,4 +1,4 @@
-"""doc."""
+"""Route contenant les endpoints sur la recherche de cocktails."""
 
 from typing import Annotated
 

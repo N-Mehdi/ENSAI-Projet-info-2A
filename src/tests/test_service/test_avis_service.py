@@ -1,6 +1,6 @@
 """Classe de test de AvisService."""
 
-from datetime import datetime
+from datetime import UTC, datetime
 from unittest.mock import MagicMock
 
 import pytest
@@ -97,7 +97,8 @@ class TestAvisService:
             service.get_cocktail_by_name(nom_cocktail)
 
     # ========== Tests pour create_or_update_avis ==========
-    def test_create_or_update_avis_succes_note_et_commentaire(self) -> None:
+    @staticmethod
+    def test_create_or_update_avis_succes_note_et_commentaire() -> None:
         """Teste la création/mise à jour d'un avis avec note et commentaire valides."""
         # GIVEN
         id_utilisateur = 1
@@ -148,7 +149,8 @@ class TestAvisService:
             commentaire=commentaire,
         )
 
-    def test_create_or_update_avis_note_vide(self) -> None:
+    @staticmethod
+    def test_create_or_update_avis_note_vide() -> None:
         """Teste la création d'un avis avec une note vide."""
         # GIVEN
         id_utilisateur = 1
@@ -179,7 +181,8 @@ class TestAvisService:
                 message=f"Le message devrait mentionner 'note vide': {error_message}",
             )
 
-    def test_create_or_update_avis_commentaire_vide(self) -> None:
+    @staticmethod
+    def test_create_or_update_avis_commentaire_vide() -> None:
         """Teste la création d'un avis avec un commentaire vide."""
         # GIVEN
         id_utilisateur = 1
@@ -214,7 +217,8 @@ class TestAvisService:
                 f"{error_message}",
             )
 
-    def test_create_or_update_avis_note_invalide_format(self) -> None:
+    @staticmethod
+    def test_create_or_update_avis_note_invalide_format() -> None:
         """Teste la création d'un avis avec une note au format invalide."""
         # GIVEN
         id_utilisateur = 1
@@ -245,7 +249,8 @@ class TestAvisService:
                 message=f"Le message devrait mentionner 'note valide': {error_message}",
             )
 
-    def test_create_or_update_avis_note_trop_basse(self) -> None:
+    @staticmethod
+    def test_create_or_update_avis_note_trop_basse() -> None:
         """Teste la création d'un avis avec une note inférieure à 0."""
         # GIVEN
         id_utilisateur = 1
@@ -276,7 +281,8 @@ class TestAvisService:
                 message=f"Le message devrait mentionner '0 et 10': {error_message}",
             )
 
-    def test_create_or_update_avis_note_trop_haute(self) -> None:
+    @staticmethod
+    def test_create_or_update_avis_note_trop_haute() -> None:
         """Teste la création d'un avis avec une note supérieure à 10."""
         # GIVEN
         id_utilisateur = 1
@@ -307,7 +313,8 @@ class TestAvisService:
                 message=f"Le message devrait mentionner '0 et 10': {error_message}",
             )
 
-    def test_create_or_update_avis_cocktail_inexistant(self) -> None:
+    @staticmethod
+    def test_create_or_update_avis_cocktail_inexistant() -> None:
         """Teste la création d'un avis pour un cocktail inexistant."""
         # GIVEN
         id_utilisateur = 1
@@ -335,7 +342,8 @@ class TestAvisService:
                 commentaire,
             )
 
-    def test_create_or_update_avis_dao_erreur(self) -> None:
+    @staticmethod
+    def test_create_or_update_avis_dao_erreur() -> None:
         """Teste la gestion d'une erreur du DAO lors de la création d'un avis."""
         # GIVEN
         id_utilisateur = 1
@@ -372,7 +380,8 @@ class TestAvisService:
                 commentaire,
             )
 
-    def test_create_or_update_avis_note_decimale_valide(self) -> None:
+    @staticmethod
+    def test_create_or_update_avis_note_decimale_valide() -> None:
         """Teste la création d'un avis avec une note décimale valide."""
         # GIVEN
         id_utilisateur = 1
@@ -437,8 +446,8 @@ class TestAvisService:
                 "note": 8,
                 "commentaire": "Excellent!",
                 "favoris": True,
-                "date_creation": datetime(2024, 1, 1),
-                "date_modification": datetime(2024, 1, 2),
+                "date_creation": datetime(2024, 1, 1, tzinfo=UTC),
+                "date_modification": datetime(2024, 1, 2, tzinfo=UTC),
             },
         ]
 

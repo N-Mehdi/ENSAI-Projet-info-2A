@@ -601,8 +601,6 @@ class TestAvisDAOIntegration:
             """,
             )
             cocktail_id = cursor.fetchone()["id_cocktail"]
-            db_connection.commit()
-
         dao = AvisDAO()
 
         # WHEN

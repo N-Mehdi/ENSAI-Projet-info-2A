@@ -278,6 +278,7 @@ class UnitConverter:
 
         return None
 
+    @staticmethod
     def normalize_unit(unit_code: str) -> str:
         """Normalise les variantes d'unités."""
         tbsp = ("tbsp", "tblsp")

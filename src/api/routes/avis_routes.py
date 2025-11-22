@@ -1,4 +1,4 @@
-"""doc."""
+"""Route contenant les endpoints sur les avis sur les cocktails."""
 
 from fastapi import APIRouter, HTTPException
 

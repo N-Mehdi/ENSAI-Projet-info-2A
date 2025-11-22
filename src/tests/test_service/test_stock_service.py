@@ -1,8 +1,10 @@
-"""doc."""
+"""Tests pour StockService."""
+
+from unittest.mock import MagicMock
 
 import pytest
 
-from src.service.stock_course_service import StockCourseService
+from src.service.stock_service import StockService
 from src.utils.exceptions import (
     IngredientNotFoundError,
     InsufficientQuantityError,
@@ -11,28 +13,29 @@ from src.utils.exceptions import (
     UniteNotFoundError,
 )
 
-# -------------------------------------------------------------------------
-# FIXTURES
-# -------------------------------------------------------------------------
+
+@pytest.fixture
+def mock_stock_dao(mocker) -> MagicMock:
+    """Mock de StockDAO utilisé dans les tests."""
+    return mocker.patch("src.service.stock_service.StockDAO").return_value
 
 
 @pytest.fixture
-def mock_stock_dao(mocker):
-    return mocker.patch("src.service.stock_course_service.StockCourseDAO").return_value
+def mock_ingredient_dao(mocker) -> MagicMock:
+    """Mock de IngredientDAO utilisé dans les tests."""
+    return mocker.patch("src.service.stock_service.IngredientDAO").return_value
+
+
+# ruff: noqa: ARG001
+@pytest.fixture
+def service(mock_stock_dao, mock_ingredient_dao) -> StockService:
+    """Instance de StockService avec des DAO mockés."""
+    return StockService()
 
 
 @pytest.fixture
-def mock_ingredient_dao(mocker):
-    return mocker.patch("src.service.stock_course_service.IngredientDAO").return_value
-
-
-@pytest.fixture
-def service(mock_stock_dao, mock_ingredient_dao):
-    return StockCourseService()
-
-
-@pytest.fixture
-def ingredient_sample():
+def ingredient_sample() -> dict:
+    """Dictionnaire représentant un ingrédient fictif."""
     return {"id_ingredient": 1, "nom": "citron"}
 
 
@@ -42,15 +45,25 @@ def ingredient_sample():
 
 
 class TestGetIngredientByName:
-    def test_success(self, service, mock_ingredient_dao, ingredient_sample):
+    """Tests pour la méthode get_ingredient_by_name."""
+
+    @staticmethod
+    def test_success(service, mock_ingredient_dao, ingredient_sample) -> None:
+        """Teste la récupération d'un ingrédient existant."""
         mock_ingredient_dao.get_by_name.return_value = ingredient_sample
 
         result = service.get_ingredient_by_name("Citron")
 
-        assert result == ingredient_sample
+        if result != ingredient_sample:
+            raise AssertionError(message=f"Résultat inattendu : {result}")
+
         mock_ingredient_dao.get_by_name.assert_called_once()
 
-    def test_not_found_with_suggestions(self, service, mock_ingredient_dao):
+    @staticmethod
+    def test_not_found_with_suggestions(service, mock_ingredient_dao) -> None:
+        """Teste le cas où l'ingrédient n'existe pas mais des suggestions sont
+        trouvées.
+        """
         mock_ingredient_dao.get_by_name.return_value = None
         mock_ingredient_dao.search_by_name.return_value = [
             {"nom": "citron vert"},
@@ -60,8 +73,13 @@ class TestGetIngredientByName:
         with pytest.raises(IngredientNotFoundError) as exc:
             service.get_ingredient_by_name("citro")
 
-        # Vérifier simplement que l'exception est levée avec un message approprié
-        assert "citro" in str(exc.value).lower() or "Ingrédient" in str(exc.value)
+        if (
+            "citro" not in str(exc.value).lower()
+            and "ingrédient" not in str(exc.value).lower()
+        ):
+            raise AssertionError(
+                message=f"Message incorrect : {exc.value}",
+            )
 
 
 # -------------------------------------------------------------------------
@@ -70,46 +88,55 @@ class TestGetIngredientByName:
 
 
 class TestAddOrUpdateIngredient:
-    def test_invalid_quantity(self, service):
+    """Tests pour add_or_update_ingredient_by_name."""
+
+    @staticmethod
+    def test_invalid_quantity(service) -> None:
+        """Teste l'erreur si la quantité est invalide."""
         with pytest.raises(InvalidQuantityError):
             service.add_or_update_ingredient_by_name(1, "citron", 0, "g")
 
+    @staticmethod
     def test_unite_not_found(
-        self,
         service,
         mock_ingredient_dao,
         mock_stock_dao,
         ingredient_sample,
-    ):
+    ) -> None:
+        """Teste l'erreur lorsque l'unité est introuvable."""
         mock_ingredient_dao.get_by_name.return_value = ingredient_sample
         mock_stock_dao.get_unite_id_by_abbreviation.return_value = None
 
         with pytest.raises(UniteNotFoundError):
             service.add_or_update_ingredient_by_name(1, "citron", 10, "xxx")
 
+    @staticmethod
     def test_success(
-        self,
         service,
         mock_ingredient_dao,
         mock_stock_dao,
         ingredient_sample,
-    ):
+    ) -> None:
+        """Teste l'ajout ou mise à jour d'un ingrédient avec succès."""
         mock_ingredient_dao.get_by_name.return_value = ingredient_sample
         mock_stock_dao.get_unite_id_by_abbreviation.return_value = 3
         mock_stock_dao.update_or_create_stock_item.return_value = True
 
         msg = service.add_or_update_ingredient_by_name(1, "Citron", 5, "g")
 
-        assert "ajouté/mis à jour" in msg
+        if "ajouté/mis à jour" not in msg:
+            raise AssertionError(message=f"Message inattendu : {msg}")
+
         mock_stock_dao.update_or_create_stock_item.assert_called_once()
 
+    @staticmethod
     def test_update_fail(
-        self,
         service,
         mock_ingredient_dao,
         mock_stock_dao,
         ingredient_sample,
-    ):
+    ) -> None:
+        """Teste l'erreur en cas d'échec de mise à jour du stock."""
         mock_ingredient_dao.get_by_name.return_value = ingredient_sample
         mock_stock_dao.get_unite_id_by_abbreviation.return_value = 3
         mock_stock_dao.update_or_create_stock_item.return_value = False
@@ -124,7 +151,11 @@ class TestAddOrUpdateIngredient:
 
 
 class TestGetUserStock:
-    def test_success(self, service, mock_stock_dao):
+    """Tests pour get_user_stock."""
+
+    @staticmethod
+    def test_success(service, mock_stock_dao) -> None:
+        """Teste la récupération du stock utilisateur."""
         mock_stock_dao.get_stock.return_value = [
             {
                 "id_ingredient": 1,
@@ -138,11 +169,24 @@ class TestGetUserStock:
 
         stock = service.get_user_stock(1)
 
-        assert stock.id_utilisateur == 1
-        assert len(stock.items) == 1
-        assert stock.items[0].nom_ingredient == "citron"
+        if stock.id_utilisateur != 1:
+            raise AssertionError(
+                message=f"id_utilisateur incorrect: {stock.id_utilisateur}",
+            )
 
-    def test_failure(self, service, mock_stock_dao):
+        if len(stock.items) != 1:
+            raise AssertionError(
+                message=f"Nombre d'items incorrect : {len(stock.items)}",
+            )
+
+        if stock.items[0].nom_ingredient != "citron":
+            raise AssertionError(
+                message=f"Ingrédient incorrect: {stock.items[0].nom_ingredient}",
+            )
+
+    @staticmethod
+    def test_failure(service, mock_stock_dao) -> None:
+        """Teste l'erreur si la DAO échoue."""
         mock_stock_dao.get_stock.side_effect = Exception("DB error")
 
         with pytest.raises(ServiceError):
@@ -155,13 +199,16 @@ class TestGetUserStock:
 
 
 class TestGetIngredientFromStockByName:
+    """Tests pour get_ingredient_from_stock_by_name."""
+
+    @staticmethod
     def test_success(
-        self,
         service,
         mock_stock_dao,
         mock_ingredient_dao,
         ingredient_sample,
-    ):
+    ) -> None:
+        """Teste la récupération d'un ingrédient présent dans le stock."""
         mock_ingredient_dao.get_by_name.return_value = ingredient_sample
 
         mock_stock_dao.get_stock_item.return_value = {
@@ -175,30 +222,36 @@ class TestGetIngredientFromStockByName:
 
         item = service.get_ingredient_from_stock_by_name(1, "citron")
 
-        assert item.nom_ingredient == "citron"
-        assert item.quantite == 2
+        if item.nom_ingredient != "citron":
+            raise AssertionError(message=f"Nom incorrect : {item.nom_ingredient}")
+        qte = 2
+        if item.quantite != qte:
+            raise AssertionError(message=f"Quantité incorrecte : {item.quantite}")
 
+    @staticmethod
     def test_not_in_stock(
-        self,
         service,
         mock_stock_dao,
         mock_ingredient_dao,
         ingredient_sample,
-    ):
+    ) -> None:
+        """Teste le cas où l'ingrédient n'est pas dans le stock."""
         mock_ingredient_dao.get_by_name.return_value = ingredient_sample
         mock_stock_dao.get_stock_item.return_value = None
 
         result = service.get_ingredient_from_stock_by_name(1, "citron")
 
-        assert result is None
+        if result is not None:
+            raise AssertionError(message=f"Résultat attendu None, obtenu : {result}")
 
+    @staticmethod
     def test_exception(
-        self,
         service,
         mock_stock_dao,
         mock_ingredient_dao,
         ingredient_sample,
-    ):
+    ) -> None:
+        """Teste l'erreur en cas d'exception DAO."""
         mock_ingredient_dao.get_by_name.return_value = ingredient_sample
         mock_stock_dao.get_stock_item.side_effect = Exception("DB error")
 
@@ -212,17 +265,22 @@ class TestGetIngredientFromStockByName:
 
 
 class TestRemoveIngredient:
-    def test_invalid_quantity(self, service):
+    """Tests pour remove_ingredient_by_name."""
+
+    @staticmethod
+    def test_invalid_quantity(service) -> None:
+        """Teste l'erreur si la quantité à retirer est invalide."""
         with pytest.raises(InvalidQuantityError):
             service.remove_ingredient_by_name(1, "citron", 0)
 
+    @staticmethod
     def test_insufficient_quantity(
-        self,
         service,
         mock_stock_dao,
         mock_ingredient_dao,
         ingredient_sample,
-    ):
+    ) -> None:
+        """Teste l'erreur si la quantité à retirer dépasse le stock disponible."""
         mock_ingredient_dao.get_by_name.return_value = ingredient_sample
 
         mock_stock_dao.decrement_stock_item.side_effect = ValueError(
@@ -232,13 +290,14 @@ class TestRemoveIngredient:
         with pytest.raises(InsufficientQuantityError):
             service.remove_ingredient_by_name(1, "citron", 10)
 
+    @staticmethod
     def test_not_in_stock(
-        self,
         service,
         mock_stock_dao,
         mock_ingredient_dao,
         ingredient_sample,
-    ):
+    ) -> None:
+        """Teste l'erreur si l'ingrédient n'est pas dans le stock."""
         mock_ingredient_dao.get_by_name.return_value = ingredient_sample
 
         mock_stock_dao.decrement_stock_item.side_effect = ValueError(
@@ -248,13 +307,14 @@ class TestRemoveIngredient:
         with pytest.raises(ServiceError):
             service.remove_ingredient_by_name(1, "citron", 1)
 
+    @staticmethod
     def test_success_partial(
-        self,
         service,
         mock_stock_dao,
         mock_ingredient_dao,
         ingredient_sample,
-    ):
+    ) -> None:
+        """Teste un retrait partiel d'un ingrédient."""
         mock_ingredient_dao.get_by_name.return_value = ingredient_sample
 
         mock_stock_dao.decrement_stock_item.return_value = {
@@ -264,15 +324,17 @@ class TestRemoveIngredient:
 
         msg = service.remove_ingredient_by_name(1, "citron", 1)
 
-        assert "Nouvelle quantité" in msg
+        if "Nouvelle quantité" not in msg:
+            raise AssertionError(message=f"Message incorrect : {msg}")
 
+    @staticmethod
     def test_success_total(
-        self,
         service,
         mock_stock_dao,
         mock_ingredient_dao,
         ingredient_sample,
-    ):
+    ) -> None:
+        """Teste le retrait complet d'un ingrédient du stock."""
         mock_ingredient_dao.get_by_name.return_value = ingredient_sample
 
         mock_stock_dao.decrement_stock_item.return_value = {
@@ -281,7 +343,8 @@ class TestRemoveIngredient:
 
         msg = service.remove_ingredient_by_name(1, "citron", 1)
 
-        assert "retiré complètement" in msg
+        if "retiré complètement" not in msg:
+            raise AssertionError(message=f"Message incorrect : {msg}")
 
 
 # -------------------------------------------------------------------------
@@ -290,32 +353,37 @@ class TestRemoveIngredient:
 
 
 class TestDeleteIngredientByName:
+    """Tests pour delete_ingredient_by_name."""
+
+    @staticmethod
     def test_not_found(
-        self,
         service,
         mock_stock_dao,
         mock_ingredient_dao,
         ingredient_sample,
-    ):
+    ) -> None:
+        """Teste l'erreur si la suppression échoue."""
         mock_ingredient_dao.get_by_name.return_value = ingredient_sample
         mock_stock_dao.delete_stock_item.return_value = False
 
         with pytest.raises(ServiceError):
             service.delete_ingredient_by_name(1, "citron")
 
+    @staticmethod
     def test_success(
-        self,
         service,
         mock_stock_dao,
         mock_ingredient_dao,
         ingredient_sample,
-    ):
+    ) -> None:
+        """Teste la suppression complète d'un ingrédient."""
         mock_ingredient_dao.get_by_name.return_value = ingredient_sample
         mock_stock_dao.delete_stock_item.return_value = True
 
         msg = service.delete_ingredient_by_name(1, "citron")
 
-        assert "supprimé complètement" in msg
+        if "supprimé complètement" not in msg:
+            raise AssertionError(message=f"Message incorrect : {msg}")
 
 
 # -------------------------------------------------------------------------
@@ -324,16 +392,23 @@ class TestDeleteIngredientByName:
 
 
 class TestGetFullStockList:
-    def test_success(self, service, mock_stock_dao):
+    """Tests pour get_full_stock_list."""
+
+    @staticmethod
+    def test_success(service, mock_stock_dao) -> None:
+        """Teste la récupération complète du stock."""
         mock_stock_dao.get_full_stock.return_value = [
             {"id_ingredient": 1, "quantite": 0},
         ]
 
         result = service.get_full_stock_list(1)
 
-        assert len(result) == 1
+        if len(result) != 1:
+            raise AssertionError(message=f"Longueur incorrecte : {len(result)}")
 
-    def test_failure(self, service, mock_stock_dao):
+    @staticmethod
+    def test_failure(service, mock_stock_dao) -> None:
+        """Teste l'erreur en cas d'échec DAO."""
         mock_stock_dao.get_full_stock.side_effect = Exception("DB fail")
 
         with pytest.raises(ServiceError):

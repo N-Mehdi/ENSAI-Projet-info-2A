@@ -6,7 +6,7 @@ import pytest
 
 from src.dao.ingredient_dao import IngredientDAO
 from src.dao.liste_course_dao import ListeCourseDAO
-from src.dao.stock_course_dao import StockCourseDAO
+from src.dao.stock_dao import StockDAO
 from src.models.utilisateurs import User
 from src.service.ingredient_service import IngredientService
 from src.service.liste_course_service import ListeCourseService
@@ -24,8 +24,8 @@ class TestListeCourseService:
     """Tests pour ListeCourseService."""
 
     # ========== Tests pour get_liste_course ==========
-
-    def test_get_liste_course_succes(self) -> None:
+    @staticmethod
+    def test_get_liste_course_succes() -> None:
         """Teste la récupération de la liste de course avec succès."""
         # GIVEN
         id_utilisateur = 1
@@ -62,7 +62,7 @@ class TestListeCourseService:
         liste_course_dao_mock = MagicMock(spec=ListeCourseDAO)
         liste_course_dao_mock.get_liste_course.return_value = rows
 
-        stock_dao_mock = MagicMock(spec=StockCourseDAO)
+        stock_dao_mock = MagicMock(spec=StockDAO)
         ingredient_dao_mock = MagicMock(spec=IngredientDAO)
 
         utilisateur_svc_mock = MagicMock(spec=UtilisateurService)
@@ -102,7 +102,8 @@ class TestListeCourseService:
                 f"{resultat['nombre_effectues']}",
             )
 
-    def test_get_liste_course_vide(self) -> None:
+    @staticmethod
+    def test_get_liste_course_vide() -> None:
         """Teste la récupération d'une liste de course vide."""
         # GIVEN
         id_utilisateur = 1
@@ -119,7 +120,7 @@ class TestListeCourseService:
         liste_course_dao_mock = MagicMock(spec=ListeCourseDAO)
         liste_course_dao_mock.get_liste_course.return_value = []
 
-        stock_dao_mock = MagicMock(spec=StockCourseDAO)
+        stock_dao_mock = MagicMock(spec=StockDAO)
         ingredient_dao_mock = MagicMock(spec=IngredientDAO)
 
         utilisateur_svc_mock = MagicMock(spec=UtilisateurService)
@@ -152,7 +153,8 @@ class TestListeCourseService:
 class TestListeCourseServiceAdd:
     """Classe pour tester l'ajout d'ingrédients dans la liste de course."""
 
-    def test_add_to_liste_course_success(self) -> None:
+    @staticmethod
+    def test_add_to_liste_course_success() -> None:
         """Teste l'ajout d'un ingrédient à la liste de course avec succès."""
         # GIVEN
         id_utilisateur = 1
@@ -170,7 +172,7 @@ class TestListeCourseServiceAdd:
         liste_course_dao_mock.add_to_liste_course.return_value = None
 
         # Créer une instance réelle pour le test, pas un mock
-        stock_dao_instance = MagicMock(spec=StockCourseDAO)
+        stock_dao_instance = MagicMock(spec=StockDAO)
         stock_dao_instance.get_unite_id_by_abbreviation.return_value = 1
 
         # WHEN
@@ -203,7 +205,8 @@ class TestListeCourseServiceAdd:
             id_unite=1,
         )
 
-    def test_add_to_liste_course_ingredient_not_found(self) -> None:
+    @staticmethod
+    def test_add_to_liste_course_ingredient_not_found() -> None:
         """Teste l'ajout d'un ingrédient inexistant."""
         # GIVEN
         id_utilisateur = 1
@@ -217,7 +220,7 @@ class TestListeCourseServiceAdd:
         )
 
         liste_course_dao_mock = MagicMock(spec=ListeCourseDAO)
-        stock_dao_mock = MagicMock(spec=StockCourseDAO)
+        stock_dao_mock = MagicMock(spec=StockDAO)
 
         # WHEN
         service = ListeCourseService()
@@ -234,7 +237,8 @@ class TestListeCourseServiceAdd:
                 abbreviation_unite,
             )
 
-    def test_add_to_liste_course_unite_not_found(self) -> None:
+    @staticmethod
+    def test_add_to_liste_course_unite_not_found() -> None:
         """Teste l'ajout d'un ingrédient avec une unité inexistante."""
         # GIVEN
         id_utilisateur = 1
@@ -250,7 +254,7 @@ class TestListeCourseServiceAdd:
 
         liste_course_dao_mock = MagicMock(spec=ListeCourseDAO)
 
-        stock_dao_mock = MagicMock(spec=StockCourseDAO)
+        stock_dao_mock = MagicMock(spec=StockDAO)
         stock_dao_mock.get_unite_id_by_abbreviation.return_value = None
 
         # WHEN
@@ -268,7 +272,8 @@ class TestListeCourseServiceAdd:
                 abbreviation_unite,
             )
 
-    def test_add_to_liste_course_service_error(self) -> None:
+    @staticmethod
+    def test_add_to_liste_course_service_error() -> None:
         """Teste l'erreur levée lors de l'ajout à la liste de course."""
         # GIVEN
         id_utilisateur = 1
@@ -285,7 +290,7 @@ class TestListeCourseServiceAdd:
         liste_course_dao_mock = MagicMock(spec=ListeCourseDAO)
         liste_course_dao_mock.add_to_liste_course.side_effect = Exception("DB error")
 
-        stock_dao_mock = MagicMock(spec=StockCourseDAO)
+        stock_dao_mock = MagicMock(spec=StockDAO)
         stock_dao_mock.get_unite_id_by_abbreviation.return_value = 2
 
         # WHEN
@@ -314,7 +319,8 @@ class TestListeCourseServiceAdd:
 class TestListeCourseServiceRemovie:
     """Classe pour tester la suppression d'ingrédients dans la liste de course."""
 
-    def test_remove_from_liste_course_succes(self) -> None:
+    @staticmethod
+    def test_remove_from_liste_course_succes() -> None:
         """Teste le retrait d'un ingrédient de la liste de course avec succès."""
         # GIVEN
         id_utilisateur = 1
@@ -328,7 +334,7 @@ class TestListeCourseServiceRemovie:
         liste_course_dao_mock = MagicMock(spec=ListeCourseDAO)
         liste_course_dao_mock.remove_from_liste_course.return_value = True
 
-        stock_dao_mock = MagicMock(spec=StockCourseDAO)
+        stock_dao_mock = MagicMock(spec=StockDAO)
 
         ingredient_svc_mock = MagicMock(spec=IngredientService)
         ingredient_svc_mock.get_by_name_with_suggestions.return_value = ingredient
@@ -352,7 +358,8 @@ class TestListeCourseServiceRemovie:
                 f"{resultat}",
             )
 
-    def test_remove_from_liste_course_non_present(self) -> None:
+    @staticmethod
+    def test_remove_from_liste_course_non_present() -> None:
         """Teste le retrait d'un ingrédient non présent dans la liste."""
         # GIVEN
         id_utilisateur = 1
@@ -366,7 +373,7 @@ class TestListeCourseServiceRemovie:
         liste_course_dao_mock = MagicMock(spec=ListeCourseDAO)
         liste_course_dao_mock.remove_from_liste_course.return_value = False
 
-        stock_dao_mock = MagicMock(spec=StockCourseDAO)
+        stock_dao_mock = MagicMock(spec=StockDAO)
 
         ingredient_svc_mock = MagicMock(spec=IngredientService)
         ingredient_svc_mock.get_by_name_with_suggestions.return_value = ingredient
@@ -386,7 +393,8 @@ class TestListeCourseServiceRemovie:
                 f"{exc_info.value}",
             )
 
-    def test_clear_liste_course_deja_vide(self) -> None:
+    @staticmethod
+    def test_clear_liste_course_deja_vide() -> None:
         """Teste le vidage d'une liste de course déjà vide."""
         # GIVEN
         id_utilisateur = 1
@@ -394,7 +402,7 @@ class TestListeCourseServiceRemovie:
         liste_course_dao_mock = MagicMock(spec=ListeCourseDAO)
         liste_course_dao_mock.clear_liste_course.return_value = 0
 
-        stock_dao_mock = MagicMock(spec=StockCourseDAO)
+        stock_dao_mock = MagicMock(spec=StockDAO)
         ingredient_dao_mock = MagicMock(spec=IngredientDAO)
 
         # WHEN
@@ -411,7 +419,8 @@ class TestListeCourseServiceRemovie:
                 message=f"'déjà vide' devrait être dans le résultat: {resultat}",
             )
 
-    def test_clear_liste_course_un_element(self) -> None:
+    @staticmethod
+    def test_clear_liste_course_un_element() -> None:
         """Teste le vidage d'une liste avec un seul élément."""
         # GIVEN
         id_utilisateur = 1
@@ -419,7 +428,7 @@ class TestListeCourseServiceRemovie:
         liste_course_dao_mock = MagicMock(spec=ListeCourseDAO)
         liste_course_dao_mock.clear_liste_course.return_value = 1
 
-        stock_dao_mock = MagicMock(spec=StockCourseDAO)
+        stock_dao_mock = MagicMock(spec=StockDAO)
         ingredient_dao_mock = MagicMock(spec=IngredientDAO)
 
         # WHEN
@@ -447,7 +456,8 @@ class TestListeCourseServiceEffectue:
     dans la liste de course.
     """
 
-    def test_toggle_effectue_vers_true(self) -> None:
+    @staticmethod
+    def test_toggle_effectue_vers_true() -> None:
         """Teste le basculement d'un item vers effectué."""
         # GIVEN
         id_utilisateur = 1
@@ -461,7 +471,7 @@ class TestListeCourseServiceEffectue:
         liste_course_dao_mock = MagicMock(spec=ListeCourseDAO)
         liste_course_dao_mock.toggle_effectue.return_value = True
 
-        stock_dao_mock = MagicMock(spec=StockCourseDAO)
+        stock_dao_mock = MagicMock(spec=StockDAO)
 
         ingredient_svc_mock = MagicMock(spec=IngredientService)
         ingredient_svc_mock.get_by_name_with_suggestions.return_value = ingredient
@@ -488,7 +498,8 @@ class TestListeCourseServiceEffectue:
                 message=f"'Vodka' devrait être dans le message: {resultat['message']}",
             )
 
-    def test_toggle_effectue_vers_false(self) -> None:
+    @staticmethod
+    def test_toggle_effectue_vers_false() -> None:
         """Teste le basculement d'un item vers non effectué."""
         # GIVEN
         id_utilisateur = 1
@@ -502,7 +513,7 @@ class TestListeCourseServiceEffectue:
         liste_course_dao_mock = MagicMock(spec=ListeCourseDAO)
         liste_course_dao_mock.toggle_effectue.return_value = False
 
-        stock_dao_mock = MagicMock(spec=StockCourseDAO)
+        stock_dao_mock = MagicMock(spec=StockDAO)
 
         ingredient_svc_mock = MagicMock(spec=IngredientService)
         ingredient_svc_mock.get_by_name_with_suggestions.return_value = ingredient
@@ -533,7 +544,8 @@ class TestListeCourseServiceRemoveAddStock:
     ajout au stock de l'utilisateur.
     """
 
-    def test_remove_and_add_to_stock_nouveau_dans_stock(self) -> None:
+    @staticmethod
+    def test_remove_and_add_to_stock_nouveau_dans_stock() -> None:
         """Teste le transfert d'un ingrédient vers un stock vide."""
         # GIVEN
         id_utilisateur = 1
@@ -559,7 +571,7 @@ class TestListeCourseServiceRemoveAddStock:
         liste_course_dao_mock.get_liste_course_item.return_value = liste_item
         liste_course_dao_mock.remove_from_liste_course.return_value = True
 
-        stock_dao_mock = MagicMock(spec=StockCourseDAO)
+        stock_dao_mock = MagicMock(spec=StockDAO)
         stock_dao_mock.get_stock_item.return_value = None
         stock_dao_mock.set_stock_item.return_value = None
         stock_dao_mock.get_unite_info.return_value = unite_info
@@ -590,7 +602,8 @@ class TestListeCourseServiceRemoveAddStock:
 
         stock_dao_mock.set_stock_item.assert_called_once()
 
-    def test_remove_and_add_to_stock_meme_unite(self) -> None:
+    @staticmethod
+    def test_remove_and_add_to_stock_meme_unite() -> None:
         """Teste le transfert avec la même unité dans le stock."""
         # GIVEN
         id_utilisateur = 1
@@ -621,7 +634,7 @@ class TestListeCourseServiceRemoveAddStock:
         liste_course_dao_mock.get_liste_course_item.return_value = liste_item
         liste_course_dao_mock.remove_from_liste_course.return_value = True
 
-        stock_dao_mock = MagicMock(spec=StockCourseDAO)
+        stock_dao_mock = MagicMock(spec=StockDAO)
         stock_dao_mock.get_stock_item.return_value = stock_item
         stock_dao_mock.set_stock_item.return_value = None
         stock_dao_mock.get_unite_info.return_value = unite_info
@@ -657,7 +670,8 @@ class TestListeCourseServiceRemoveAddStock:
                 f"{call_args[1]['quantite']}",
             )
 
-    def test_remove_and_add_to_stock_non_dans_liste(self) -> None:
+    @staticmethod
+    def test_remove_and_add_to_stock_non_dans_liste() -> None:
         """Teste le transfert d'un ingrédient non présent dans la liste."""
         # GIVEN
         id_utilisateur = 1
@@ -671,7 +685,7 @@ class TestListeCourseServiceRemoveAddStock:
         liste_course_dao_mock = MagicMock(spec=ListeCourseDAO)
         liste_course_dao_mock.get_liste_course_item.return_value = None
 
-        stock_dao_mock = MagicMock(spec=StockCourseDAO)
+        stock_dao_mock = MagicMock(spec=StockDAO)
 
         ingredient_svc_mock = MagicMock(spec=IngredientService)
         ingredient_svc_mock.get_by_name_with_suggestions.return_value = ingredient

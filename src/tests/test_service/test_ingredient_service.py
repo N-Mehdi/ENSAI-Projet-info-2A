@@ -13,8 +13,8 @@ class TestIngredientService:
     """Tests pour IngredientService."""
 
     # ========== Tests pour check_if_alcoholic ==========
-
-    def test_check_if_alcoholic_true(self) -> None:
+    @staticmethod
+    def test_check_if_alcoholic_true() -> None:
         """Teste la vérification d'un ingrédient alcoolisé par ID."""
         # GIVEN
         ingredient_id = 1
@@ -45,7 +45,8 @@ class TestIngredientService:
             )
         dao_mock.is_alcoholic.assert_called_once_with(ingredient_id)
 
-    def test_check_if_alcoholic_false(self) -> None:
+    @staticmethod
+    def test_check_if_alcoholic_false() -> None:
         """Teste la vérification d'un ingrédient non alcoolisé par ID."""
         # GIVEN
         ingredient_id = 2
@@ -76,7 +77,8 @@ class TestIngredientService:
             )
         dao_mock.is_alcoholic.assert_called_once_with(ingredient_id)
 
-    def test_check_if_alcoholic_ingredient_inexistant(self) -> None:
+    @staticmethod
+    def test_check_if_alcoholic_ingredient_inexistant() -> None:
         """Teste la vérification d'un ingrédient inexistant par ID.
 
         Raises
@@ -109,7 +111,8 @@ class TestIngredientService:
                 message=f"'{ingredient_id}' devrait être dans l'erreur:{error_message}",
             )
 
-    def test_check_if_alcoholic_id_negatif(self) -> None:
+    @staticmethod
+    def test_check_if_alcoholic_id_negatif() -> None:
         """Teste la vérification avec un ID négatif.
 
         Raises
@@ -133,8 +136,8 @@ class TestIngredientService:
             service.check_if_alcoholic(ingredient_id)
 
     # ========== Tests pour check_if_alcoholic_by_name ==========
-
-    def test_check_if_alcoholic_by_name_true(self) -> None:
+    @staticmethod
+    def test_check_if_alcoholic_by_name_true() -> None:
         """Teste la vérification d'un ingrédient alcoolisé par nom."""
         # GIVEN
         ingredient_name = "Vodka"
@@ -165,7 +168,8 @@ class TestIngredientService:
             )
         dao_mock.is_alcoholic_by_name.assert_called_once_with(ingredient_name)
 
-    def test_check_if_alcoholic_by_name_false(self) -> None:
+    @staticmethod
+    def test_check_if_alcoholic_by_name_false() -> None:
         """Teste la vérification d'un ingrédient non alcoolisé par nom."""
         # GIVEN
         ingredient_name = "Orange Juice"
@@ -196,7 +200,8 @@ class TestIngredientService:
             )
         dao_mock.is_alcoholic_by_name.assert_called_once_with(ingredient_name)
 
-    def test_check_if_alcoholic_by_name_ingredient_inexistant(self) -> None:
+    @staticmethod
+    def test_check_if_alcoholic_by_name_ingredient_inexistant() -> None:
         """Teste la vérification d'un ingrédient inexistant par nom.
 
         Raises
@@ -230,7 +235,8 @@ class TestIngredientService:
                 f"{error_message}",
             )
 
-    def test_check_if_alcoholic_by_name_nom_vide(self) -> None:
+    @staticmethod
+    def test_check_if_alcoholic_by_name_nom_vide() -> None:
         """Teste la vérification avec un nom vide.
 
         Raises
@@ -253,7 +259,8 @@ class TestIngredientService:
         with pytest.raises(IngredientNotFoundError):
             service.check_if_alcoholic_by_name(ingredient_name)
 
-    def test_check_if_alcoholic_by_name_casse_differente(self) -> None:
+    @staticmethod
+    def test_check_if_alcoholic_by_name_casse_differente() -> None:
         """Teste la vérification avec une casse différente."""
         # GIVEN
         ingredient_name = "vOdKa"

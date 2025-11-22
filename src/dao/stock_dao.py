@@ -6,7 +6,7 @@ from src.utils.log_decorator import log, logging
 from src.utils.singleton import Singleton
 
 
-class StockCourseDAO(metaclass=Singleton):
+class StockDAO(metaclass=Singleton):
     """Classe contenant les méthodes agissants sur le stock d'un utilisateur."""
 
     @staticmethod

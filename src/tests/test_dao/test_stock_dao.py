@@ -1,16 +1,16 @@
-"""Tests d'intégration pour StockCourseDAO."""
+"""Tests d'intégration pour StockDAO."""
 
 import pytest
 
-from src.dao.stock_course_dao import StockCourseDAO
+from src.dao.stock_dao import StockDAO
 from src.utils.exceptions import (
     IngredientNotFoundError,
     InvalidQuantityError,
 )
 
 
-class TestStockCourseDAOIntegration:
-    """Tests d'intégration pour StockCourseDAO."""
+class TestStockDAOIntegration:
+    """Tests d'intégration pour StockDAO."""
 
     # ========== Tests pour update_or_create_stock_item ==========
 
@@ -50,7 +50,7 @@ class TestStockCourseDAOIntegration:
             unite_id = cursor.fetchone()["id_unite"]
             db_connection.commit()
 
-        dao = StockCourseDAO()
+        dao = StockDAO()
 
         # WHEN
         result = dao.update_or_create_stock_item(
@@ -126,7 +126,7 @@ class TestStockCourseDAOIntegration:
             )
             db_connection.commit()
 
-        dao = StockCourseDAO()
+        dao = StockDAO()
 
         # WHEN - Ajouter 50 à un stock de 100
         result = dao.update_or_create_stock_item(
@@ -206,7 +206,7 @@ class TestStockCourseDAOIntegration:
             )
             db_connection.commit()
 
-        dao = StockCourseDAO()
+        dao = StockDAO()
 
         # WHEN - Ajouter avec une nouvelle unité
         result = dao.update_or_create_stock_item(
@@ -278,7 +278,7 @@ class TestStockCourseDAOIntegration:
             )
             db_connection.commit()
 
-        dao = StockCourseDAO()
+        dao = StockDAO()
 
         # WHEN
         result = dao.get_stock(user_id, only_available=True)
@@ -353,7 +353,7 @@ class TestStockCourseDAOIntegration:
             )
             db_connection.commit()
 
-        dao = StockCourseDAO()
+        dao = StockDAO()
 
         # WHEN
         result = dao.get_stock(user_id, only_available=True)
@@ -418,7 +418,7 @@ class TestStockCourseDAOIntegration:
             )
             db_connection.commit()
 
-        dao = StockCourseDAO()
+        dao = StockDAO()
 
         # WHEN
         result = dao.get_stock(user_id, only_available=False)
@@ -448,7 +448,7 @@ class TestStockCourseDAOIntegration:
             user_id = cursor.fetchone()["id_utilisateur"]
             db_connection.commit()
 
-        dao = StockCourseDAO()
+        dao = StockDAO()
 
         # WHEN
         result = dao.get_stock(user_id, only_available=True)
@@ -510,7 +510,7 @@ class TestStockCourseDAOIntegration:
                 )
             db_connection.commit()
 
-        dao = StockCourseDAO()
+        dao = StockDAO()
 
         # WHEN
         result = dao.get_stock(user_id, only_available=True)
@@ -572,7 +572,7 @@ class TestStockCourseDAOIntegration:
             )
             db_connection.commit()
 
-        dao = StockCourseDAO()
+        dao = StockDAO()
 
         # WHEN
         result = dao.get_stock_item(user_id, ingredient_id)
@@ -621,7 +621,7 @@ class TestStockCourseDAOIntegration:
             user_id = cursor.fetchone()["id_utilisateur"]
             db_connection.commit()
 
-        dao = StockCourseDAO()
+        dao = StockDAO()
 
         # WHEN
         result = dao.get_stock_item(user_id, 99999)
@@ -680,7 +680,7 @@ class TestStockCourseDAOIntegration:
             )
             db_connection.commit()
 
-        dao = StockCourseDAO()
+        dao = StockDAO()
 
         # WHEN
         result = dao.decrement_stock_item(
@@ -756,7 +756,7 @@ class TestStockCourseDAOIntegration:
             )
             db_connection.commit()
 
-        dao = StockCourseDAO()
+        dao = StockDAO()
 
         # WHEN
         result = dao.decrement_stock_item(
@@ -829,7 +829,7 @@ class TestStockCourseDAOIntegration:
             )
             db_connection.commit()
 
-        dao = StockCourseDAO()
+        dao = StockDAO()
 
         # WHEN
         result = dao.decrement_stock_item(
@@ -898,7 +898,7 @@ class TestStockCourseDAOIntegration:
             )
             db_connection.commit()
 
-        dao = StockCourseDAO()
+        dao = StockDAO()
 
         # WHEN / THEN
         with pytest.raises(InvalidQuantityError) as exc_info:
@@ -934,7 +934,7 @@ class TestStockCourseDAOIntegration:
             user_id = cursor.fetchone()["id_utilisateur"]
             db_connection.commit()
 
-        dao = StockCourseDAO()
+        dao = StockDAO()
 
         # WHEN / THEN
         with pytest.raises(IngredientNotFoundError):
@@ -992,7 +992,7 @@ class TestStockCourseDAOIntegration:
             )
             db_connection.commit()
 
-        dao = StockCourseDAO()
+        dao = StockDAO()
 
         # WHEN
         result = dao.delete_stock_item(user_id, ingredient_id)
@@ -1028,7 +1028,7 @@ class TestStockCourseDAOIntegration:
             user_id = cursor.fetchone()["id_utilisateur"]
             db_connection.commit()
 
-        dao = StockCourseDAO()
+        dao = StockDAO()
 
         # WHEN
         result = dao.delete_stock_item(user_id, 99999)
@@ -1089,7 +1089,7 @@ class TestStockCourseDAOIntegration:
             )
             db_connection.commit()
 
-        dao = StockCourseDAO()
+        dao = StockDAO()
 
         # WHEN
         result = dao.get_full_stock(user_id)
@@ -1151,7 +1151,7 @@ class TestStockCourseDAOIntegration:
             )
             db_connection.commit()
 
-        dao = StockCourseDAO()
+        dao = StockDAO()
 
         # WHEN
         result = dao.get_full_stock(user_id)
@@ -1183,7 +1183,7 @@ class TestStockCourseDAOIntegration:
             unite_id = cursor.fetchone()["id_unite"]
             db_connection.commit()
 
-        dao = StockCourseDAO()
+        dao = StockDAO()
 
         # WHEN
         result = dao.get_unite_info(unite_id)
@@ -1209,7 +1209,7 @@ class TestStockCourseDAOIntegration:
     def test_get_unite_info_inexistante() -> None:
         """Teste la récupération d'une unité inexistante."""
         # GIVEN
-        dao = StockCourseDAO()
+        dao = StockDAO()
 
         # WHEN
         result = dao.get_unite_info(99999)
@@ -1240,7 +1240,7 @@ class TestStockCourseDAOIntegration:
             unite_id = cursor.fetchone()["id_unite"]
             db_connection.commit()
 
-        dao = StockCourseDAO()
+        dao = StockDAO()
 
         # WHEN
         result = dao.get_unite_id_by_abbreviation("ml")
@@ -1269,7 +1269,7 @@ class TestStockCourseDAOIntegration:
             unite_id = cursor.fetchone()["id_unite"]
             db_connection.commit()
 
-        dao = StockCourseDAO()
+        dao = StockDAO()
 
         # WHEN
         result = dao.get_unite_id_by_abbreviation("ML")
@@ -1285,7 +1285,7 @@ class TestStockCourseDAOIntegration:
     def test_get_unite_id_by_abbreviation_inexistante() -> None:
         """Teste avec une abréviation inexistante."""
         # GIVEN
-        dao = StockCourseDAO()
+        dao = StockDAO()
 
         # WHEN
         result = dao.get_unite_id_by_abbreviation("xyz")
@@ -1334,7 +1334,7 @@ class TestStockCourseDAOIntegration:
             unite_id = cursor.fetchone()["id_unite"]
             db_connection.commit()
 
-        dao = StockCourseDAO()
+        dao = StockDAO()
 
         # WHEN
         result = dao.set_stock_item(
@@ -1406,7 +1406,7 @@ class TestStockCourseDAOIntegration:
             )
             db_connection.commit()
 
-        dao = StockCourseDAO()
+        dao = StockDAO()
 
         # WHEN - Set à 50 (devrait remplacer, pas cumuler)
         result = dao.set_stock_item(

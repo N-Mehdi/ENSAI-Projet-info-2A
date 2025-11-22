@@ -26,8 +26,9 @@ class TestAccesService:
     """Tests pour AccesService."""
 
     # ========== Tests pour grant_access_to_user ==========
-
-    def test_grant_access_to_user_succes(self) -> None:
+    @staticmethod
+    def test_grant_access_to_user_succes() -> None:
+        """Teste l'octroi d'accès avec succès."""
         # GIVEN
         owner_pseudo = "alice"
         user_pseudo = "bob"
@@ -47,14 +48,29 @@ class TestAccesService:
         resultat = service.grant_access_to_user(owner_pseudo, user_pseudo)
 
         # THEN
-        assert isinstance(resultat, AccessResponse)
-        assert resultat.success is True
-        assert "bob" in resultat.message
-        assert resultat.owner_pseudo == owner_pseudo
-        assert resultat.user_pseudo == user_pseudo
+        if not isinstance(resultat, dict):
+            raise TypeError(
+                message=f"Le résultat devrait être un dict, obtenu: {type(resultat)}",
+            )
+        if resultat["success"] is not True:
+            raise AssertionError(
+                message=f"success devrait être True, obtenu: {resultat['success']}",
+            )
+        if "bob" not in resultat["message"]:
+            raise AssertionError(
+                message=f"'bob' devrait être dans le message"
+                f"obtenu: {resultat['message']}",
+            )
+        if resultat["owner_pseudo"] != owner_pseudo:
+            raise AssertionError(
+                message=f"owner_pseudo devrait être '{owner_pseudo}', obtenu: "
+                f"{resultat['owner_pseudo']}",
+            )
         dao_mock.grant_access.assert_called_once_with(owner_id, user_id)
 
-    def test_grant_access_to_user_owner_inexistant(self) -> None:
+    @staticmethod
+    def test_grant_access_to_user_owner_inexistant() -> None:
+        """Teste l'octroi d'accès avec un propriétaire inexistant."""
         # GIVEN
         owner_pseudo = "inconnu"
         user_pseudo = "bob"
@@ -72,9 +88,15 @@ class TestAccesService:
         # THEN
         with pytest.raises(UserNotFoundError) as exc_info:
             service.grant_access_to_user(owner_pseudo, user_pseudo)
-        assert "inconnu" in str(exc_info.value)
+        if "inconnu" not in str(exc_info.value):
+            raise AssertionError(
+                message=f"'inconnu' devrait être dans l'erreur,"
+                f"obtenu: {exc_info.value}",
+            )
 
-    def test_grant_access_to_user_user_inexistant(self):
+    @staticmethod
+    def test_grant_access_to_user_user_inexistant() -> None:
+        """Teste l'octroi d'accès avec un utilisateur inexistant."""
         # GIVEN
         owner_pseudo = "alice"
         user_pseudo = "inconnu"
@@ -93,9 +115,15 @@ class TestAccesService:
         # THEN
         with pytest.raises(UserNotFoundError) as exc_info:
             service.grant_access_to_user(owner_pseudo, user_pseudo)
-        assert "inconnu" in str(exc_info.value)
+        if "inconnu" not in str(exc_info.value):
+            raise AssertionError(
+                message=f"'inconnu' devrait être dans l'erreur,"
+                f"obtenu: {exc_info.value}",
+            )
 
-    def test_grant_access_to_user_self_access(self):
+    @staticmethod
+    def test_grant_access_to_user_self_access() -> None:
+        """Teste l'octroi d'accès à soi-même."""
         # GIVEN
         owner_pseudo = "alice"
         user_pseudo = "alice"
@@ -114,9 +142,15 @@ class TestAccesService:
         # THEN
         with pytest.raises(SelfAccessError) as exc_info:
             service.grant_access_to_user(owner_pseudo, user_pseudo)
-        assert "vous-même" in str(exc_info.value)
+        if "vous-même" not in str(exc_info.value):
+            raise AssertionError(
+                message=f"'vous-même' devrait être dans l'erreur,"
+                f"obtenu: {exc_info.value}",
+            )
 
-    def test_grant_access_to_user_deja_existant(self):
+    @staticmethod
+    def test_grant_access_to_user_deja_existant() -> None:
+        """Teste l'octroi d'accès déjà existant."""
         # GIVEN
         owner_pseudo = "alice"
         user_pseudo = "bob"
@@ -137,11 +171,16 @@ class TestAccesService:
         # THEN
         with pytest.raises(AccessAlreadyExistsError) as exc_info:
             service.grant_access_to_user(owner_pseudo, user_pseudo)
-        assert "déjà accès" in str(exc_info.value)
+        if "déjà accès" not in str(exc_info.value):
+            raise AssertionError(
+                message=f"'déjà accès' devrait être dans l'erreur,"
+                f"obtenu: {exc_info.value}",
+            )
 
     # ========== Tests pour revoke_access_from_user ==========
-
-    def test_revoke_access_from_user_succes(self):
+    @staticmethod
+    def test_revoke_access_from_user_succes() -> None:
+        """Teste le retrait d'accès avec succès."""
         # GIVEN
         owner_pseudo = "alice"
         user_pseudo = "bob"
@@ -161,12 +200,25 @@ class TestAccesService:
         resultat = service.revoke_access_from_user(owner_pseudo, user_pseudo)
 
         # THEN
-        assert isinstance(resultat, AccessResponse)
-        assert resultat.success is True
-        assert "retiré" in resultat.message
+        if not isinstance(resultat, AccessResponse):
+            raise TypeError(
+                message=f"Le résultat devrait être AccessResponse,"
+                f"obtenu: {type(resultat)}",
+            )
+        if resultat.success is not True:
+            raise AssertionError(
+                message=f"success devrait être True, obtenu: {resultat.success}",
+            )
+        if "retiré" not in resultat.message:
+            raise AssertionError(
+                message=f"'retiré' devrait être dans le message,"
+                f"obtenu: {resultat.message}",
+            )
         dao_mock.revoke_access.assert_called_once_with(owner_id, user_id)
 
-    def test_revoke_access_from_user_acces_inexistant(self):
+    @staticmethod
+    def test_revoke_access_from_user_acces_inexistant() -> None:
+        """Teste le retrait d'accès inexistant."""
         # GIVEN
         owner_pseudo = "alice"
         user_pseudo = "bob"
@@ -187,11 +239,16 @@ class TestAccesService:
         # THEN
         with pytest.raises(AccessNotFoundError) as exc_info:
             service.revoke_access_from_user(owner_pseudo, user_pseudo)
-        assert "n'a pas d'accès" in str(exc_info.value)
+        if "n'a pas d'accès" not in str(exc_info.value):
+            raise AssertionError(
+                message=f"'n'a pas d'accès' devrait être dans l'erreur,"
+                f"obtenu: {exc_info.value}",
+            )
 
     # ========== Tests pour get_users_with_access ==========
-
-    def test_get_users_with_access_succes(self):
+    @staticmethod
+    def test_get_users_with_access_succes() -> None:
+        """Teste la récupération des utilisateurs avec accès."""
         # GIVEN
         owner_pseudo = "alice"
         owner_id = 1
@@ -210,12 +267,29 @@ class TestAccesService:
         resultat = service.get_users_with_access(owner_pseudo)
 
         # THEN
-        assert isinstance(resultat, AccessList)
-        assert resultat.owner_pseudo == owner_pseudo
-        assert resultat.users_with_access == users
-        assert resultat.total_users == 2
+        if not isinstance(resultat, AccessList):
+            raise TypeError(
+                message=f"Le résultat devrait être AccessList,obtenu: {type(resultat)}",
+            )
+        if resultat.owner_pseudo != owner_pseudo:
+            raise AssertionError(
+                message=f"owner_pseudo devrait être '{owner_pseudo}',"
+                f"obtenu: {resultat.owner_pseudo}",
+            )
+        if resultat.users_with_access != users:
+            raise AssertionError(
+                message=f"users_with_access devrait être {users},"
+                f"obtenu: {resultat.users_with_access}",
+            )
+        nb_user = 2
+        if resultat.total_users != nb_user:
+            raise AssertionError(
+                message=f"total_users devrait être 2,obtenu: {resultat.total_users}",
+            )
 
-    def test_get_users_with_access_utilisateur_inexistant(self):
+    @staticmethod
+    def test_get_users_with_access_utilisateur_inexistant() -> None:
+        """Teste la récupération avec un utilisateur inexistant."""
         # GIVEN
         owner_pseudo = "inconnu"
 
@@ -233,7 +307,9 @@ class TestAccesService:
         with pytest.raises(UserNotFoundError):
             service.get_users_with_access(owner_pseudo)
 
-    def test_get_users_with_access_liste_vide(self):
+    @staticmethod
+    def test_get_users_with_access_liste_vide() -> None:
+        """Teste la récupération avec une liste vide."""
         # GIVEN
         owner_pseudo = "alice"
         owner_id = 1
@@ -251,12 +327,20 @@ class TestAccesService:
         resultat = service.get_users_with_access(owner_pseudo)
 
         # THEN
-        assert resultat.total_users == 0
-        assert resultat.users_with_access == []
+        if resultat.total_users != 0:
+            raise AssertionError(
+                message=f"total_users devrait être 0, obtenu: {resultat.total_users}",
+            )
+        if resultat.users_with_access != []:
+            raise AssertionError(
+                message=f"users_with_access devrait être [], obtenu: "
+                f"{resultat.users_with_access}",
+            )
 
     # ========== Tests pour view_private_cocktails ==========
-
-    def test_view_private_cocktails_succes(self):
+    @staticmethod
+    def test_view_private_cocktails_succes() -> None:
+        """Teste la visualisation des cocktails privés avec succès."""
         # GIVEN
         owner_pseudo = "alice"
         viewer_pseudo = "bob"
@@ -267,6 +351,11 @@ class TestAccesService:
             {
                 "id_cocktail": 1,
                 "nom_cocktail": "Mojito",
+                "categorie": "Cocktail",
+                "verre": "Highball",
+                "alcool": True,
+                "image": "mojito.jpg",
+                "instruction": "Mélanger tous les ingrédients",
                 "ingredients": [
                     {"nom_ingredient": "Rhum", "quantite": 50.0, "unite": "ml"},
                     {"nom_ingredient": "Menthe", "quantite": 10.0, "unite": "feuilles"},
@@ -288,13 +377,49 @@ class TestAccesService:
         resultat = service.view_private_cocktails(owner_pseudo, viewer_pseudo)
 
         # THEN
-        assert isinstance(resultat, PrivateCocktailsList)
-        assert resultat.owner_pseudo == owner_pseudo
-        assert resultat.total_cocktails == 1
-        assert len(resultat.cocktails) == 1
-        assert resultat.cocktails[0].nom_cocktail == "Mojito"
+        if not isinstance(resultat, PrivateCocktailsList):
+            raise TypeError(
+                message=f"Le résultat devrait être PrivateCocktailsList, obtenu: "
+                f"{type(resultat)}",
+            )
+        if resultat.owner_pseudo != owner_pseudo:
+            raise AssertionError(
+                message=f"owner_pseudo devrait être '{owner_pseudo}', obtenu: "
+                f"{resultat.owner_pseudo}",
+            )
+        if resultat.total_cocktails != 1:
+            raise AssertionError(
+                message=f"total_cocktails devrait être 1,"
+                f"obtenu: {resultat.total_cocktails}",
+            )
+        if len(resultat.cocktails) != 1:
+            raise AssertionError(
+                message=f"Devrait avoir 1 cocktail, obtenu: {len(resultat.cocktails)}",
+            )
+        if resultat.cocktails[0].nom_cocktail != "Mojito":
+            raise AssertionError(
+                message=f"Le nom devrait être 'Mojito', obtenu: "
+                f"{resultat.cocktails[0].nom_cocktail}",
+            )
+        if resultat.cocktails[0].categorie != "Cocktail":
+            raise AssertionError(
+                message=f"La catégorie devrait être 'Cocktail', obtenu: "
+                f"{resultat.cocktails[0].categorie}",
+            )
+        if resultat.cocktails[0].verre != "Highball":
+            raise AssertionError(
+                message=f"Le verre devrait être 'Highball', obtenu: "
+                f"{resultat.cocktails[0].verre}",
+            )
+        if resultat.cocktails[0].alcool is not True:
+            raise AssertionError(
+                message=f"alcool devrait être True, obtenu:"
+                f"{resultat.cocktails[0].alcool}",
+            )
 
-    def test_view_private_cocktails_acces_refuse(self):
+    @staticmethod
+    def test_view_private_cocktails_acces_refuse() -> None:
+        """Teste la visualisation avec accès refusé."""
         # GIVEN
         owner_pseudo = "alice"
         viewer_pseudo = "bob"
@@ -315,11 +440,16 @@ class TestAccesService:
         # THEN
         with pytest.raises(AccessDeniedError) as exc_info:
             service.view_private_cocktails(owner_pseudo, viewer_pseudo)
-        assert "n'avez pas accès" in str(exc_info.value)
+        if "n'avez pas accès" not in str(exc_info.value):
+            raise AssertionError(
+                message=f"'n'avez pas accès' devrait être dans l'erreur, obtenu: "
+                f"{exc_info.value}",
+            )
 
     # ========== Tests pour get_my_private_cocktails ==========
-
-    def test_get_my_private_cocktails_succes(self):
+    @staticmethod
+    def test_get_my_private_cocktails_succes() -> None:
+        """Teste la récupération de ses propres cocktails privés."""
         # GIVEN
         owner_pseudo = "alice"
         owner_id = 1
@@ -328,6 +458,11 @@ class TestAccesService:
             {
                 "id_cocktail": 1,
                 "nom_cocktail": "Mojito",
+                "categorie": "Cocktail",
+                "verre": "Highball",
+                "alcool": True,
+                "image": "mojito.jpg",
+                "instruction": "Mélanger tous les ingrédients",
                 "ingredients": [],
             },
         ]
@@ -346,12 +481,35 @@ class TestAccesService:
         resultat = service.get_my_private_cocktails(owner_pseudo)
 
         # THEN
-        assert isinstance(resultat, PrivateCocktailsList)
-        assert resultat.owner_pseudo == owner_pseudo
+        if not isinstance(resultat, PrivateCocktailsList):
+            raise TypeError(
+                message=f"Le résultat devrait être PrivateCocktailsList,"
+                f"obtenu: {type(resultat)}",
+            )
+        if resultat.owner_pseudo != owner_pseudo:
+            raise AssertionError(
+                message=f"owner_pseudo devrait être '{owner_pseudo}', obtenu: "
+                f"{resultat.owner_pseudo}",
+            )
+        if resultat.total_cocktails != 1:
+            raise AssertionError(
+                message=f"total_cocktails devrait être 1,"
+                f"obtenu: {resultat.total_cocktails}",
+            )
+        if len(resultat.cocktails) != 1:
+            raise AssertionError(
+                message=f"Devrait avoir 1 cocktail, obtenu: {len(resultat.cocktails)}",
+            )
+        if resultat.cocktails[0].nom_cocktail != "Mojito":
+            raise AssertionError(
+                message=f"Le nom devrait être 'Mojito', obtenu: "
+                f"{resultat.cocktails[0].nom_cocktail}",
+            )
 
     # ========== Tests pour add_cocktail_to_private_list ==========
-
-    def test_add_cocktail_to_private_list_succes(self):
+    @staticmethod
+    def test_add_cocktail_to_private_list_succes() -> None:
+        """Teste l'ajout d'un cocktail à la liste privée."""
         # GIVEN
         owner_pseudo = "alice"
         cocktail_id = 1
@@ -370,11 +528,24 @@ class TestAccesService:
         resultat = service.add_cocktail_to_private_list(owner_pseudo, cocktail_id)
 
         # THEN
-        assert isinstance(resultat, AccessResponse)
-        assert resultat.success is True
-        assert "ajouté" in resultat.message
+        if not isinstance(resultat, AccessResponse):
+            raise TypeError(
+                message=f"Le résultat devrait être AccessResponse,"
+                f"obtenu: {type(resultat)}",
+            )
+        if resultat.success is not True:
+            raise AssertionError(
+                message=f"success devrait être True, obtenu: {resultat.success}",
+            )
+        if "ajouté" not in resultat.message:
+            raise AssertionError(
+                message=f"'ajouté' devrait être dans le message,"
+                f"obtenu: {resultat.message}",
+            )
 
-    def test_add_cocktail_to_private_list_deja_present(self):
+    @staticmethod
+    def test_add_cocktail_to_private_list_deja_present() -> None:
+        """Teste l'ajout d'un cocktail déjà présent."""
         # GIVEN
         owner_pseudo = "alice"
         cocktail_id = 1
@@ -394,11 +565,16 @@ class TestAccesService:
         # THEN
         with pytest.raises(AccessAlreadyExistsError) as exc_info:
             service.add_cocktail_to_private_list(owner_pseudo, cocktail_id)
-        assert "déjà dans" in str(exc_info.value)
+        if "déjà dans" not in str(exc_info.value):
+            raise AssertionError(
+                message=f"'déjà dans' devrait être dans l'erreur,"
+                f"obtenu: {exc_info.value}",
+            )
 
     # ========== Tests pour add_cocktail_to_private_list_by_name ==========
-
-    def test_add_cocktail_to_private_list_by_name_succes(self):
+    @staticmethod
+    def test_add_cocktail_to_private_list_by_name_succes() -> None:
+        """Teste l'ajout d'un cocktail par nom."""
         # GIVEN
         owner_pseudo = "alice"
         cocktail_name = "Mojito"
@@ -422,11 +598,24 @@ class TestAccesService:
         )
 
         # THEN
-        assert isinstance(resultat, AccessResponse)
-        assert resultat.success is True
-        assert "Mojito" in resultat.message
+        if not isinstance(resultat, AccessResponse):
+            raise TypeError(
+                message=f"Le résultat devrait être AccessResponse,"
+                f"obtenu: {type(resultat)}",
+            )
+        if resultat.success is not True:
+            raise AssertionError(
+                message=f"success devrait être True, obtenu: {resultat.success}",
+            )
+        if "Mojito" not in resultat.message:
+            raise AssertionError(
+                message=f"'Mojito' devrait être dans le message,"
+                f"obtenu: {resultat.message}",
+            )
 
-    def test_add_cocktail_to_private_list_by_name_cocktail_inexistant(self):
+    @staticmethod
+    def test_add_cocktail_to_private_list_by_name_cocktail_inexistant() -> None:
+        """Teste l'ajout d'un cocktail inexistant par nom."""
         # GIVEN
         owner_pseudo = "alice"
         cocktail_name = "CocktailInconnu"
@@ -446,11 +635,16 @@ class TestAccesService:
         # THEN
         with pytest.raises(CocktailNotFoundError) as exc_info:
             service.add_cocktail_to_private_list_by_name(owner_pseudo, cocktail_name)
-        assert "CocktailInconnu" in str(exc_info.value)
+        if "CocktailInconnu" not in str(exc_info.value):
+            raise AssertionError(
+                emssage=f"'CocktailInconnu' devrait être dans l'erreur, obtenu: "
+                f"{exc_info.value}",
+            )
 
     # ========== Tests pour remove_cocktail_from_private_list ==========
-
-    def test_remove_cocktail_from_private_list_succes(self):
+    @staticmethod
+    def test_remove_cocktail_from_private_list_succes() -> None:
+        """Teste le retrait d'un cocktail de la liste privée."""
         # GIVEN
         owner_pseudo = "alice"
         cocktail_id = 1
@@ -469,11 +663,24 @@ class TestAccesService:
         resultat = service.remove_cocktail_from_private_list(owner_pseudo, cocktail_id)
 
         # THEN
-        assert isinstance(resultat, AccessResponse)
-        assert resultat.success is True
-        assert "retiré" in resultat.message
+        if not isinstance(resultat, AccessResponse):
+            raise TypeError(
+                message=f"Le résultat devrait être AccessResponse,"
+                f"obtenu: {type(resultat)}",
+            )
+        if resultat.success is not True:
+            raise AssertionError(
+                message=f"success devrait être True, obtenu: {resultat.success}",
+            )
+        if "retiré" not in resultat.message:
+            raise AssertionError(
+                message=f"'retiré' devrait être dans le message,"
+                f"obtenu: {resultat.message}",
+            )
 
-    def test_remove_cocktail_from_private_list_non_present(self):
+    @staticmethod
+    def test_remove_cocktail_from_private_list_non_present() -> None:
+        """Teste le retrait d'un cocktail non présent."""
         # GIVEN
         owner_pseudo = "alice"
         cocktail_id = 1
@@ -493,11 +700,16 @@ class TestAccesService:
         # THEN
         with pytest.raises(AccessNotFoundError) as exc_info:
             service.remove_cocktail_from_private_list(owner_pseudo, cocktail_id)
-        assert "n'est pas dans" in str(exc_info.value)
+        if "n'est pas dans" not in str(exc_info.value):
+            raise AssertionError(
+                message=f"'n'est pas dans' devrait être dans l'erreur,"
+                f"obtenu: {exc_info.value}",
+            )
 
     # ========== Tests pour remove_cocktail_from_private_list_by_name ==========
-
-    def test_remove_cocktail_from_private_list_by_name_succes(self):
+    @staticmethod
+    def test_remove_cocktail_from_private_list_by_name_succes() -> None:
+        """Teste le retrait d'un cocktail par nom."""
         # GIVEN
         owner_pseudo = "alice"
         cocktail_name = "Mojito"
@@ -521,11 +733,24 @@ class TestAccesService:
         )
 
         # THEN
-        assert isinstance(resultat, AccessResponse)
-        assert resultat.success is True
-        assert "Mojito" in resultat.message
+        if not isinstance(resultat, AccessResponse):
+            raise TypeError(
+                message=f"Le résultat devrait être AccessResponse, obtenu:"
+                f"{type(resultat)}",
+            )
+        if resultat.success is not True:
+            raise AssertionError(
+                message=f"success devrait être True, obtenu: {resultat.success}",
+            )
+        if "Mojito" not in resultat.message:
+            raise TypeError(
+                message=f"'Mojito' devrait être dans le message,"
+                f"obtenu:{resultat.message}",
+            )
 
-    def test_remove_cocktail_from_private_list_by_name_cocktail_inexistant(self):
+    @staticmethod
+    def test_remove_cocktail_from_private_list_by_name_cocktail_inexistant() -> None:
+        """Teste le retrait d'un cocktail inexistant par nom."""
         # GIVEN
         owner_pseudo = "alice"
         cocktail_name = "CocktailInconnu"
@@ -548,4 +773,8 @@ class TestAccesService:
                 owner_pseudo,
                 cocktail_name,
             )
-        assert "CocktailInconnu" in str(exc_info.value)
+        if "CocktailInconnu" not in str(exc_info.value):
+            raise AssertionError(
+                message=f"'CocktailInconnu' devrait être dans l'erreur, obtenu: "
+                f"{exc_info.value}",
+            )

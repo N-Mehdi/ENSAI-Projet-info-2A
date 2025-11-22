@@ -1,4 +1,4 @@
-"""doc."""
+"""Route contenant les endpoints sur la liste de course de l'utilsateur."""
 
 from typing import Annotated
 

@@ -1,4 +1,4 @@
-"""doc."""
+"""Route contenant les endpoints sur le compte d'un utilisateur."""
 
 from fastapi import APIRouter, HTTPException, status
 

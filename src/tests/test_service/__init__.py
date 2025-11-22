@@ -1,1 +1,1 @@
-"""Package contenant les tests de la couche service."""
+"""Package contenant les tests unitaires (avec mock de la DAO) de la couche service."""

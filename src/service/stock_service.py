@@ -3,7 +3,7 @@
 import re
 
 from src.dao.ingredient_dao import IngredientDAO
-from src.dao.stock_course_dao import StockCourseDAO
+from src.dao.stock_dao import StockDAO
 from src.models.stock import Stock, StockItem
 from src.utils.exceptions import (
     DAOError,
@@ -16,12 +16,12 @@ from src.utils.exceptions import (
 from src.utils.text_utils import normalize_ingredient_name
 
 
-class StockCourseService:
+class StockService:
     """Service pour gérer le stock des utilisateurs."""
 
     def __init__(self) -> None:
-        """Initialise un StockCourseService."""
-        self.stock_dao = StockCourseDAO()
+        """Initialise un StockService."""
+        self.stock_dao = StockDAO()
         self.ingredient_dao = IngredientDAO()
 
     def get_ingredient_by_name(self, nom_ingredient: str) -> dict:

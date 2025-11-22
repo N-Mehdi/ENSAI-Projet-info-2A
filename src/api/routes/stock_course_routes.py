@@ -1,4 +1,4 @@
-"""doc."""
+"""Route contenant les endpoints sur le stock de l'utilsateur."""
 
 from typing import Annotated
 
@@ -6,7 +6,7 @@ from fastapi import APIRouter, HTTPException, Query, status
 
 from src.api.deps import CurrentUser
 from src.models.stock import Stock, StockItem, StockItemAddByName, StockItemRemove
-from src.service.stock_course_service import StockCourseService
+from src.service.stock_service import StockService
 from src.utils.exceptions import (
     IngredientNotFoundError,
     InsufficientQuantityError,
@@ -16,7 +16,7 @@ from src.utils.exceptions import (
 )
 
 router = APIRouter(prefix="/stock", tags=["Stock"])
-service = StockCourseService()
+service = StockService()
 
 
 @router.post(

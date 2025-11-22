@@ -7,14 +7,15 @@ import pytest
 from src.business_object.cocktail import Cocktail
 from src.dao.cocktail_utilisateur_dao import CocktailUtilisateurDAO
 from src.service.cocktail_utilisateur_service import CocktailUtilisateurService
+from src.utils.exceptions import CocktailNotFoundError
 
 
 class TestCocktailUtilisateurService:
     """Tests pour CocktailUtilisateurService."""
 
     # ========== Tests pour get_cocktails_testes ==========
-
-    def test_get_cocktails_testes_succes(self) -> None:
+    @staticmethod
+    def test_get_cocktails_testes_succes() -> None:
         """Teste la récupération des cocktails testés avec succès."""
         # GIVEN
         id_utilisateur = 1
@@ -46,11 +47,16 @@ class TestCocktailUtilisateurService:
         resultat = service.get_cocktails_testes(id_utilisateur)
 
         # THEN
-        assert resultat == cocktails_attendus
+        if resultat != cocktails_attendus:
+            raise AssertionError(
+                message=f"Le résultat devrait être {cocktails_attendus},"
+                f"obtenu: {resultat}",
+            )
         dao_mock.get_teste.assert_called_once_with(id_utilisateur)
 
-    def test_get_cocktails_testes_liste_vide(self) -> None:
-        """Teste la récupération des cocktails testés quand la liste est vide."""
+    @staticmethod
+    def test_get_cocktails_testes_liste_vide() -> None:
+        """Teste la récupération des cocktails testés avec une liste vide."""
         # GIVEN
         id_utilisateur = 1
 
@@ -63,12 +69,15 @@ class TestCocktailUtilisateurService:
         resultat = service.get_cocktails_testes(id_utilisateur)
 
         # THEN
-        assert resultat == []
+        if resultat != []:
+            raise AssertionError(
+                message=f"La liste devrait être vide, obtenu: {resultat}",
+            )
         dao_mock.get_teste.assert_called_once_with(id_utilisateur)
 
     # ========== Tests pour ajouter_cocktail_teste ==========
-
-    def test_ajouter_cocktail_teste_succes(self) -> None:
+    @staticmethod
+    def test_ajouter_cocktail_teste_succes() -> None:
         """Teste l'ajout d'un cocktail testé avec succès."""
         # GIVEN
         id_utilisateur = 1
@@ -87,10 +96,18 @@ class TestCocktailUtilisateurService:
         resultat = service.ajouter_cocktail_teste(id_utilisateur, nom_cocktail)
 
         # THEN
-        assert resultat == reponse_attendue
-        dao_mock.ajouter_cocktail_teste.assert_called_once_with(id_utilisateur, nom_cocktail)
+        if resultat != reponse_attendue:
+            raise AssertionError(
+                message=f"Le résultat devrait être {reponse_attendue},"
+                f"obtenu: {resultat}",
+            )
+        dao_mock.ajouter_cocktail_teste.assert_called_once_with(
+            id_utilisateur,
+            nom_cocktail,
+        )
 
-    def test_ajouter_cocktail_teste_deja_present(self) -> None:
+    @staticmethod
+    def test_ajouter_cocktail_teste_deja_present() -> None:
         """Teste l'ajout d'un cocktail déjà testé."""
         # GIVEN
         id_utilisateur = 1
@@ -109,37 +126,45 @@ class TestCocktailUtilisateurService:
         resultat = service.ajouter_cocktail_teste(id_utilisateur, nom_cocktail)
 
         # THEN
-        assert resultat == reponse_attendue
-        assert resultat["success"] is False
+        if resultat != reponse_attendue:
+            raise AssertionError(
+                message=f"Le résultat devrait être {reponse_attendue},"
+                f"obtenu: {resultat}",
+            )
+        if resultat["success"] is not False:
+            raise AssertionError(
+                message=f"success devrait être False, obtenu: {resultat['success']}",
+            )
 
-    def test_ajouter_cocktail_teste_cocktail_inexistant(self) -> None:
-        """Teste l'ajout d'un cocktail inexistant.
-
-        Raises
-        ------
-        Exception
-            Quand le cocktail n'existe pas
-
-        """
+    @staticmethod
+    def test_ajouter_cocktail_teste_cocktail_inexistant() -> None:
+        """Teste l'ajout d'un cocktail inexistant."""
         # GIVEN
         id_utilisateur = 1
         nom_cocktail = "CocktailInconnu"
 
         dao_mock = MagicMock(spec=CocktailUtilisateurDAO)
-        dao_mock.ajouter_cocktail_teste.side_effect = Exception("Cocktail non trouvé")
+        dao_mock.ajouter_cocktail_teste.side_effect = CocktailNotFoundError(
+            "Cocktail non trouvé",
+        )
 
         # WHEN
         service = CocktailUtilisateurService()
         service.dao = dao_mock
 
         # THEN
-        with pytest.raises(Exception) as exc_info:
+        with pytest.raises(CocktailNotFoundError) as exc_info:
             service.ajouter_cocktail_teste(id_utilisateur, nom_cocktail)
-        assert "Cocktail non trouvé" in str(exc_info.value)
+        if "Cocktail non trouvé" not in str(exc_info.value):
+            raise AssertionError(
+                message=f"'Cocktail non trouvé' devrait être dans l'erreur, "
+                f"obtenu: {exc_info.value}",
+            )
 
     # ========== Tests pour retirer_cocktail_teste ==========
 
-    def test_retirer_cocktail_teste_succes(self) -> None:
+    @staticmethod
+    def test_retirer_cocktail_teste_succes() -> None:
         """Teste le retrait d'un cocktail testé avec succès."""
         # GIVEN
         id_utilisateur = 1
@@ -158,10 +183,18 @@ class TestCocktailUtilisateurService:
         resultat = service.retirer_cocktail_teste(id_utilisateur, nom_cocktail)
 
         # THEN
-        assert resultat == reponse_attendue
-        dao_mock.retirer_cocktail_teste.assert_called_once_with(id_utilisateur, nom_cocktail)
+        if resultat != reponse_attendue:
+            raise AssertionError(
+                message=f"Le résultat devrait être {reponse_attendue},"
+                f"obtenu: {resultat}",
+            )
+        dao_mock.retirer_cocktail_teste.assert_called_once_with(
+            id_utilisateur,
+            nom_cocktail,
+        )
 
-    def test_retirer_cocktail_teste_non_present(self) -> None:
+    @staticmethod
+    def test_retirer_cocktail_teste_non_present() -> None:
         """Teste le retrait d'un cocktail non testé."""
         # GIVEN
         id_utilisateur = 1
@@ -180,36 +213,44 @@ class TestCocktailUtilisateurService:
         resultat = service.retirer_cocktail_teste(id_utilisateur, nom_cocktail)
 
         # THEN
-        assert resultat == reponse_attendue
-        assert resultat["success"] is False
+        if resultat != reponse_attendue:
+            raise AssertionError(
+                message=f"Le résultat devrait être {reponse_attendue},"
+                f"obtenu: {resultat}",
+            )
+        if resultat["success"] is not False:
+            raise AssertionError(
+                message=f"success devrait être False, obtenu:{resultat['success']}",
+            )
 
-    def test_retirer_cocktail_teste_cocktail_inexistant(self) -> None:
-        """Teste le retrait d'un cocktail inexistant.
-
-        Raises
-        ------
-        Exception
-            Quand le cocktail n'existe pas
-
-        """
+    @staticmethod
+    def test_retirer_cocktail_teste_cocktail_inexistant() -> None:
+        """Teste le retrait d'un cocktail inexistant."""
         # GIVEN
         id_utilisateur = 1
         nom_cocktail = "CocktailInconnu"
 
         dao_mock = MagicMock(spec=CocktailUtilisateurDAO)
-        dao_mock.retirer_cocktail_teste.side_effect = Exception("Cocktail non trouvé")
+        dao_mock.retirer_cocktail_teste.side_effect = CocktailNotFoundError(
+            "Cocktail non trouvé",
+        )
 
         # WHEN
         service = CocktailUtilisateurService()
         service.dao = dao_mock
 
         # THEN
-        with pytest.raises(Exception) as exc_info:
+        with pytest.raises(CocktailNotFoundError) as exc_info:
             service.retirer_cocktail_teste(id_utilisateur, nom_cocktail)
-        assert "Cocktail non trouvé" in str(exc_info.value)
+        if "Cocktail non trouvé" not in str(exc_info.value):
+            raise AssertionError(
+                message=f"'Cocktail non trouvé' devrait être dans l'erreur, "
+                f"obtenu: {exc_info.value}",
+            )
 
-    def test_retirer_cocktail_teste_utilisateur_sans_cocktails(self) -> None:
-        """Teste le retrait d'un cocktail pour un utilisateur sans cocktails testés."""
+    @staticmethod
+    def test_retirer_cocktail_teste_utilisateur_sans_cocktails() -> None:
+        """Teste le retrait pour un utilisateur sans cocktails testés."""
         # GIVEN
         id_utilisateur = 999
         nom_cocktail = "Margarita"
@@ -227,5 +268,12 @@ class TestCocktailUtilisateurService:
         resultat = service.retirer_cocktail_teste(id_utilisateur, nom_cocktail)
 
         # THEN
-        assert resultat == reponse_attendue
-        assert resultat["success"] is False
+        if resultat != reponse_attendue:
+            raise AssertionError(
+                message=f"Le résultat devrait être {reponse_attendue},"
+                f"obtenu: {resultat}",
+            )
+        if resultat["success"] is not False:
+            raise AssertionError(
+                message=f"success devrait être False, obtenu:{resultat['success']}",
+            )

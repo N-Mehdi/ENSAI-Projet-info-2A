@@ -1,4 +1,5 @@
-"""Doc."""
+"""Décorateur des logs."""
+
 import logging.config
 import numbers
 from functools import wraps

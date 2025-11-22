@@ -45,11 +45,11 @@ class CocktailUtilisateurDAO(metaclass=Singleton):
                 "       c.nom,                                   "
                 "       c.categorie,                             "
                 "       c.verre,                                 "
-                "       c.alcool                                 "
+                "       c.alcool,                                "
                 "       c.image                                  "
                 "FROM cocktail c                                 "
-                "INNER JOIN acces a using id_cocktail            "
-                "WHERE id_utilisateur = %(id_utilisateur)s       "
+                "INNER JOIN acces a using (id_cocktail)            "
+                "WHERE a.id_utilisateur = %(id_utilisateur)s       "
                 "AND a.is_owner = TRUE                           ",
                 {"id_utilisateur": id_utilisateur},
             )
@@ -105,7 +105,7 @@ class CocktailUtilisateurDAO(metaclass=Singleton):
         """
 
         sql_insert_acces = """
-        INSERT INTO acces (id_cocktail, id_utilisateur, is_owner, can_edit)
+        INSERT INTO acces (id_cocktail, id_utilisateur, is_owner, has_access)
         VALUES (%(id_cocktail)s, %(id_utilisateur)s, TRUE, TRUE);
         """
 
@@ -152,11 +152,11 @@ class CocktailUtilisateurDAO(metaclass=Singleton):
         """
         with DBConnection().connection as connection, connection.cursor() as cursor:
             cursor.execute(
-                "SELECT id_ingredient, quantite FROM cocktail_ingredient WHERE"
+                "SELECT id_ingredient, qte FROM cocktail_ingredient WHERE "
                 "id_cocktail = %(id_cocktail)s",
                 {"id_cocktail": id_cocktail},
             )
-            return {row[0]: row[1] for row in cursor.fetchall()}
+            return {row["id_ingredient"]: row["qte"] for row in cursor.fetchall()}
 
     @staticmethod
     @log
@@ -202,7 +202,7 @@ class CocktailUtilisateurDAO(metaclass=Singleton):
             if cursor.fetchone():
                 cursor.execute(
                     "UPDATE cocktail_ingredient "
-                    "SET quantite = %(quantite)s "
+                    "SET qte = %(quantite)s "
                     "WHERE id_ingredient = %(id_ingredient)s "
                     "AND id_cocktail = %(id_cocktail)s",
                     {
@@ -259,7 +259,7 @@ class CocktailUtilisateurDAO(metaclass=Singleton):
                 cursor.execute(
                     "INSERT INTO cocktail_ingredient (id_cocktail,  "
                     "                                 id_ingredient,"
-                    "                                  quantite)    "
+                    "                                  qte)    "
                     "VALUES (%(id_cocktail)s, %(id_ingredient)s,    "
                     "                                %(quantite)s)  ",
                     {
@@ -392,11 +392,11 @@ class CocktailUtilisateurDAO(metaclass=Singleton):
                 "       c.nom,                                   "
                 "       c.categorie,                             "
                 "       c.verre,                                 "
-                "       c.alcool                                 "
+                "       c.alcool,                                "
                 "       c.image                                  "
                 "FROM cocktail c                                 "
-                "INNER JOIN avis a using id_cocktail             "
-                "WHERE id_utilisateur = %(id_utilisateur)s       "
+                "INNER JOIN avis a using (id_cocktail)           "
+                "WHERE a.id_utilisateur = %(id_utilisateur)s       "
                 "AND a.favoris = TRUE                            ",
                 {"id_utilisateur": id_utilisateur},
             )
@@ -696,7 +696,7 @@ class CocktailUtilisateurDAO(metaclass=Singleton):
             result = cursor.fetchone()
 
             if not result or not result["teste"]:
-                raise CocktailNotTestedError
+                raise CocktailNotTestedError(nom_cocktail=nom_cocktail)
 
             cursor.execute(
                 """

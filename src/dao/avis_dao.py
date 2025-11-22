@@ -285,7 +285,7 @@ class AvisDAO(metaclass=Singleton):
                 SELECT
                     c.id_cocktail,
                     c.nom as nom_cocktail,
-                    COUNT(*) as nombre_avis,
+                    COUNT(a.id_cocktail) as nombre_avis,
                     AVG(a.note) as note_moyenne,
                     SUM(CASE WHEN a.favoris THEN 1 ELSE 0 END) as nombre_favoris
                 FROM cocktail c
